@@ -1,0 +1,2260 @@
+<meta charset="utf-8">
+<title>特教研習島嶼</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: full-bleed 3D island; HUD floats on top — brand + badges top-left, station dock along the bottom, challenge sheet slides in from the right (bottom sheet on phones). */
+:root{
+  --ink:#18323A; --ink-soft:#4A6870; --paper:#FFFFFF; --mist:#EAF5F4; --line:#CFE3E1;
+  --teal:#2A8C8C; --teal-deep:#1D6B6B; --coral:#EE6F57; --sun:#F4B740; --leaf:#5FA651; --sky:#A9DDE6;
+  --good:#2F9E5B; --warn:#D9513A;
+  --display:"Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --r:18px; --shadow:0 10px 30px rgba(24,50,58,.18);
+  color-scheme:light;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#scene{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.hud{position:fixed;pointer-events:none;z-index:5}
+.hud > *{pointer-events:auto}
+
+/* top bar */
+.top{top:calc(env(safe-area-inset-top,0px) + 12px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.brand{background:var(--paper);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 16px 12px;max-width:min(420px,100%)}
+.brand small{display:block;font-size:12px;letter-spacing:.08em;color:var(--teal-deep);font-weight:700}
+.brand h1{font-family:var(--display);font-weight:900;font-size:clamp(22px,4vw,30px);line-height:1.15;margin:2px 0 6px;letter-spacing:.02em}
+.badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--display);background:var(--mist);color:var(--ink-soft);border:2px dashed var(--line)}
+.badge.on{background:var(--sun);color:var(--ink);border:2px solid #D99A1E}
+.badges .count{margin-left:4px;font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.side{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:0;border-radius:999px;box-shadow:var(--shadow);padding:8px 14px;font-weight:700;font-size:14px}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.chip .dot.live{background:var(--good)}
+.chip.chip-ink{background:var(--ink);color:var(--paper)}
+
+/* bottom dock */
+.dock{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:8px;align-items:center}
+.hint{background:rgba(255,255,255,.85);border-radius:999px;padding:4px 14px;font-size:13px;color:var(--ink-soft)}
+.stations{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:4px;scrollbar-width:none}
+.stations::-webkit-scrollbar{display:none}
+.st-btn{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:var(--paper);border:2px solid transparent;border-radius:14px;padding:6px 12px 6px 6px;box-shadow:var(--shadow);font-weight:700;font-size:14px;white-space:nowrap}
+.st-btn .n{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;color:#fff;font:900 15px var(--display)}
+.st-btn.done{border-color:var(--sun)}
+.st-btn.locked{opacity:.55}
+.st-btn .state{font-size:12px;font-weight:500;color:var(--ink-soft)}
+
+/* sheet */
+.sheet{position:fixed;z-index:20;top:calc(env(safe-area-inset-top,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));width:min(460px,calc(100% - 24px));background:var(--paper);border-radius:22px;box-shadow:0 20px 60px rgba(24,50,58,.35);display:flex;flex-direction:column;overflow:hidden;transform:translateX(0);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.sheet[hidden]{display:flex!important;transform:translateX(calc(100% + 40px));visibility:hidden;transition:transform .3s,visibility 0s .3s}
+.sheet-head{padding:18px 20px 12px;display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line)}
+.sheet-head .n{flex:0 0 auto;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;font:900 22px var(--display)}
+.sheet-head .eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--teal-deep)}
+.sheet-head h2{font-family:var(--display);font-weight:900;font-size:24px;line-height:1.2;margin:0;text-wrap:balance}
+.close{margin-left:auto;flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:0;background:var(--mist);font-size:20px;line-height:1}
+.sheet-body{padding:16px 20px 22px;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
+.sheet-body h3{font-family:var(--display);font-size:17px;margin:0}
+.sheet-body ul{margin:0;padding-left:1.2em}
+.sheet-body li{margin:2px 0}
+.note{background:var(--mist);border-radius:14px;padding:12px 14px;font-size:14px}
+.note b{color:var(--teal-deep)}
+.prompt{background:#FFF8E6;border:1px dashed #E2B54A;border-radius:14px;padding:12px 14px;font-size:13.5px;white-space:pre-line}
+.prompt .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;color:#9A6B00;margin-bottom:4px}
+.quote{font-family:var(--display);font-size:19px;line-height:1.7;font-weight:700;color:var(--teal-deep);border-left:4px solid var(--sun);padding-left:14px}
+.res{display:grid;gap:8px}
+.res div{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.res b{display:block}
+.res span{font-size:13px;color:var(--ink-soft)}
+.readable{cursor:pointer;border-radius:10px;padding:8px 10px;border:2px solid transparent;transition:background .15s}
+.readable:hover{background:var(--mist)}
+.readable.speaking{background:#FFF0A8;border-color:#E2B54A}
+.primary{border:0;border-radius:14px;padding:13px 18px;background:var(--coral);color:#fff;font-weight:700;font-size:16px;box-shadow:0 4px 0 #C2533E}
+.primary:active{transform:translateY(2px);box-shadow:0 2px 0 #C2533E}
+.ghost{border:2px solid var(--line);border-radius:12px;padding:8px 14px;background:var(--paper);font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* challenge */
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--teal)}
+.q{display:flex;gap:10px;align-items:flex-start}
+.q p{margin:0;font-weight:700;font-size:17px;flex:1}
+.speak{flex:0 0 auto;border:0;background:var(--mist);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;color:var(--teal-deep);display:inline-flex;gap:4px;align-items:center}
+.speak svg{width:16px;height:16px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:13px 14px;font-size:15.5px;font-weight:500;min-height:52px}
+.opt:hover{border-color:var(--teal)}
+.opt.right{background:#E3F5EA;border-color:var(--good)}
+.opt.wrong{border-color:var(--warn)}
+.feedback{border-radius:14px;padding:12px 14px;font-size:14.5px}
+.feedback.ok{background:#E3F5EA}
+.feedback.no{background:#FDECE8}
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:44px}
+.card{border:2px solid var(--line);background:var(--paper);border-radius:12px;padding:8px 12px;font-size:14.5px;font-weight:500}
+.card[aria-pressed="true"]{border-color:var(--coral);background:#FFF1EE;box-shadow:0 0 0 3px rgba(238,111,87,.2)}
+.card.placed{border-style:solid;border-color:transparent;background:rgba(255,255,255,.75);cursor:default;font-size:13.5px;padding:5px 9px}
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.bucket{border:2px dashed var(--teal);background:var(--mist);border-radius:14px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:84px}
+.bucket > b{font-family:var(--display);color:var(--teal-deep)}
+.bucket .in{display:flex;flex-wrap:wrap;gap:4px}
+.order-line{display:flex;flex-direction:column;gap:6px}
+.order-line .slot{border-radius:12px;padding:9px 12px;background:#E3F5EA;font-weight:700}
+.order-line .slot.empty{background:var(--mist);color:var(--ink-soft);font-weight:500;border:2px dashed var(--line)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.done-card{text-align:center;padding:16px 8px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.medal{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE39A,var(--sun) 60%,#D99A1E);display:grid;place-items:center;font:900 40px var(--display);color:var(--ink);box-shadow:0 6px 0 #B97F12}
+
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(24,50,58,.55);display:grid;place-items:center;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.dialog{background:var(--paper);border-radius:24px;box-shadow:var(--shadow);width:min(440px,100%);padding:24px;display:flex;flex-direction:column;gap:14px}
+.dialog h2{font-family:var(--display);font-weight:900;font-size:26px;margin:0;line-height:1.2}
+.dialog p{margin:0;color:var(--ink-soft)}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px}
+.field input,.field textarea,.field select{font:inherit;font-weight:500;font-size:16px;border:2px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper);color:var(--ink)}
+.small{font-size:12.5px;color:var(--ink-soft)}
+.chars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.char{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:8px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12.5px;font-weight:700}
+.char[aria-checked="true"]{border-color:var(--coral);background:#FFF1EE;box-shadow:0 0 0 3px rgba(238,111,87,.2)}
+.av{width:54px;height:54px;display:block}
+.av img,.av svg{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.av.sm{width:26px;height:26px}
+.av.md{width:34px;height:34px}
+.code{font:900 26px var(--display);letter-spacing:.2em;background:var(--mist);border-radius:12px;padding:6px 14px;text-align:center;user-select:all}
+details.resume summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--teal-deep)}
+details.resume .row{margin-top:8px}
+details.resume input{width:7em;text-transform:uppercase;letter-spacing:.15em}
+.draw-box{text-align:center;align-items:center}
+.reel{font-family:var(--display);font-weight:900;font-size:clamp(34px,9vw,56px);line-height:1.2;min-height:1.3em;color:var(--ink);word-break:break-all}
+.reel.final{color:var(--coral);animation:pop .5s}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+.me-flag{background:var(--sun);border-radius:999px;padding:6px 16px;font-weight:900;font-family:var(--display)}
+
+/* host panel */
+.host{position:fixed;z-index:30;top:calc(env(safe-area-inset-top,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));width:min(420px,calc(100% - 24px));background:var(--paper);border-radius:22px;box-shadow:0 20px 60px rgba(24,50,58,.35);display:flex;flex-direction:column;overflow:hidden}
+.host .sheet-head{background:var(--ink);color:var(--paper);border:0}
+.host .sheet-head .eyebrow{color:var(--sun)}
+.host section{display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.host section:last-child{border:0}
+.open-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.open-grid button{border:2px solid var(--line);background:var(--paper);border-radius:10px;padding:7px 0;font-weight:700}
+.open-grid button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--ink-soft);font-weight:700}
+td.num{font-variant-numeric:tabular-nums;text-align:center}
+.roster-wrap{max-height:220px;overflow:auto}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:10px;padding:6px 10px;font-size:14px;font-weight:500;cursor:pointer}
+.seg input{accent-color:var(--teal)}
+.hist{display:flex;flex-wrap:wrap;gap:6px}
+.hist span{background:var(--mist);border-radius:999px;padding:3px 10px;font-size:13px}
+.banner{position:fixed;z-index:6;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 120px);background:var(--ink);color:var(--paper);border-radius:999px;padding:10px 20px;font:700 16px var(--display);box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;pointer-events:none}
+.banner.wait{background:var(--paper);color:var(--ink)}
+.attn{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(24,50,58,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));text-align:center;color:#fff}
+.attn .big{font:900 clamp(40px,11vw,88px)/1.15 var(--display);letter-spacing:.06em}
+.attn p{margin:8px 0 0;font-size:18px;opacity:.9}
+.attn svg{width:84px;height:84px;margin-bottom:10px;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.class-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.class-grid .rest{background:#2B3A67}
+.class-grid .rest.on{background:#5B6FB5}
+.rest-box{position:fixed;z-index:7;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 110px);background:rgba(16,24,52,.82);color:#F3F0E0;border:1px solid rgba(255,230,160,.35);border-radius:22px;padding:12px 28px 14px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);pointer-events:none;max-width:calc(100% - 32px)}
+.rest-box small{display:block;font-weight:700;letter-spacing:.12em;color:#FFE39A;font-size:13px}
+.rest-box .clock{font:900 clamp(44px,12vw,72px)/1.05 var(--display);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.rest-box p{margin:2px 0 0;font-size:13.5px;opacity:.85}
+.rest-box.over .clock{color:#FFE39A}
+.class-grid button{border:0;border-radius:12px;padding:12px 6px;font-weight:700;color:#fff;font-size:15px}
+.class-grid .start{background:var(--teal)}
+.class-grid .pause{background:var(--sun);color:var(--ink)}
+.class-grid .pause.on{background:var(--warn);color:#fff}
+.class-grid .end{background:var(--ink-soft)}
+.class-grid button.cur{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--teal)}
+.toast{position:fixed;z-index:50;left:50%;top:calc(env(safe-area-inset-top,0px) + 90px);transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:700;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.confetti{position:fixed;z-index:45;top:-10px;width:10px;height:14px;border-radius:2px;pointer-events:none;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg)}}
+/* gems, map fragments, timer, mining, QR, AI avatar */
+.badge.gem{border-radius:8px;border:2px dashed var(--line);background:var(--mist);width:28px;height:28px}
+.badge.gem svg{width:20px;height:20px;opacity:.25;filter:grayscale(1)}
+.badge.gem.on{border:2px solid #D99A1E;background:#FFF6DA}
+.badge.gem.on svg{opacity:1;filter:none}
+.frag{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--ink-soft);background:var(--mist);border-radius:999px;padding:2px 10px;margin-left:4px}
+.frag.full{background:#FFF0C2;color:#7A5300}
+.timer-box{position:fixed;z-index:8;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 66px);background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:6px 20px 8px;text-align:center;pointer-events:none;border:3px solid var(--teal)}
+.timer-box small{display:block;font-size:12px;font-weight:700;color:var(--teal-deep);letter-spacing:.06em}
+.timer-box b{font:900 34px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.timer-box.over{border-color:var(--warn)}
+.timer-box.over b{color:var(--warn)}
+.mine{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:8px 0}
+.rock{position:relative;width:180px;height:150px;border:0;background:none;padding:0}
+.rock svg{width:100%;height:100%}
+.rock.hit{animation:shake .35s}
+.rock .crack{opacity:0;transition:opacity .2s}
+.rock[data-hits="1"] .c1,.rock[data-hits="2"] .c1,.rock[data-hits="2"] .c2{opacity:1}
+.pick{font-size:15px}
+.gem-big{width:110px;height:110px;animation:pop .6s}
+.boardBtn{background:var(--sun)!important;color:var(--ink)!important;box-shadow:0 4px 0 #B97F12!important}
+.qr-box{width:min(560px,100%);align-items:center;text-align:center}
+.qr-box #qrBig{background:#fff;padding:14px;border-radius:16px;line-height:0}
+.qr-box #qrBig img,.qr-box #qrBig canvas{width:min(360px,70vw)!important;height:auto!important}
+.qr-url{font-size:13px;word-break:break-all;color:var(--ink-soft)}
+.ai-box{border:2px dashed var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ai-box summary{cursor:pointer;font-weight:700;color:var(--teal-deep);font-size:14px}
+.ai-box textarea{font:inherit;font-size:15px;border:2px solid var(--line);border-radius:12px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical}
+.dialog{max-height:calc(100dvh - 32px);overflow-y:auto}
+.draw-q{background:var(--mist);border-radius:14px;padding:12px 14px;font-weight:700;font-size:17px;color:var(--ink);text-align:left;width:100%;box-sizing:border-box}
+.land-title{position:fixed;z-index:9;inset:0;display:grid;place-items:center;pointer-events:none}
+.land-title div{font:900 clamp(40px,10vw,90px)/1.1 var(--display);color:#fff;text-shadow:0 6px 24px rgba(24,50,58,.55);letter-spacing:.08em;animation:landIn 3.2s ease forwards}
+@keyframes landIn{0%{opacity:0;transform:scale(.7)}15%{opacity:1;transform:scale(1.05)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.class-grid .sail{background:#8A5A3B}
+.class-grid .sail.cur{box-shadow:0 0 0 3px var(--paper),0 0 0 6px #8A5A3B}
+.chat{position:fixed;z-index:25;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);width:min(560px,calc(100% - 32px));background:var(--paper);border-radius:22px;box-shadow:0 20px 60px rgba(24,50,58,.35);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.chat-head{display:flex;gap:10px;align-items:center}
+.chat-head .ava{width:46px;height:46px;border-radius:50%;flex:0 0 auto}
+.chat-head b{font:900 19px var(--display)}
+.chat-text{font-size:16.5px;line-height:1.7;min-height:3.4em}
+.kcard{background:#FFF8E6;border:2px solid #E2B54A;border-radius:14px;padding:10px 12px}
+.kcard small{display:block;font-size:12px;font-weight:700;color:#9A6B00;letter-spacing:.06em}
+.kcard b{display:block;font-family:var(--display);font-size:17px;margin:2px 0}
+.know-ed{display:flex;flex-direction:column;gap:6px}
+.know-ed textarea{font:inherit;font-size:14px;border:2px solid var(--line);border-radius:10px;padding:8px}
+@media (max-width:640px){
+  .timer-box{top:calc(env(safe-area-inset-top,0px) + 132px);padding:4px 14px 6px}
+  .timer-box b{font-size:26px}
+  .sheet{top:auto;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));width:auto;height:min(78%,640px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+  .sheet[hidden]{transform:translateY(calc(100% + 40px))}
+  .brand{padding:8px 12px 10px}
+  .badge{width:22px;height:22px;font-size:11px}
+  .hint{display:none}
+}
+</style>
+
+<canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
+
+<div class="hud top">
+  <div class="brand">
+    <small>台東大學 特教師培生研習・傅碧柔（瑪莉）老師</small>
+    <h1>特教研習島嶼</h1>
+    <div class="badges" id="badges" aria-label="已獲得的徽章"></div>
+  </div>
+  <div class="side">
+    <span class="chip" id="liveChip" hidden><span class="dot" id="liveDot"></span><span id="liveText">連線中</span></span>
+    <button class="chip" id="meChip" type="button" title="角色、暱稱與接續碼" style="padding:5px 14px 5px 5px"><span class="av md" id="meAv"></span><span id="meName">—</span></button>
+    <button class="chip" id="viewBtn" type="button" hidden>鳥瞰全島</button>
+    <button class="chip chip-ink" id="hostBtn" type="button" hidden>講師主控台</button>
+  </div>
+</div>
+
+<div class="hud dock">
+  <button class="primary" id="nearBtn" type="button" hidden></button>
+  <button class="primary boardBtn" id="boardBtn" type="button" hidden>登船離島</button>
+  <div class="hint" id="hint">點地面或地標就會走過去・方向鍵／WASD 移動・拖曳旋轉視角・闖關挖礦石、找藏寶圖碎片</div>
+  <nav class="stations" id="stations" aria-label="關卡列表"></nav>
+</div>
+
+<aside class="sheet" id="sheet" hidden aria-live="polite">
+  <div class="sheet-head">
+    <div class="n" id="sheetNum">1</div>
+    <div style="min-width:0">
+      <div class="eyebrow" id="sheetEyebrow"></div>
+      <h2 id="sheetTitle"></h2>
+    </div>
+    <button class="close" id="sheetClose" type="button" aria-label="關閉">×</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</aside>
+
+<aside class="host" id="host" hidden>
+  <div class="sheet-head">
+    <div style="min-width:0">
+      <div class="eyebrow">講師主控台</div>
+      <h2 style="font-size:22px">帶領控制台</h2>
+    </div>
+    <button class="close" id="hostClose" type="button" aria-label="關閉">×</button>
+  </div>
+  <div class="sheet-body">
+    <section>
+      <h3>課堂控制</h3>
+      <div class="class-grid">
+        <button type="button" class="start" id="cStart">登島<br><span class="small" style="color:inherit">渡輪開進島</span></button>
+        <button type="button" class="pause" id="cAttn">注意！<br><span class="small" style="color:inherit" id="cAttnSub">暫停全班畫面</span></button>
+        <button type="button" class="rest" id="cRest">休息<br><span class="small" style="color:inherit" id="cRestSub">島上入夜，角色睡覺</span></button>
+        <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，集滿寶藏可登船</span></button>
+        <button type="button" class="sail" id="cSail" style="grid-column:1 / -1">全員開船<br><span class="small" style="color:inherit">所有人上船，船開走</span></button>
+        <button type="button" class="end" id="cReset" style="grid-column:1 / -1;background:#9AA9AA">重設島嶼<br><span class="small" style="color:inherit">回到登島前，清除計時與抽籤紀錄</span></button>
+      </div>
+      <label class="row small">休息時間
+        <select id="restMin" aria-label="休息分鐘數"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select> 分鐘
+      </label>
+      <p class="small" id="classHint">按「注意！」時，學員畫面會暫停並提醒看講師；再按一次解除。休息時島上入夜，學員角色會走到營火旁睡覺。</p>
+    </section>
+    <section>
+      <h3>活動計時器</h3>
+      <div class="row">
+        <label class="field" style="flex:1 1 140px">名稱<input id="tLabel" maxlength="20" value="實作時間"></label>
+        <label class="field" style="width:90px">分鐘<input id="tMin" type="number" min="1" max="120" value="5"></label>
+      </div>
+      <div class="row"><button class="primary" id="tStart" type="button">開始計時</button><button class="ghost" id="tStop" type="button">停止</button></div>
+      <p class="small">倒數會同步顯示在每位學員畫面下方。</p>
+    </section>
+    <section>
+      <h3>學員登入 QR Code</h3>
+      <label class="field">學員掃描的網址<input id="qrUrl" autocomplete="off"></label>
+      <button class="primary" id="qrShow" type="button">投影 QR Code</button>
+      <p class="small">學員不用帳號，掃描後選角色、輸入暱稱就會出現在島上，並自動加入抽籤名單。</p>
+    </section>
+    <section>
+      <h3>動物新知</h3>
+      <p class="small">學員和動物聊天時，會收到這裡的知識卡。改完按「更新」，學員畫面立即同步。</p>
+      <div class="know-ed">
+        <select id="kSel" class="ghost"></select>
+        <input id="kTitle" class="ghost" maxlength="40" placeholder="知識卡標題">
+        <textarea id="kBody" rows="4" maxlength="400" placeholder="知識卡內容"></textarea>
+        <button class="primary" id="kSave" type="button">更新這張知識卡</button>
+      </div>
+    </section>
+    <section>
+      <h3>關卡開放進度</h3>
+      <p class="small" id="openHint">跟著講到哪一段，就開放到哪一站。學員畫面會同步上鎖或解鎖。</p>
+      <div class="open-grid" id="openGrid"></div>
+    </section>
+    <section>
+      <h3>隨機抽籤</h3>
+      <div class="seg" id="poolSeg">
+        <label><input type="radio" name="pool" value="all" checked> 所有加入的學員</label>
+        <label><input type="radio" name="pool" value="online"> 目前在線</label>
+        <label><input type="radio" name="pool" value="done"> 已完成 ≥ <select id="minDone" aria-label="至少完成站數"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select> 站</label>
+        <label><input type="radio" name="pool" value="manual"> 手動名單</label>
+      </div>
+      <label class="field">手動名單（一行一位，可貼座號或姓名）
+        <textarea id="manual" rows="4" placeholder="1號 王小明&#10;2號 陳小華&#10;3號 林小美"></textarea>
+      </label>
+      <label class="field">抽到後要回答的問題
+        <select id="qSel"></select>
+      </label>
+      <label class="field" id="qCustomWrap" hidden>自訂問題<input id="qCustom" maxlength="80" placeholder="輸入要請學員回答的問題"></label>
+      <label class="row small"><input type="checkbox" id="noRepeat" checked> 不重複抽到已抽過的人</label>
+      <button class="primary" id="drawBtn" type="button">抽一位！</button>
+      <p class="small" id="drawMsg"></p>
+      <div class="hist" id="hist"></div>
+    </section>
+    <section>
+      <h3>學員進度 <span class="small" id="rosterCount"></span></h3>
+      <div class="roster-wrap">
+        <table><thead><tr><th>暱稱</th><th>礦石</th><th>正在</th></tr></thead><tbody id="roster"></tbody></table>
+      </div>
+      <p class="small" id="rosterHint">學員掃描加入後會自動出現在這裡；離線的學員以淺色顯示，仍保留在抽籤名單中。<button class="ghost" id="rosterClear" type="button" style="padding:2px 10px;font-size:13px;margin-left:4px">清空名單</button></p>
+    </section>
+  </div>
+</aside>
+
+<div class="overlay" id="join" hidden style="z-index:42">
+  <form class="dialog" id="joinForm">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">歡迎登島</small>
+    <h2>特教研習島嶼</h2>
+    <p>跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開資源寶箱拿到黃金船票，才能登船離島。講師也會隨機抽人回答問題喔！</p>
+    <div class="field">1．選擇你的島民角色
+      <div class="chars" id="chars" role="radiogroup" aria-label="選擇角色"></div>
+    </div>
+    <details class="ai-box" id="aiBox">
+      <summary>或：做一個自己的專屬角色</summary>
+      <label class="field" style="font-weight:500">描述你想要的角色（外型、顏色、配件）
+        <textarea id="aiDesc" rows="2" maxlength="120" placeholder="例如：戴紫色巫師帽、綠色衣服、短捲髮的魔法老師（給 ChatGPT 生圖用）"></textarea></label>
+      <div class="row"><button class="ghost" id="aiGen" type="button">隨機生成角色</button><span class="small" id="aiMsg"></span></div>
+      <div class="small" style="font-weight:700;color:var(--ink)">用 ChatGPT 生圖當頭像</div>
+      <div class="row"><button class="ghost" id="gptCopy" type="button">複製 ChatGPT 生圖提示詞</button>
+        <label class="ghost" style="cursor:pointer">上傳圖片<input id="imgUp" type="file" accept="image/*" hidden></label></div>
+      <span class="small">在 ChatGPT 生成圖片後存到手機，再按「上傳圖片」，就會變成你在島上的頭像。</span>
+    </details>
+    <label class="field">2．輸入暱稱或座號
+      <input id="nickInput" maxlength="16" autocomplete="off" placeholder="例如：12號 小芸" required>
+    </label>
+    <details class="resume" id="resumeBox">
+      <summary>在別台裝置玩過？輸入接續碼</summary>
+      <div class="row"><label class="field" style="flex-direction:row;align-items:center">接續碼 <input id="codeInput" maxlength="4" autocomplete="off" placeholder="ABCD"></label>
+      <span class="small" id="codeMsg">輸入後會帶回角色、礦石與碎片</span></div>
+    </details>
+    <div id="myCodeBox" hidden class="field">我的接續碼（換裝置時輸入）<div class="code" id="myCode"></div></div>
+    <button class="primary" type="submit">完成，準備登島</button>
+    <button class="ghost" id="hostSkip" type="button" style="font-size:13px;align-self:center;border:0;color:var(--ink-soft)">講師登入</button>
+  </form>
+</div>
+
+<div class="overlay" id="drawOv" hidden>
+  <div class="dialog draw-box">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">隨機抽籤</small>
+    <div class="reel" id="reel">…</div>
+    <div class="me-flag" id="meFlag" hidden>就是你！</div>
+    <p id="drawSub"></p>
+    <div class="draw-q" id="drawQ" hidden></div>
+    <button class="ghost" id="drawClose" type="button" hidden>關閉</button>
+  </div>
+</div>
+
+<div class="banner" id="banner" hidden></div>
+
+<div class="rest-box" id="restBox" hidden aria-live="polite">
+  <small id="restLabel">休息時間</small>
+  <div class="clock" id="restClock">10:00</div>
+  <p id="restNote">島上入夜了，起來走走、喝口水吧</p>
+</div>
+
+<div class="attn" id="attn" hidden role="alertdialog" aria-label="請看講師">
+  <div>
+    <svg viewBox="0 0 64 64" fill="none" stroke="#F4B740" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 32s10-18 28-18 28 18 28 18-10 18-28 18S4 32 4 32z"/><circle cx="32" cy="32" r="8" fill="#F4B740"/></svg>
+    <div class="big">請看講師</div>
+    <p>畫面暫停中，先停下手邊操作，專心聽講。</p>
+  </div>
+</div>
+
+<div class="overlay" id="endOv" hidden>
+  <div class="dialog draw-box">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em" id="endEyebrow">離島囉</small>
+    <h2 id="endTitle">船要開走了，謝謝參與！</h2>
+    <p id="endSum"></p>
+    <div class="field" style="align-items:center">我的接續碼<div class="code" id="endCode"></div></div>
+    <button class="ghost" id="endClose" type="button">留在島上繼續逛</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<div class="chat" id="chat" hidden role="dialog" aria-label="和動物聊天">
+  <div class="chat-head"><svg class="ava" id="chatAva" viewBox="0 0 46 46"></svg><b id="chatName"></b>
+    <button class="close" id="chatClose" type="button" aria-label="關閉">×</button></div>
+  <div class="chat-text" id="chatText"></div>
+  <div id="chatCard"></div>
+  <div class="row"><button class="primary" id="chatNext" type="button">下一句</button>
+    <button class="speak" id="chatSay" type="button">朗讀</button></div>
+</div>
+
+<div class="timer-box" id="timerBox" hidden aria-live="polite"><small id="timerLabel">計時</small><b id="timerClock">00:00</b></div>
+<div class="land-title" id="landTitle" hidden><div id="landText">登島！</div></div>
+
+<div class="overlay" id="qrOv" hidden>
+  <div class="dialog qr-box">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">掃描登島</small>
+    <h2>用手機相機掃描</h2>
+    <div id="qrBig"></div>
+    <p>登入 claude.ai → 選擇角色 → 等講師按「登島」</p>
+    <div class="qr-url" id="qrText"></div>
+    <button class="ghost" id="qrClose" type="button">關閉</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const reduced = false; // the ships, night and landing are the content, so always animate
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('island.'+k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('island.'+k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------------- content (from the workshop slides) ---------------- */
+const STATIONS = [
+{ id:1, name:'需求燈塔', area:'個案學習需求分析', color:'#EE6F57', pos:[-8.2,4.2],
+  intro:`<div class="note">先看見孩子的需求，再選工具。特教課程調整有<b>四大向度</b>：</div>
+  <ul><li><b>內容</b>：調整「教什麼」— 簡化、減量、分解、替代、重整或加深加廣</li>
+  <li><b>歷程</b>：調整「怎麼教」與「學生怎麼學」— 多感官、工作分析、思考架構</li>
+  <li><b>環境</b>：調整「在哪裡學」— 座位、角落、常規與氛圍</li>
+  <li><b>評量</b>：調整「怎麼評量成果」— 報讀、延長時間、口試或電腦作答</li></ul>
+  <p class="quote">調整不是降低標準，而是打開學習的可能。</p>`,
+  steps:[
+    {type:'sort', q:'把每一個調整做法，放進正確的向度。', buckets:['內容','歷程','環境','評量'], items:[
+      ['生字量由 10 個減為 5 個',0],['長篇課文改為圖文摘錄',0],['工作分析法：拆成小步驟',1],['提供思考架構圖',1],
+      ['座位安排靠前、遠離門窗',2],['建立明確的班級常規',2],['報讀服務',3],['口試或電腦作答替代手寫',3]]},
+    {type:'mc', q:'「調整不是降低標準，而是＿＿＿＿。」', opts:['讓作業變少','打開學習的可能','統一全班進度','減少教學時間'], a:1,
+      why:'調整的目的，是讓每個孩子都找到適合自己的學習方式。'}
+  ]},
+{ id:2, name:'國語森林', area:'國語領域・閱讀理解', color:'#5FA651', pos:[-6,-5.6],
+  intro:`<div class="note">國語文學習表現：<b>聆聽、口語表達、標音符號與運用、識字與寫字、閱讀、寫作</b>。</div>
+  <ul><li><b>文本簡化與注音標註</b>：在 Gemini 點「試用 Canvas」，和 AI 協作建立自己的教材格式</li>
+  <li><b>課文朗讀檢核系統</b>：注音認讀、拼讀皆可，訓練閱讀流暢性</li>
+  <li><b>課文漫畫</b>：用 Gemini／NotebookLM 把每一句課文畫成 Q 版漫畫格</li>
+  <li><b>課文動畫</b>：搭配 PointerFocus 聚焦重點</li></ul>
+  <div class="prompt"><span class="tag">提示詞重點（課文漫畫）</span>每個 slide 三格、格子加流水號、不能漏掉任何句子；語詞用便利貼呈現「簡化後」的解釋，重複的語詞只解釋第一次；原句中的語詞用紅色標示。</div>`,
+  steps:[
+    {type:'sort', q:'這些工具主要支持哪一項學習表現？', buckets:['閱讀','識字與寫字','寫作'], items:[
+      ['課文朗讀檢核系統',0],['課文漫畫',0],['部件拆解與形近字學習單',1],['生字讀寫及手寫辨識系統',1],['語音寫作小幫手',2],['照樣造句與短語練習',2]]},
+    {type:'mc', q:'課文漫畫的提示詞要求「語詞用便利貼呈現簡化解釋」，主要是為了什麼？', opts:['讓畫面更熱鬧','幫助程度較弱的學生理解句子內容','減少 AI 輸出的字數','方便老師批改'], a:1,
+      why:'不直接用原始解釋，而是簡化後再呈現，降低理解門檻。'},
+    {type:'mc', q:'閱讀流暢度的「課文朗讀檢核系統」可以怎麼用？', opts:['只能用在國字','注音認讀、拼讀都可以，用來訓練閱讀流暢性','只能用來打分數','只適合高年級'], a:1,
+      why:'注音與國字都能用，重點是反覆朗讀、提升流暢度。'}
+  ]},
+{ id:3, name:'報讀小屋', area:'報讀工具・數位考卷', color:'#2A8C8C', pos:[4.8,-6.2],
+  intro:`<div class="note">試試看！點任一句，系統會<b>朗讀並以黃色標示</b>；朗讀中點別句，會<b>立刻改唸新的一句</b>。</div>
+  <p class="readable">一、選詞填寫：小明每天早上（　　）去學校。</p>
+  <p class="readable">選項一：走路。選項二：游泳。選項三：飛行。</p>
+  <div class="prompt"><span class="tag">提示詞重點（考卷報讀點讀工具）</span>單一 HTML 檔（Tailwind + JavaScript），可放在 Google 協作平台。
+  ・Web Speech API：點題目、選項或詞語就朗讀
+  ・朗讀中的區塊黃底加框，讀完自動恢復；點別句會打斷前一句
+  ・純報讀模式：不判斷對錯、不計分、不顯示答案
+  ・頂部控制面板：語音選擇、語速 0.5x–2.0x、字體大小
+  ・RWD，選項間留足點擊空間，避免誤觸</div>
+  <p class="small">設計原則：提供報讀與語音輔助、試卷格式與題量精簡。</p>`,
+  steps:[
+    {type:'mc', q:'「考卷報讀點讀工具」絕對不能加入哪一項功能？', opts:['語速調整','字體大小調整','計分與顯示正確答案','語音選擇'], a:2,
+      why:'它是純報讀的輔助閱讀工具，評量的公平性要保留給測驗本身。'},
+    {type:'mc', q:'學生正在聽第一題，突然點了第三題，系統應該怎麼做？', opts:['等第一題唸完再唸第三題','打斷前一句，立刻改唸第三題並標示','兩句同時唸','跳出錯誤訊息'], a:1,
+      why:'即時回應學生的點選，視覺標示也要跟著移動。'},
+    {type:'mc', q:'為什麼選項之間要留足夠的點擊空間？', opts:['比較好看','避免學生在手機、平板上誤觸','讓頁面變長','節省流量'], a:1,
+      why:'精細動作較弱的學生特別需要大一點的點擊目標。'}
+  ]},
+{ id:4, name:'識字花園', area:'識字與寫字', color:'#D46FA0', pos:[8,1.2],
+  intro:`<ul><li><b>圖詞識字</b>：語詞配圖片，把詞彙圖像化，建立心理詞彙</li>
+  <li><b>圖詞析字卡・分析字頻</b>：請 AI 依教育部字庫 5021 字，分析每課生字字頻，由小到大排列</li>
+  <li><b>圖像提示策略、圖解識字</b>：部件拆解與形近字教材、字族文學習單</li>
+  <li><b>強制回憶寫字教學法</b>、生字讀寫及手寫辨識系統</li>
+  <li><b>照樣造句、語詞造句及句型練習板</b>：小步驟教學、融入個人興趣</li></ul>
+  <div class="prompt"><span class="tag">提示詞（Gemini／NotebookLM）</span>請根據教育部字庫 5021 字，分析國語 3 上生字表每一課生字的字頻，每一課都依序從小到大排列。</div>`,
+  steps:[
+    {type:'mc', q:'分析生字字頻時，講者請 AI 依據哪一份資料？', opts:['網路熱門詞','教育部字庫 5021 字','課本目錄','學生作文'], a:1,
+      why:'有了字頻，就能先教常用字，安排教學順序。'},
+    {type:'mc', q:'把「語詞」配上「圖片」來教，是在幫學生建立什麼？', opts:['心理詞彙（詞彙圖像化）','寫字速度','標點符號','背誦能力'], a:0,
+      why:'圖像讓詞義有具體的連結，也有助斷詞與閱讀。'},
+    {type:'mc', q:'「形近字」教材最常搭配哪一種策略？', opts:['抄寫十遍','部件拆解','只看注音','跳過不教'], a:1,
+      why:'把字拆成部件比較異同，學生較容易分辨形近字。'}
+  ]},
+{ id:5, name:'CPA 數學山', area:'數學領域・概念理解', color:'#7A63C9', pos:[-0.6,-1.4],
+  intro:`<div class="note">數學學習表現：<b>n 數與量、s 空間與形狀、r 關係、d 資料與不確定性</b>。</div>
+  <ul><li><b>C 具體操作</b>：動手做，用真實物品</li>
+  <li><b>P 圖像理解</b>：看圖像，用圖片、圖表、模型</li>
+  <li><b>A 抽象符號</b>：用符號，3 + 2 = 5</li></ul>
+  <p>皮亞傑認知發展：感覺動作期（0–2 歲）、前運思期（2–7 歲）、具體運思期（7–11 歲）、形式運思期（約 11 歲以上）。</p>
+  <p class="small">工具舉例：10 以內加減法、十十乘法、立體魔法空間（柱體挑戰）、速度合成演示 — 小步驟教學，減輕工作記憶負荷。</p>`,
+  steps:[
+    {type:'order', q:'依 CPA 教學法的順序點選：', items:['C 具體操作：拿出 3 顆蘋果和 2 顆蘋果','P 圖像理解：畫出蘋果圖','A 抽象符號：3 + 2 = 5']},
+    {type:'order', q:'依年齡由小到大，點出皮亞傑的四個認知發展期：', items:['感覺動作期','前運思期','具體運思期','形式運思期']},
+    {type:'mc', q:'國小學生大多處於哪一期？教學上要注意什麼？', opts:['形式運思期，可以直接用公式','具體運思期，需要具體事物支持','感覺動作期，只能用感官','前運思期，不能學數學'], a:1,
+      why:'7–11 歲能邏輯思考，但需要具體事物支持，所以 CPA 從操作開始。'},
+    {type:'mc', q:'數學學習表現代碼「r」代表哪一個主題？', opts:['數與量','空間與形狀','關係','資料與不確定性'], a:2}
+  ]},
+{ id:6, name:'應用題港口', area:'數學應用題・文本簡化', color:'#3B7FC4', pos:[3.6,9.2],
+  intro:`<ul><li><b>題目簡化</b>：在 NotebookLM 請 AI 將題目簡化成適合國小三年級學障生，情境要生活化</li>
+  <li><b>數學情境圖</b>：讓 AI 畫出已知條件、變化過程與未知量</li>
+  <li><b>情境包裝</b>：融入孩子的個人興趣主題</li></ul>
+  <div class="prompt"><span class="tag">提示詞重點（數學情境示意圖）</span>1 張獨立圖片；不要把題目完整呈現在圖上；清楚呈現「已知條件、變化過程、未知量」；不要過多裝飾；版面簡潔、低認知負荷；教材圖卡風格；未知量用「？」不寫答案；透明背景 PNG；繁體中文。</div>`,
+  steps:[
+    {type:'mc', q:'情境圖中的「未知量」要怎麼呈現？', opts:['直接寫出答案','用「？」表示','留白不畫','用英文字母'], a:1,
+      why:'圖是幫助理解題意，不是給答案。'},
+    {type:'sort', q:'這些做法，情境圖提示詞「要」還是「不要」？', buckets:['要','不要'], items:[
+      ['呈現已知條件與變化過程',0],['版面簡潔、低認知負荷',0],['透明背景 PNG、繁體中文',0],
+      ['把題目完整印在圖上',1],['加上很多裝飾插圖',1],['在圖上寫出答案',1]]},
+    {type:'mc', q:'孩子很喜歡恐龍，應用題可以怎麼調整？', opts:['換成更難的數字','情境包裝：把題目情境換成恐龍主題','取消應用題','只做計算題'], a:1,
+      why:'融入個人興趣，提高動機，數學概念不變。'}
+  ]},
+{ id:7, name:'資源寶箱', area:'資源分享・結語', color:'#C9902A', pos:[-3.2,7.2],
+  intro:`<div class="res">
+  <div><b>特工 365｜教學資源平台</b><span>特工365 社群平台、特工聲活 Podcast</span></div>
+  <div><b>米克師・Special Education 教師備課幫手</b><span>AI 備課工具</span></div>
+  <div><b>特教老師的融合練習簿</b><span>Facebook 粉絲專頁</span></div>
+  <div><b>特殊教育多媒體教材交流社團</b><span>Facebook 社團</span></div></div>
+  <p class="quote">科技本身沒有溫度，但當它被交到特教老師手中，就能成為點亮特殊需求孩子學習之路的溫暖微光。</p>`,
+  steps:[
+    {type:'mc', q:'「數位工具是橋，而＿＿＿＿才是真正引導孩子勇敢過橋的力量。」', opts:['更多的 App','我們的陪伴與專業','更快的網路','更多的考試'], a:1,
+      why:'謝謝參與今天的研習！'}
+  ]}
+];
+
+/* bigger island: every map position is scaled by S */
+const S = 1.8;
+STATIONS.forEach(s => s.pos = [s.pos[0]*S, s.pos[1]*S]);
+
+/* ---------------- rewards: one ore per station, hidden map fragments, draw questions ---------------- */
+const GEMS = [
+  {name:'紅寶石', color:'#E0435A'}, {name:'翡翠', color:'#3FAE6A'}, {name:'藍寶石', color:'#2F6FD6'},
+  {name:'粉晶', color:'#F08DB8'}, {name:'紫水晶', color:'#8E5BD6'}, {name:'海藍寶', color:'#3FC1D0'},
+  {name:'黃金船票', color:'#F4B740'}
+];
+function gemSVG(i, cls){
+  const c = GEMS[i - 1].color;
+  return `<svg class="${cls || ''}" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 14 14 6h12l6 8-12 20z" fill="${c}"/><path d="M8 14h24L20 34z" fill="#000" opacity=".14"/><path d="M14 6l-2 8 8 20M26 6l2 8-8 20M12 14l8-8 8 8" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.2"/><path d="M15 9l-2 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`;
+}
+const FRAGS = [
+  {pos:[-2.5,-7.8], tip:'調整不是降低標準，而是打開學習的可能。'},
+  {pos:[7.2,-2.6],  tip:'善用 AI，建立屬於自己的教材格式生成系統。'},
+  {pos:[-7.6,-.4],  tip:'圖像提示策略：部件拆解，幫助孩子分辨形近字。'},
+  {pos:[4.6,4.2],   tip:'融入個人興趣主題，用情境包裝提高學習動機。'}
+];
+FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
+
+/* ---------------- island animals: chat with them to collect knowledge cards ----------------
+   The host can rewrite each card live from the control panel. */
+const ANIMALS = [
+  {name:'貓頭鷹博士', kind:'owl',    color:'#8A6142', home:[2,-12.5],
+    card:{t:'今年學障鑑定基準修訂', b:'（請講師在主控台「動物新知」填入今年學習障礙鑑定基準修訂的重點。）'}},
+  {name:'小兔跳跳',   kind:'rabbit', color:'#F4F1EA', home:[-8,2],
+    card:{t:'閱讀流暢度', b:'課文朗讀檢核可用注音或國字，重點是反覆朗讀、提升流暢度。參考：胡永崇（2007）學習障礙學生閱讀流暢度的評量與教學。'}},
+  {name:'烏龜爺爺',   kind:'turtle', color:'#5FA651', home:[9,-4],
+    card:{t:'小步驟教學', b:'把學習任務拆成小步驟，一次只處理一個步驟，可以減輕工作記憶負荷，例如 10 以內加減法、十十乘法的分段練習。'}},
+  {name:'小狗旺旺',   kind:'dog',    color:'#D9A066', home:[-3,7],
+    card:{t:'報讀工具的設計原則', b:'點哪裡就唸哪裡、朗讀中的句子要高亮；純報讀，不判斷對錯也不顯示答案；選項之間留足點擊空間，避免誤觸。'}},
+  {name:'橘貓咪咪',   kind:'cat',    color:'#EE9A4D', home:[-15,-6],
+    card:{t:'心理詞彙與斷詞', b:'語詞配圖片能把詞彙圖像化，幫助建立心理詞彙，也有助斷詞與閱讀。參考：黃怡、廖晨惠（2010）斷詞能力在中文閱讀認知歷程之探究。'}}
+];
+const QUESTIONS = [
+  '分析個案需求時，你會先從哪一項學習表現著手？為什麼？',
+  '課文漫畫的提示詞裡，有哪些小細節是為學生設計的？',
+  '考卷報讀工具為什麼不能顯示答案或計分？',
+  '圖詞識字為什麼能幫助孩子斷詞與閱讀？',
+  '數學情境圖為什麼要用「？」表示未知量？',
+  '如果孩子喜歡恐龍，你會怎麼改寫一題應用題？',
+  '分享一個你想用 AI 製作的教材點子。',
+  '「數位工具是橋」，你心中的陪伴與專業是什麼？'
+];
+
+/* ---------------- characters ----------------
+   Presets below; a learner can also make one with AI (Claude designs the
+   colours and accessory) or upload a portrait made in ChatGPT. */
+const CHARS = [
+  {name:'燈塔守護者', bg:'#FFE1D9', skin:'#F6CDA8', hair:'#3B2A22', acc:'cap',     accC:'#EE6F57', img:''},
+  {name:'森林探險家', bg:'#DDF0D6', skin:'#E9B98E', hair:'#6B3E1F', acc:'leaf',    accC:'#5FA651', img:''},
+  {name:'小屋播報員', bg:'#D6EEEE', skin:'#F6CDA8', hair:'#1F1B1A', acc:'phones',  accC:'#2A8C8C', img:''},
+  {name:'花園園丁',   bg:'#F7DDEB', skin:'#F3C9A0', hair:'#B0582E', acc:'bow',     accC:'#D46FA0', img:''},
+  {name:'登山數學家', bg:'#E5DFF7', skin:'#E2AE82', hair:'#2C2C3A', acc:'glasses', accC:'#7A63C9', img:''},
+  {name:'港口船長',   bg:'#DCE8F7', skin:'#F6CDA8', hair:'#8A8A8A', acc:'captain', accC:'#3B7FC4', img:''}
+];
+const CUSTOM = 9;
+const ACCS = ['cap','leaf','phones','bow','glasses','captain','crown','wizard','flower','beanie'];
+const HEX = /^#[0-9A-Fa-f]{6}$/;
+let custom = store.get('custom', null);
+function specFor(ci){ return ci === CUSTOM && custom ? custom : (CHARS[ci] || CHARS[0]); }
+function packSpec(c){ return [c.skin, c.hair, c.body || c.accC, c.acc, c.accC, c.bg].join('|'); }
+function unpackSpec(str, img){
+  const a = String(str || '').split('|');
+  if (a.length !== 6 || ![0,1,2,4,5].every(k => HEX.test(a[k])) || !ACCS.includes(a[3])) return null;
+  return {name:'AI 角色', skin:a[0], hair:a[1], body:a[2], acc:a[3], accC:a[4], bg:a[5], img:img || ''};
+}
+function cleanSpec(o){
+  if (!o || typeof o !== 'object') return null;
+  const pick = (v, d) => HEX.test(String(v)) ? String(v) : d;
+  return {name:String(o.name || 'AI 角色').slice(0, 8), skin:pick(o.skin, '#F6CDA8'), hair:pick(o.hair, '#3B2A22'),
+    body:pick(o.body, '#2A8C8C'), acc:ACCS.includes(o.acc) ? o.acc : 'cap', accC:pick(o.accC, '#EE6F57'), bg:pick(o.bg, '#EAF5F4'), img:''};
+}
+function avatarHTML(i){
+  const c = typeof i === 'object' && i ? i : specFor(i);
+  if (c.img) return `<img src="${esc(c.img)}" alt="${esc(c.name)}">`;
+  const acc = {
+    cap:`<path d="M14 26c2-12 34-12 36 0z" fill="${c.accC}"/><rect x="30" y="22" width="26" height="5" rx="2.5" fill="${c.accC}"/>`,
+    leaf:`<path d="M44 12c8-2 12 4 10 10-6 1-11-3-10-10z" fill="${c.accC}"/>`,
+    phones:`<path d="M15 34a17 17 0 0 1 34 0" fill="none" stroke="${c.accC}" stroke-width="4"/><rect x="11" y="31" width="7" height="11" rx="3" fill="${c.accC}"/><rect x="46" y="31" width="7" height="11" rx="3" fill="${c.accC}"/>`,
+    bow:`<path d="M40 15l8-6v12zM40 15l-8-6v12z" fill="${c.accC}"/><circle cx="40" cy="15" r="3" fill="${c.accC}"/>`,
+    glasses:`<circle cx="25" cy="37" r="5.5" fill="none" stroke="${c.accC}" stroke-width="2.5"/><circle cx="39" cy="37" r="5.5" fill="none" stroke="${c.accC}" stroke-width="2.5"/><path d="M30.5 37h3" stroke="${c.accC}" stroke-width="2.5"/>`,
+    captain:`<path d="M13 25c3-11 35-11 38 0z" fill="#fff" stroke="${c.accC}" stroke-width="2"/><rect x="13" y="23" width="38" height="5" rx="2" fill="${c.accC}"/><circle cx="32" cy="18" r="2.5" fill="#F4B740"/>`,
+    crown:`<path d="M20 24l2-11 6 6 4-8 4 8 6-6 2 11z" fill="${c.accC}" stroke="#B97F12" stroke-width="1"/>`,
+    wizard:`<path d="M16 25 34 2l14 23z" fill="${c.accC}"/><circle cx="33" cy="14" r="2" fill="#FFE08A"/><rect x="13" y="22" width="38" height="5" rx="2.5" fill="${c.accC}"/>`,
+    flower:`<g fill="${c.accC}"><circle cx="44" cy="16" r="4"/><circle cx="50" cy="20" r="4"/><circle cx="44" cy="24" r="4"/><circle cx="38" cy="20" r="4"/></g><circle cx="44" cy="20" r="3" fill="#FFE08A"/>`,
+    beanie:`<path d="M16 28c0-14 32-14 32 0z" fill="${c.accC}"/><rect x="15" y="25" width="34" height="5" rx="2.5" fill="#fff" opacity=".7"/><circle cx="32" cy="12" r="4" fill="${c.accC}"/>`
+  }[c.acc] || '';
+  return `<svg viewBox="0 0 64 64" role="img" aria-label="${esc(c.name)}"><circle cx="32" cy="32" r="32" fill="${c.bg}"/>
+    <path d="M10 64c2-12 10-17 22-17s20 5 22 17z" fill="${c.body || c.accC}"/>
+    <circle cx="32" cy="35" r="15" fill="${c.skin}"/>
+    <path d="M17 33c0-12 7-17 15-17s15 5 15 17c-4-5-9-7-15-7s-11 2-15 7z" fill="${c.hair}"/>
+    <circle cx="26" cy="37" r="1.9" fill="#18323A"/><circle cx="38" cy="37" r="1.9" fill="#18323A"/>
+    <path d="M27 43q5 4 10 0" fill="none" stroke="#18323A" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="22" cy="42" r="2.4" fill="#F29C8F" opacity=".55"/><circle cx="42" cy="42" r="2.4" fill="#F29C8F" opacity=".55"/>${acc}</svg>`;
+}
+
+/* ---------------- resume code: 7 ores + 4 fragments + character in 4 letters ---------------- */
+const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function makeCode(){
+  let mask = 0, fm = 0; done.forEach(i => mask |= 1 << (i - 1)); frags.forEach(i => fm |= 1 << i);
+  const v = (mask << 7) | (fm << 3) | (charIdx === CUSTOM ? 7 : charIdx), chk = (v * 7 + 3) % 32;
+  return ABC[v >> 10] + ABC[(v >> 5) & 31] + ABC[v & 31] + ABC[chk];
+}
+function readCode(s){
+  s = String(s).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (s.length !== 4) return null;
+  const a = ABC.indexOf(s[0]), b = ABC.indexOf(s[1]), c = ABC.indexOf(s[2]), k = ABC.indexOf(s[3]);
+  if (a < 0 || b < 0 || c < 0 || k < 0 || a > 15) return null;
+  const v = a * 1024 + b * 32 + c; if ((v * 7 + 3) % 32 !== k) return null;
+  let ch = v & 7; const fm = (v >> 3) & 15, mask = v >> 7;
+  if (ch === 7) ch = custom ? CUSTOM : 0; else if (ch >= CHARS.length) return null;
+  return {charIdx:ch, done:[1,2,3,4,5,6,7].filter(i => mask & (1 << (i - 1))), frags:[0,1,2,3].filter(i => fm & (1 << i))};
+}
+
+/* ---------------- state ---------------- */
+let nick = store.get('nick', '');
+let charIdx = store.get('char', 0);
+let done = new Set(store.get('done', []));
+let frags = new Set(store.get('frags', []));
+let sleeping = false, boarded = false, explorersOn = true;
+let cards = new Set(store.get('cards', []));
+const knowAt = i => { const k = liveState && Array.isArray(liveState.know) && liveState.know[i]; return k && k.t ? {t:String(k.t).slice(0, 40), b:String(k.b || '').slice(0, 400)} : ANIMALS[i].card; };
+let openUpTo = 7;          // host-controlled; 7 = all open
+let liveState = null;      // last live/state doc
+let currentSid = null;
+let isHost = false;
+let room = null, db = null, user = null;
+
+/* ---------------- live sync without accounts ----------------
+   Everyone with the same room code shares one channel on a public MQTT broker:
+   each learner keeps a retained profile+position (p/<id>) and portrait (f/<id>);
+   the host's control state is one retained message (state). */
+const params = new URLSearchParams(location.search);
+const ROOM = (params.get('room') || 'tt1151120').replace(/[^\w-]/g, '').slice(0, 24) || 'tt1151120';
+const BROKERS = {emqx:'wss://broker.emqx.io:8084/mqtt', hivemq:'wss://broker.hivemq.com:8884/mqtt', mosquitto:'wss://test.mosquitto.org:8081/mqtt'};
+const BROKER = BROKERS[params.get('broker')] || BROKERS.emqx;
+const TOPIC = 'sesns365-island/v1/' + ROOM + '/';
+const HOST_PIN = '0506';          // 講師密碼：要換就改這裡
+const myId = store.get('cid', '') || (() => { const v = Math.random().toString(36).slice(2, 10); store.set('cid', v); return v; })();
+const joined = new Map(Object.entries(store.get('joined.' + ROOM, {})));
+let mq = null, connected = false, myPres = {}, presT = null, lastPresSent = 0, peersRaf = 0;
+const peerMap = new Map(), peerCbs = [], connCbs = [];
+function mqPub(sub, obj, retain){
+  if (mq && connected) mq.publish(TOPIC + sub, obj == null ? '' : JSON.stringify(obj), {qos:0, retain:!!retain});
+}
+function sendPres(){ presT = null; lastPresSent = Date.now(); if (myPres.nick) mqPub('p/' + myId, Object.assign({}, myPres, {t:Date.now()}), true); }
+function firePeers(){ if (!peersRaf) peersRaf = requestAnimationFrame(() => { peersRaf = 0; peerCbs.forEach(cb => cb({})); }); }
+room = {
+  presence(patch){
+    for (const k in patch){ if (patch[k] === null) delete myPres[k]; else myPres[k] = patch[k]; }
+    if (!presT) presT = setTimeout(sendPres, Math.max(0, 250 - (Date.now() - lastPresSent)));
+    return Promise.resolve();
+  },
+  peers(){
+    const a = [...peerMap.entries()].map(([id, v]) => ({peer:id, isMe:false, kind:'viewer', presence:v.presence}));
+    if (myPres.nick) a.push({peer:myId, isMe:true, kind:'viewer', presence:myPres});
+    return a;
+  },
+  onPeers(cb){ peerCbs.push(cb); }, onConnection(cb){ connCbs.push(cb); }, connected(){ return connected; }
+};
+function noteJoin(p){
+  if (!isHost) return;
+  const n = String(p.nick).trim().slice(0, 16); if (!n) return;
+  const d = String(p.done || '').split(',').filter(Boolean).length, prev = joined.get(n);
+  const v = {ci:+p.c || 0, c:+p.c === CUSTOM ? p.av : '', d};
+  if (prev && prev.ci === v.ci && prev.c === v.c && prev.d === v.d) return;
+  joined.set(n, v); store.set('joined.' + ROOM, Object.fromEntries(joined));
+}
+function onMsg(topic, buf){
+  const sub = topic.slice(TOPIC.length), txt = buf.toString();
+  let v = null;
+  if (txt){ try { v = JSON.parse(txt); } catch(e){ return; } }
+  if (sub === 'state'){ applyLive(v && typeof v === 'object' ? v : null); return; }
+  const [kind, id] = sub.split('/');
+  if (!id || id === myId) return;
+  if (kind === 'p'){
+    if (v && typeof v === 'object' && typeof v.nick === 'string' && Date.now() - (+v.t || 0) < 3*3600e3){
+      peerMap.set(id, {presence:v, t:Date.now()}); noteJoin(v);
+    } else peerMap.delete(id);
+    firePeers();
+  } else if (kind === 'f'){
+    if (v && typeof v.img === 'string' && v.img.length < 20000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v.img)) faceMap.set(id, v.img);
+    else faceMap.delete(id);
+    firePeers();
+  }
+}
+function connectNet(){
+  const chip = $('#liveChip'); chip.hidden = false;
+  if (typeof mqtt === 'undefined'){ $('#liveText').textContent = '離線模式'; return; }
+  mq = mqtt.connect(BROKER, {clientId:'isl_' + myId + '_' + Math.random().toString(36).slice(2, 6), clean:true, keepalive:30,
+    reconnectPeriod:3000, connectTimeout:12000, will:{topic:TOPIC + 'p/' + myId, payload:'', retain:true, qos:0}});
+  mq.on('connect', () => {
+    connected = true; mq.subscribe(TOPIC + '#');
+    $('#liveDot').classList.add('live'); $('#liveText').textContent = '已連線';
+    lastPresence = ''; pushPresence(); lastPos = 0; pushPos(true); pushFace();
+  });
+  mq.on('close', () => { connected = false; $('#liveDot').classList.remove('live'); $('#liveText').textContent = '重新連線中'; });
+  mq.on('message', onMsg);
+  room.onPeers(() => {
+    if (connected) $('#liveText').textContent = isHost ? `線上 ${rosterRows().length} 人` : '已連線';
+    renderRoster(); syncPeers();
+  });
+  // keep my retained profile fresh, drop learners who went silent
+  setInterval(() => {
+    if (myPres.nick && Date.now() - lastPresSent > 60000) sendPres();
+    let gone = false;
+    peerMap.forEach((v, id) => { if (Date.now() - v.t > 200000 && Date.now() - (+v.presence.t || 0) > 200000){ peerMap.delete(id); gone = true; } });
+    if (gone) firePeers();
+  }, 15000);
+  addEventListener('pagehide', () => { mqPub('p/' + myId, null, true); });
+}
+
+function isOpen(st){
+  if (st.id > openUpTo) return false;
+  if (st.id === 7) return oresDone() === 6 && frags.size >= FRAGS.length || openUpTo >= 7 && isHost;
+  return true;
+}
+const oresDone = () => [1,2,3,4,5,6].filter(i => done.has(i)).length;
+function lockReason(st){
+  if (st.id > openUpTo) return '講師還沒開放這一站，先專心聽講喔！';
+  return `資源寶箱需要 6 顆礦石＋${FRAGS.length} 片藏寶圖碎片（目前礦石 ${oresDone()}/6、碎片 ${frags.size}/${FRAGS.length}）`;
+}
+
+/* ---------------- TTS ---------------- */
+let voice = null;
+function pickVoice(){
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+let speakingEl = null;
+function speak(text, el){
+  if (!('speechSynthesis' in window)) { toast('這個瀏覽器不支援語音朗讀'); return; }
+  speechSynthesis.cancel();
+  if (speakingEl) speakingEl.classList.remove('speaking');
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW'; if (voice) u.voice = voice; u.rate = .95;
+  speakingEl = el || null;
+  if (el){ el.classList.add('speaking'); u.onend = u.onerror = () => { el.classList.remove('speaking'); if (speakingEl === el) speakingEl = null; }; }
+  speechSynthesis.speak(u);
+}
+const SPEAK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+
+/* ---------------- toast / confetti ---------------- */
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+function confetti(){
+  if (reduced) return;
+  const cs = ['#EE6F57','#F4B740','#2A8C8C','#5FA651','#7A63C9'];
+  for (let i = 0; i < 40; i++){
+    const s = document.createElement('span'); s.className = 'confetti';
+    s.style.left = Math.random()*100 + 'vw'; s.style.background = cs[i % cs.length];
+    s.style.animationDelay = Math.random()*.4 + 's';
+    document.body.appendChild(s); setTimeout(() => s.remove(), 2200);
+  }
+}
+
+/* ---------------- HUD ---------------- */
+function renderHUD(){
+  $('#badges').innerHTML = STATIONS.map(s => `<span class="badge gem ${done.has(s.id)?'on':''}" title="${esc(s.name)}：${GEMS[s.id-1].name}">${gemSVG(s.id)}</span>`).join('') +
+    `<span class="frag ${frags.size >= FRAGS.length ? 'full' : ''}" title="藏寶圖碎片">藏寶圖 ${frags.size}/${FRAGS.length}</span>` +
+    `<span class="frag ${cards.size >= ANIMALS.length ? 'full' : ''}" title="和動物聊天得到的知識卡">知識卡 ${cards.size}/${ANIMALS.length}</span>`;
+  $('#stations').innerHTML = STATIONS.map(s => {
+    const open = isOpen(s), d = done.has(s.id);
+    return `<button class="st-btn ${d?'done':''} ${open?'':'locked'}" data-sid="${s.id}" type="button">
+      <span class="n" style="background:${s.color}">${s.id}</span>
+      <span>${esc(s.name)}<br><span class="state">${d?'已挖到'+GEMS[s.id-1].name:open?'可挑戰':'未開放'}</span></span></button>`;
+  }).join('');
+  $('#meName').textContent = nick || '—';
+  $('#meAv').innerHTML = avatarHTML(charIdx);
+  STATIONS.forEach(updateMarker);
+  pushPresence(); updateBoardBtn();
+}
+$('#stations').addEventListener('click', e => { const b = e.target.closest('[data-sid]'); if (b) goStation(+b.dataset.sid); });
+// with an explorer on the island, "go to a station" means walking there first
+function goStation(sid){
+  const st = STATIONS[sid - 1];
+  if (!player || !player.g.visible) return openStation(sid);
+  if (locked()){ toast(sleeping ? '島上夜晚，大家都在睡覺，等天亮再闖關喔' : '請看講師'); return; }
+  if (!isOpen(st)){ toast(lockReason(st)); return; }
+  if (!$('#sheet').hidden) closeSheet();
+  if (Math.hypot(player.pos.x - st.pos[0], player.pos.z - st.pos[1]) < BLOCK[sid] + 1.6) return openStation(sid);
+  walkToStation(st);
+  toast(`正在走向「${st.name}」…`);
+}
+
+/* ---------------- station sheet & challenge engine ---------------- */
+function openStation(sid){
+  const st = STATIONS.find(s => s.id === sid);
+  if (!player) focusStation(st);
+  $('#nearBtn').hidden = true;
+  if (!isOpen(st)) { toast(lockReason(st)); return; }
+  currentSid = sid; pushPresence();
+  $('#sheetNum').textContent = st.id; $('#sheetNum').style.background = st.color;
+  $('#sheetEyebrow').textContent = `第 ${st.id} 站・${st.area}`;
+  $('#sheetTitle').textContent = st.name;
+  const body = $('#sheetBody');
+  body.innerHTML = st.intro + `<div class="row"><button class="primary" id="startBtn" type="button">${done.has(sid)?'再挑戰一次':'開始挑戰'}（${st.steps.length} 關）</button>
+    ${done.has(sid)?'<span class="small">已獲得徽章</span>':''}</div>`;
+  body.scrollTop = 0;
+  $('#startBtn').onclick = () => runStep(st, 0);
+  $('#sheet').hidden = false;
+}
+function closeSheet(){ if (typeof closeChat === 'function' && chatAid >= 0) closeChat(); $('#sheet').hidden = true; currentSid = null; pushPresence(); nearSid = -1; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+$('#sheetClose').onclick = closeSheet;
+$('#sheetBody').addEventListener('click', e => {
+  const r = e.target.closest('.readable'); if (r) speak(r.textContent, r);
+});
+
+function stepHead(st, i){
+  return `<div class="steps">${st.steps.map((_, k) => `<i class="${k<=i?'on':''}"></i>`).join('')}</div>`;
+}
+function qBlock(text){
+  return `<div class="q"><p>${esc(text)}</p><button class="speak" type="button" data-say="${esc(text)}">${SPEAK_ICON}朗讀</button></div>`;
+}
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; };
+function shake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+function runStep(st, i){
+  const body = $('#sheetBody');
+  if (i >= st.steps.length) return finishStation(st);
+  const s = st.steps[i];
+  const next = () => runStep(st, i + 1);
+  const nextBtn = `<button class="primary" id="nextBtn" type="button">${i === st.steps.length - 1 ? '完成這一站' : '下一題'}</button>`;
+  body.scrollTop = 0;
+
+  if (s.type === 'mc'){
+    body.innerHTML = stepHead(st, i) + qBlock(s.q) +
+      `<div class="opts">${s.opts.map((o, k) => `<button class="opt" data-k="${k}" type="button">${esc(o)}</button>`).join('')}</div><div id="fb"></div>`;
+    body.querySelector('.opts').onclick = e => {
+      const b = e.target.closest('.opt'); if (!b || body.querySelector('.opt.right')) return;
+      if (+b.dataset.k === s.a){
+        b.classList.add('right');
+        $('#fb').innerHTML = `<div class="feedback ok"><b>答對了！</b>${s.why ? ' ' + esc(s.why) : ''}</div>` + nextBtn;
+        $('#nextBtn').onclick = next;
+      } else {
+        b.classList.add('wrong'); shake(b);
+        $('#fb').innerHTML = `<div class="feedback no">再想想看，換一個選項試試。</div>`;
+      }
+    };
+  }
+
+  if (s.type === 'sort'){
+    let picked = null, left = s.items.length;
+    const items = shuffle(s.items.map((it, k) => ({t:it[0], b:it[1], k})));
+    body.innerHTML = stepHead(st, i) + qBlock(s.q) +
+      `<p class="small">先點一張卡片，再點它屬於的框框。</p>
+      <div class="pool" id="pool">${items.map(it => `<button class="card" data-k="${it.k}" aria-pressed="false" type="button">${esc(it.t)}</button>`).join('')}</div>
+      <div class="buckets">${s.buckets.map((b, k) => `<button class="bucket" data-b="${k}" type="button"><b>${esc(b)}</b><span class="in"></span></button>`).join('')}</div><div id="fb"></div>`;
+    $('#pool').onclick = e => {
+      const c = e.target.closest('.card'); if (!c) return;
+      body.querySelectorAll('#pool .card').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true'); picked = c;
+    };
+    body.querySelector('.buckets').onclick = e => {
+      const bk = e.target.closest('.bucket'); if (!bk) return;
+      if (!picked){ toast('先點一張卡片'); return; }
+      const it = s.items[+picked.dataset.k];
+      if (it[1] === +bk.dataset.b){
+        const span = document.createElement('span'); span.className = 'card placed'; span.textContent = it[0];
+        bk.querySelector('.in').appendChild(span); picked.remove(); picked = null; left--;
+        if (!left){ $('#fb').innerHTML = `<div class="feedback ok"><b>全部分類正確！</b></div>` + nextBtn; $('#nextBtn').onclick = next; }
+      } else { shake(bk); $('#fb').innerHTML = `<div class="feedback no">這張不屬於「${esc(s.buckets[+bk.dataset.b])}」，再試試別的框。</div>`; }
+    };
+  }
+
+  if (s.type === 'order'){
+    let n = 0;
+    const order = s.items.map((t, k) => ({t, k}));
+    body.innerHTML = stepHead(st, i) + qBlock(s.q) +
+      `<div class="order-line" id="line">${s.items.map(() => `<div class="slot empty">？</div>`).join('')}</div>
+      <div class="pool" id="pool">${shuffle(order).map(o => `<button class="card" data-k="${o.k}" type="button">${esc(o.t)}</button>`).join('')}</div><div id="fb"></div>`;
+    $('#pool').onclick = e => {
+      const c = e.target.closest('.card'); if (!c) return;
+      if (+c.dataset.k === n){
+        const slot = $('#line').children[n]; slot.className = 'slot'; slot.textContent = `${n+1}．${s.items[n]}`;
+        c.remove(); n++;
+        if (n === s.items.length){ $('#fb').innerHTML = `<div class="feedback ok"><b>順序正確！</b></div>` + nextBtn; $('#nextBtn').onclick = next; }
+      } else { shake(c); $('#fb').innerHTML = `<div class="feedback no">還不是這一個，想想看下一步是什麼？</div>`; }
+    };
+  }
+  body.querySelector('.speak').onclick = e => speak(e.currentTarget.dataset.say, body.querySelector('.q p'));
+}
+
+// first clear of a station: tap the rock three times to dig out that station's ore
+function finishStation(st){
+  if (done.has(st.id)) return showDone(st, false);
+  const body = $('#sheetBody'), g = GEMS[st.id - 1];
+  body.scrollTop = 0;
+  body.innerHTML = `<div class="mine"><h3 style="font-size:22px">通關！來挖礦吧</h3>
+    <p class="small" style="margin:0">點岩石三下，挖出這一站的寶石</p>
+    <button class="rock" id="rock" data-hits="0" type="button" aria-label="點擊敲岩石">
+      <svg viewBox="0 0 180 150"><path d="M20 128 34 62 70 26l52 6 38 40 6 56z" fill="#8C8A7A"/><path d="M34 62 70 26l52 6-30 40z" fill="#A8A696"/><path d="M92 72l30-40 38 40z" fill="#77756A"/>
+      <path d="M78 96l12 8" stroke="${g.color}" stroke-width="5" stroke-linecap="round"/>
+      <path class="crack c1" d="M90 40 82 70 96 88 86 118" fill="none" stroke="#2B2B26" stroke-width="3"/>
+      <path class="crack c2" d="M96 88 124 96 140 120M82 70 56 82 44 110" fill="none" stroke="#2B2B26" stroke-width="3"/></svg>
+    </button>
+    <div class="pick small" id="pickMsg">敲第 1 下</div></div>`;
+  let hits = 0;
+  $('#rock').onclick = e => {
+    const r = e.currentTarget; hits++; r.dataset.hits = hits; shake(r); r.classList.remove('hit'); void r.offsetWidth; r.classList.add('hit');
+    if (hits < 3){ $('#pickMsg').textContent = `敲第 ${hits + 1} 下`; return; }
+    done.add(st.id); store.set('done', [...done]);
+    confetti(); renderHUD();
+    body.innerHTML = `<div class="mine">${gemSVG(st.id, 'gem-big')}<h3 style="font-size:24px">挖到${esc(g.name)}！</h3>
+      <p style="margin:0">已放進背包。礦石 <b>${oresDone()}</b> / 6・藏寶圖 <b>${frags.size}</b> / ${FRAGS.length}</p>
+      <button class="primary" id="gemOk" type="button">收進背包</button></div>`;
+    $('#gemOk').onclick = () => showDone(st, true);
+  };
+}
+function showDone(st, first){
+  const all = done.has(7);
+  const body = $('#sheetBody');
+  body.innerHTML = `<div class="done-card">${gemSVG(st.id, 'gem-big')}
+    <h3 style="font-size:22px">${st.id === 7 ? (first ? '拿到黃金船票！' : '再次通關！') : first ? `獲得${esc(GEMS[st.id-1].name)}！` : '再次通關！'}</h3>
+    <p style="margin:0">「${esc(st.name)}」完成。礦石 <b>${oresDone()}</b> / 6・藏寶圖碎片 <b>${frags.size}</b> / ${FRAGS.length}${all ? '・已有黃金船票，離島時可以登船' : ''}</p>
+    ${!all && oresDone() === 6 && frags.size < FRAGS.length ? '<p class="small" style="margin:0">礦石集滿了！島上還藏著發光的藏寶圖碎片，走過去就能撿起來。</p>' : ''}
+    <p class="small" style="margin:0">換裝置接續用的接續碼：<b class="code" style="font-size:18px;padding:2px 10px">${makeCode()}</b></p>
+    ${all && st.id === 7 ? '<p class="quote" style="text-align:left">數位工具是橋，而我們的陪伴與專業，才是真正引導孩子勇敢過橋的力量。</p>' : ''}
+    <div class="row" style="justify-content:center">${nextOpen(st) ? `<button class="primary" id="goNext" type="button">前往第 ${nextOpen(st).id} 站</button>` : ''}
+    <button class="ghost" id="backMap" type="button">回到島上</button></div></div>`;
+  const n = nextOpen(st);
+  if (n) $('#goNext').onclick = () => goStation(n.id);
+  $('#backMap').onclick = () => { closeSheet(); resetView(); };
+}
+function nextOpen(st){ return STATIONS.find(s => s.id > st.id && !done.has(s.id) && isOpen(s)) || STATIONS.find(s => !done.has(s.id) && isOpen(s)); }
+
+/* ---------------- 3D island ---------------- */
+const canvas = $('#scene');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({canvas, antialias:true}); }
+catch(e){ renderer = null; }
+const scene = new THREE.Scene();
+const SKY = 0xA9DDE6;
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 120, 260);
+const camera = new THREE.PerspectiveCamera(45, 1, .1, 400);
+const HOME_POS = new THREE.Vector3(0, 42, 60), HOME_TGT = new THREE.Vector3(0, 1, 2);
+camera.position.copy(HOME_POS);
+let controls = null;
+if (renderer){
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  controls = new THREE.OrbitControls(camera, canvas);
+  controls.target.copy(HOME_TGT); controls.enableDamping = true; controls.dampingFactor = .08;
+  controls.minDistance = 8; controls.maxDistance = 105; controls.maxPolarAngle = 1.32; controls.enablePan = false;
+  controls.autoRotate = !reduced; controls.autoRotateSpeed = .35;
+  controls.addEventListener('start', () => { controls.autoRotate = false; camAnim = null; });
+}
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0x6c8f6a, .78);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1d6, .95);
+sun.position.set(32, 58, 25); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, {left:-38, right:38, top:38, bottom:-38, near:1, far:150});
+scene.add(sun);
+
+const M = {};
+const mat = (c, o = {}) => (M[c + JSON.stringify(o)] ||= new THREE.MeshStandardMaterial(Object.assign({color:c, flatShading:true, roughness:.85, metalness:0}, o)));
+function mesh(geo, color, o){ const m = new THREE.Mesh(geo, mat(color, o)); m.castShadow = true; m.receiveShadow = true; return m; }
+const shapeR = a => 1 + .07*Math.sin(3*a) + .05*Math.cos(5*a + 1);
+function blob(geo){
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++){ const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x), k = shapeR(a); p.setX(i, x*k); p.setZ(i, z*k); }
+  geo.computeVertexNormals(); return geo;
+}
+const GROUND = 1.2;
+// ocean
+const waterGeo = new THREE.PlaneGeometry(260, 260, 64, 64); waterGeo.rotateX(-Math.PI/2);
+const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({color:0x3AA6B9, flatShading:true, roughness:.35, metalness:.05}));
+water.receiveShadow = true; scene.add(water);
+const wBase = Float32Array.from(waterGeo.attributes.position.array);
+// island layers
+const rock = mesh(blob(new THREE.CylinderGeometry(12.8, 9, 5, 18, 1)), 0x8C8A7A); rock.position.y = -2.6; rock.scale.set(S, 1, S); scene.add(rock);
+const sand = mesh(blob(new THREE.CylinderGeometry(13, 13.6, .9, 48, 1)), 0xF1D9A4); sand.position.y = .15; sand.scale.set(S, 1, S); scene.add(sand);
+const grass = mesh(blob(new THREE.CylinderGeometry(10.8, 11.6, 1.1, 48, 1)), 0x8CC66B); grass.position.y = .65; grass.scale.set(S, 1, S); scene.add(grass);
+// the pier runs from the shore out to where the ships dock
+const PU = new THREE.Vector3(Math.cos(.75), 0, Math.sin(.75)), PV = new THREE.Vector3(-PU.z, 0, PU.x);
+const PIER_A = PU.clone().multiplyScalar(14).setY(GROUND), PIER_B = PU.clone().multiplyScalar(26.5).setY(GROUND);
+const pier = new THREE.Group();
+{
+  const deck = mesh(new THREE.BoxGeometry(13.5, .22, 1.8), 0xB0855A); deck.position.y = GROUND - .08; pier.add(deck);
+  for (let i = 0; i < 6; i++) for (const sz of [-.8, .8]){
+    const post = mesh(new THREE.CylinderGeometry(.1, .1, 2.2, 6), 0x7A5A3B); post.position.set(-6 + i*2.4, 0, sz); pier.add(post);
+  }
+  pier.position.copy(PU.clone().multiplyScalar(20.3)); pier.rotation.y = -.75; scene.add(pier);
+}
+const onPier = v => { const t = v.x*PU.x + v.z*PU.z, w = v.x*PV.x + v.z*PV.z; return t > 13 && t < 26.8 && Math.abs(w) < .7; };
+// seeded random
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function tree(x, z, s = 1){
+  const g = new THREE.Group();
+  const t = mesh(new THREE.CylinderGeometry(.12*s, .18*s, .7*s, 6), 0x8A5A3B); t.position.y = .35*s; g.add(t);
+  const c1 = mesh(new THREE.ConeGeometry(.8*s, 1.4*s, 7), rnd() > .5 ? 0x4E9A4A : 0x3F8A47); c1.position.y = 1.2*s; g.add(c1);
+  const c2 = mesh(new THREE.ConeGeometry(.58*s, 1.1*s, 7), 0x5FAE55); c2.position.y = 1.8*s; g.add(c2);
+  g.position.set(x, GROUND, z); g.rotation.y = rnd()*6; return g;
+}
+const nearStation = (x, z, d) => STATIONS.some(s => Math.hypot(s.pos[0]-x, s.pos[1]-z) < d);
+const nearKeep = (x, z) => ANIMALS.some(a => Math.hypot(a.home[0]-x, a.home[1]-z) < 3.6) || FRAGS.some(f => Math.hypot(f.pos[0]-x, f.pos[1]-z) < 2) ||
+  Math.hypot(x - 2.5, z - 8.3) < 3.5 || Math.hypot(x - PIER_A.x, z - PIER_A.z) < 3.5;
+for (let i = 0, n = 0; i < 400 && n < 120; i++){
+  const a = rnd()*Math.PI*2, r = (3 + rnd()*7)*S;
+  const x = Math.cos(a)*r*shapeR(a), z = Math.sin(a)*r*shapeR(a);
+  if (!nearStation(x, z, 3.6) && !nearKeep(x, z)){ scene.add(tree(x, z, .7 + rnd()*.6)); n++; }
+}
+for (let i = 0; i < 28; i++){
+  const a = rnd()*Math.PI*2, r = (11.6 + rnd()*1.4)*S;
+  const s = mesh(new THREE.DodecahedronGeometry(.3 + rnd()*.4, 0), 0x9C9A8C);
+  s.position.set(Math.cos(a)*r*shapeR(a), .5, Math.sin(a)*r*shapeR(a)); scene.add(s);
+}
+
+// landmarks
+const stationObj = {};
+function flag(){
+  const g = new THREE.Group();
+  const pole = mesh(new THREE.CylinderGeometry(.05, .05, 1.8, 6), 0xffffff); pole.position.y = .9; g.add(pole);
+  const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.lineTo(.9, -.3); shape.lineTo(0, -.6);
+  const f = mesh(new THREE.ShapeGeometry(shape), 0xF4B740, {side:THREE.DoubleSide}); f.position.set(.05, 1.78, 0); g.add(f);
+  g.userData.cloth = f; return g;
+}
+const builders = {
+  1(g){ // lighthouse
+    const base = mesh(new THREE.CylinderGeometry(1.1, 1.3, .5, 10), 0xB8B3A3); base.position.y = .25; g.add(base);
+    for (let i = 0; i < 4; i++){
+      const r0 = 1 - i*.13, r1 = r0 - .13;
+      const seg = mesh(new THREE.CylinderGeometry(r1, r0, 1, 12), i % 2 ? 0xEE6F57 : 0xFFFFFF); seg.position.y = 1 + i; g.add(seg);
+    }
+    const lamp = mesh(new THREE.CylinderGeometry(.45, .45, .7, 10), 0xFFE08A, {emissive:0xFFC844, emissiveIntensity:.9}); lamp.position.y = 4.85; g.add(lamp);
+    const roof = mesh(new THREE.ConeGeometry(.65, .7, 10), 0x1D6B6B); roof.position.y = 5.55; g.add(roof);
+    g.userData.lamp = lamp; return 6.4;
+  },
+  2(g){ // forest + book
+    [[0,0,1.4],[-1.4,.8,1.1],[1.3,.9,1.2],[-.6,-1.3,1],[1,-1.2,.9],[-1.8,-.6,.8],[.2,1.8,.9]].forEach(([x,z,s]) => { const t = tree(x, z, s); t.position.y = 0; g.add(t); });
+    const book = new THREE.Group();
+    const l = mesh(new THREE.BoxGeometry(.9, .08, 1.1), 0xFFFFFF); l.position.x = -.46; l.rotation.z = .15; book.add(l);
+    const r = l.clone(); r.position.x = .46; r.rotation.z = -.15; book.add(r);
+    book.position.set(1.8, .25, 1.6); g.add(book); return 4.2;
+  },
+  3(g){ // speaker house
+    const w = mesh(new THREE.BoxGeometry(2.6, 1.7, 2.2), 0xFDF6EC); w.position.y = .85; g.add(w);
+    const roof = mesh(new THREE.ConeGeometry(2.1, 1.3, 4), 0x2A8C8C); roof.position.y = 2.35; roof.rotation.y = Math.PI/4; g.add(roof);
+    const door = mesh(new THREE.BoxGeometry(.6, 1, .06), 0x8A5A3B); door.position.set(0, .5, 1.12); g.add(door);
+    const win = mesh(new THREE.BoxGeometry(.5, .45, .06), 0xFFE08A, {emissive:0xFFC844, emissiveIntensity:.3}); win.position.set(.85, 1.05, 1.12); g.add(win); g.userData.win = win;
+    const horn = mesh(new THREE.CylinderGeometry(.42, .1, .7, 10, 1, true), 0xEE6F57, {side:THREE.DoubleSide}); horn.rotation.z = -Math.PI/2.6; horn.position.set(-.7, 3.05, 0); g.add(horn);
+    const mast = mesh(new THREE.CylinderGeometry(.05, .05, .7, 6), 0x555555); mast.position.set(-.9, 2.75, 0); g.add(mast);
+    return 4.2;
+  },
+  4(g){ // flower garden
+    const cs = [0xEE6F57, 0xF4B740, 0xD46FA0, 0xFFFFFF, 0x9B7FE0];
+    for (let i = 0; i < 22; i++){
+      const a = rnd()*Math.PI*2, r = rnd()*1.9;
+      const st = mesh(new THREE.CylinderGeometry(.03, .03, .5, 4), 0x3F8A47); st.position.set(Math.cos(a)*r, .25, Math.sin(a)*r); g.add(st);
+      const h = mesh(new THREE.IcosahedronGeometry(.17, 0), cs[i % cs.length]); h.position.set(Math.cos(a)*r, .55, Math.sin(a)*r); g.add(h);
+    }
+    for (let i = 0; i < 16; i++){
+      const a = i/16*Math.PI*2; const p = mesh(new THREE.BoxGeometry(.12, .45, .12), 0xFDF6EC);
+      p.position.set(Math.cos(a)*2.4, .22, Math.sin(a)*2.4); g.add(p);
+    }
+    const sign = mesh(new THREE.BoxGeometry(1.1, .8, .1), 0xFFFFFF); sign.position.set(0, 1.1, 0); g.add(sign);
+    const post = mesh(new THREE.CylinderGeometry(.05, .05, .8, 6), 0x8A5A3B); post.position.set(0, .4, 0); g.add(post);
+    return 2.6;
+  },
+  5(g){ // CPA mountain
+    const m = mesh(new THREE.ConeGeometry(3.3, 5.2, 8), 0x7FA36B); m.position.y = 2.6; g.add(m);
+    const cap = mesh(new THREE.ConeGeometry(1.25, 2, 8), 0xFFFFFF); cap.position.y = 4.25; g.add(cap);
+    [0xD9513A, 0xD9513A, 0xD9513A, 0x5FA651, 0x5FA651].forEach((c, i) => {
+      const ap = mesh(new THREE.IcosahedronGeometry(.22, 0), c); ap.position.set(-1.1 + i*.5, .22, 3.3); g.add(ap);
+    });
+    return 6;
+  },
+  6(g){ // harbor
+    const dock = mesh(new THREE.BoxGeometry(1.4, .18, 5), 0xB0855A); dock.position.set(0, .55, .8); g.add(dock);
+    for (let i = 0; i < 4; i++) for (const sx of [-.65, .65]){
+      const p = mesh(new THREE.CylinderGeometry(.08, .08, 1.4, 6), 0x7A5A3B); p.position.set(sx, 0, -1 + i*1.3); g.add(p);
+    }
+    const boat = new THREE.Group();
+    const hull = mesh(new THREE.BoxGeometry(1.1, .5, 2.4), 0x3B7FC4); hull.position.y = .25; boat.add(hull);
+    const sail = mesh(new THREE.ConeGeometry(.9, 2.2, 3), 0xFFFFFF); sail.scale.z = .15; sail.position.y = 1.6; boat.add(sail);
+    boat.position.set(1.9, .05, 2.4); g.add(boat); g.userData.boat = boat;
+    return 3.4;
+  },
+  7(g){ // treasure chest
+    const base = mesh(new THREE.BoxGeometry(1.5, .9, 1), 0x9A5B2E); base.position.y = .45; g.add(base);
+    const band = mesh(new THREE.BoxGeometry(1.54, .14, 1.04), 0xF4B740, {metalness:.4}); band.position.y = .7; g.add(band);
+    const lidPivot = new THREE.Group(); lidPivot.position.set(0, .9, -.5);
+    const lid = mesh(new THREE.CylinderGeometry(.5, .5, 1.5, 10, 1, false, 0, Math.PI), 0xB06A35);
+    lid.rotation.z = Math.PI/2; lid.rotation.y = Math.PI/2; lid.position.set(0, 0, .5); lidPivot.add(lid); g.add(lidPivot);
+    const glow = mesh(new THREE.SphereGeometry(.45, 10, 8), 0xFFE08A, {emissive:0xFFD24A, emissiveIntensity:1}); glow.position.y = .9; glow.visible = false; g.add(glow);
+    g.userData.lid = lidPivot; g.userData.glow = glow;
+    return 2.8;
+  }
+};
+const pickables = [];
+STATIONS.forEach(st => {
+  const g = new THREE.Group();
+  const h = builders[st.id](g);
+  g.position.set(st.pos[0], st.id === 6 ? 0 : GROUND, st.pos[1]);
+  if (st.id === 6) g.rotation.y = .25;
+  const f = flag(); f.position.set(st.id === 5 ? 2.4 : 1.3, st.id === 6 ? .6 : 0, st.id === 5 ? 1.6 : -.6); f.visible = false; g.add(f);
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 168;
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false, transparent:true}));
+  sp.scale.set(4.4, 1.44, 1); sp.position.y = h + 1.1; sp.renderOrder = 10; g.add(sp);
+  // invisible hit volume
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, h + 1, 8), new THREE.MeshBasicMaterial({visible:false}));
+  hit.position.y = (h + 1)/2; g.add(hit);
+  g.traverse(o => o.userData.sid = st.id);
+  scene.add(g); pickables.push(g);
+  stationObj[st.id] = {g, f, sp, cv, tex, baseY:sp.position.y};
+});
+function roundRect(c, x, y, w, h, r){ c.beginPath(); c.moveTo(x+r, y); c.arcTo(x+w, y, x+w, y+h, r); c.arcTo(x+w, y+h, x, y+h, r); c.arcTo(x, y+h, x, y, r); c.arcTo(x, y, x+w, y, r); c.closePath(); }
+function updateMarker(st){
+  const o = stationObj[st.id]; if (!o) return;
+  const c = o.cv.getContext('2d'), open = isOpen(st), d = done.has(st.id);
+  c.clearRect(0, 0, 512, 168);
+  c.save(); c.shadowColor = 'rgba(24,50,58,.3)'; c.shadowBlur = 14; c.shadowOffsetY = 4;
+  roundRect(c, 14, 14, 484, 118, 59); c.fillStyle = d ? '#FFF3CF' : open ? '#FFFFFF' : '#E3E8E8'; c.fill(); c.restore();
+  if (d){ c.lineWidth = 6; c.strokeStyle = '#F4B740'; roundRect(c, 14, 14, 484, 118, 59); c.stroke(); }
+  c.beginPath(); c.arc(73, 73, 44, 0, Math.PI*2); c.fillStyle = open ? st.color : '#9AA9AA'; c.fill();
+  c.fillStyle = '#fff'; c.font = '900 50px "Chiron GoRound TC","Noto Sans TC",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText(d ? '✓' : String(st.id), 73, 76);
+  c.textAlign = 'left'; c.fillStyle = open ? '#18323A' : '#6F8285';
+  c.font = '900 50px "Chiron GoRound TC","Noto Sans TC",sans-serif'; c.fillText(st.name, 134, 62);
+  c.font = '500 26px "Noto Sans TC",sans-serif'; c.fillStyle = '#4A6870';
+  c.fillText(d ? '已挖到礦石' : open ? '點我闖關' : (st.id > openUpTo ? '尚未開放' : '集滿寶藏開啟'), 136, 106);
+  o.tex.needsUpdate = true;
+  o.f.visible = d;
+  if (st.id === 7){ o.g.userData.glow.visible = open; o.g.userData.lidTarget = d ? -1.1 : open ? -.35 : 0; }
+}
+// clouds
+const clouds = [];
+for (let i = 0; i < 7; i++){
+  const c = new THREE.Group();
+  for (let k = 0; k < 4; k++){
+    const p = mesh(new THREE.IcosahedronGeometry(1 + rnd()*1.1, 0), 0xFFFFFF, {roughness:1}); p.castShadow = false;
+    p.position.set(k*1.4 - 2, rnd()*.6, rnd()*1.2); c.add(p);
+  }
+  c.position.set(-50 + rnd()*100, 13 + rnd()*6, -40 + rnd()*70); clouds.push(c); scene.add(c);
+}
+
+// hidden treasure-map fragments: glowing scrolls a walker picks up by stepping close
+const fragObj = FRAGS.map((f, i) => {
+  const g = new THREE.Group();
+  const scroll = mesh(new THREE.CylinderGeometry(.16, .16, .9, 10), 0xF3E2B3); scroll.rotation.z = Math.PI/2; scroll.position.y = .9; g.add(scroll);
+  const tie = mesh(new THREE.CylinderGeometry(.18, .18, .12, 10), 0xEE6F57); tie.rotation.z = Math.PI/2; tie.position.y = .9; g.add(tie);
+  const glow = mesh(new THREE.OctahedronGeometry(.22, 0), 0xFFE08A, {emissive:0xFFD24A, emissiveIntensity:1}); glow.position.y = 1.6; glow.castShadow = false; g.add(glow);
+  g.position.set(f.pos[0], GROUND, f.pos[1]); g.userData = {scroll, tie, glow}; scene.add(g);
+  return g;
+});
+// animals wander near home; walking up to one (or tapping it) opens a chat
+function makeAnimal(a, i){
+  const g = new THREE.Group(), body = new THREE.Group(), c = a.color;
+  g.add(body);
+  const ball = (r, col, x, y, z, sx = 1, sy = 1, sz = 1) => { const m = mesh(new THREE.SphereGeometry(r, 12, 9), col); m.position.set(x, y, z); m.scale.set(sx, sy, sz); body.add(m); return m; };
+  const eyes = (y, z, gap, r = .06) => [-gap, gap].forEach(x => ball(r, '#18323A', x, y, z));
+  if (a.kind === 'owl'){
+    ball(.55, c, 0, .6, 0, 1, 1.15, .95); ball(.32, '#E9D2A8', 0, .5, .35, 1, 1.2, .5);
+    [-.2, .2].forEach(x => { ball(.17, '#FFFFFF', x, .95, .4); ball(.08, '#18323A', x, .95, .54); });
+    const beak = mesh(new THREE.ConeGeometry(.07, .18, 4), '#F4B740'); beak.rotation.x = Math.PI/2; beak.position.set(0, .82, .52); body.add(beak);
+    [-.28, .28].forEach(x => { const e = mesh(new THREE.ConeGeometry(.1, .3, 4), c); e.position.set(x, 1.25, 0); body.add(e); });
+    const cap = mesh(new THREE.BoxGeometry(.6, .06, .6), '#18323A'); cap.position.y = 1.32; body.add(cap);
+  } else if (a.kind === 'rabbit'){
+    ball(.42, c, 0, .45, 0, 1, .95, 1.1); ball(.3, c, 0, .9, .25);
+    [-.12, .12].forEach(x => { const e = ball(.09, c, x, 1.35, .2, 1, 3.2, .7); e.rotation.z = x*1.5; ball(.05, '#F29C8F', x, 1.35, .25, .8, 2.6, .5); });
+    eyes(.95, .5, .11); ball(.05, '#F29C8F', 0, .87, .54); ball(.13, '#FFFFFF', 0, .45, -.48);
+  } else if (a.kind === 'turtle'){
+    const shell = mesh(new THREE.SphereGeometry(.6, 12, 8, 0, Math.PI*2, 0, Math.PI/2), '#3F7D3A'); shell.position.y = .25; shell.scale.set(1, .8, 1.15); body.add(shell);
+    ball(.62, '#A8C66B', 0, .25, 0, 1, .15, 1.15);
+    ball(.2, c, 0, .4, .78); eyes(.47, .95, .08, .04);
+    [[-.4, .45], [.4, .45], [-.4, -.45], [.4, -.45]].forEach(([x, z]) => ball(.13, c, x, .15, z));
+  } else {
+    // dog and cat share a four-legged body
+    ball(.38, c, 0, .62, 0, .95, .85, 1.35); ball(.3, c, 0, 1.02, .5);
+    [[-.18, .32], [.18, .32], [-.18, -.32], [.18, -.32]].forEach(([x, z]) => { const l = mesh(new THREE.CylinderGeometry(.07, .07, .4, 6), c); l.position.set(x, .22, z); body.add(l); });
+    eyes(1.08, .78, .1); ball(.06, '#18323A', 0, .98, .8);
+    if (a.kind === 'cat'){
+      [-.15, .15].forEach(x => { const e = mesh(new THREE.ConeGeometry(.1, .22, 4), c); e.position.set(x, 1.32, .45); body.add(e); });
+      const tail = mesh(new THREE.CylinderGeometry(.05, .05, .7, 6), c); tail.position.set(0, .9, -.55); tail.rotation.x = -.6; body.add(tail);
+    } else {
+      [-.25, .25].forEach(x => ball(.1, '#8A5A3B', x, 1.05, .45, .6, 1.6, .8));
+      const tail = mesh(new THREE.CylinderGeometry(.05, .04, .4, 6), c); tail.position.set(0, .85, -.6); tail.rotation.x = -1; body.add(tail);
+    }
+  }
+  const label = nameSprite(a.name + '・聊天'); label.position.y = a.kind === 'owl' ? 1.95 : 1.75; label.scale.set(2.6, .6, 1); g.add(label);
+  g.position.set(a.home[0], GROUND, a.home[1]);
+  g.traverse(o => o.userData.aid = i);
+  g.userData = {aid:i, body, cur:g.position.clone(), goal:g.position.clone(), wait:rnd()*3, h:rnd()*6};
+  scene.add(g); return g;
+}
+const animalObjs = ANIMALS.map(makeAnimal);
+let chatAid = -1;
+function updateAnimals(dt, t){
+  animalObjs.forEach((g, i) => {
+    const u = g.userData, a = ANIMALS[i];
+    g.visible = explorersOn;
+    if (chatAid === i || nightTarget > 0){ u.body.position.y = 0; if (chatAid === i && player) g.rotation.y = Math.atan2(player.pos.x - g.position.x, player.pos.z - g.position.z); return; }
+    if ((u.wait -= dt) > 0){ u.body.position.y = 0; return; }
+    const d = u.goal.clone().sub(g.position); d.y = 0;
+    if (d.length() < .1){
+      u.wait = 2 + rnd()*4;
+      const ang = rnd()*Math.PI*2, r = rnd()*2.6;
+      u.goal.set(a.home[0] + Math.cos(ang)*r, GROUND, a.home[1] + Math.sin(ang)*r); clampWalk(u.goal);
+      return;
+    }
+    d.normalize(); g.position.addScaledVector(d, Math.min(dt*(a.kind === 'turtle' ? .35 : .9), g.position.distanceTo(u.goal)));
+    g.rotation.y = Math.atan2(d.x, d.z);
+    u.body.position.y = a.kind === 'rabbit' ? Math.abs(Math.sin(t*7))*.25 : Math.abs(Math.sin(t*9))*.04;
+  });
+}
+function animalSVG(i){
+  const a = ANIMALS[i];
+  return `<circle cx="23" cy="23" r="23" fill="#EAF5F4"/><circle cx="23" cy="26" r="13" fill="${a.color}"/>` +
+    (a.kind === 'rabbit' ? `<ellipse cx="17" cy="9" rx="3" ry="8" fill="${a.color}" stroke="#CFC7B8"/><ellipse cx="29" cy="9" rx="3" ry="8" fill="${a.color}" stroke="#CFC7B8"/>` :
+     a.kind === 'cat' ? `<path d="M12 18 14 7l7 7zM34 18 32 7l-7 7z" fill="${a.color}"/>` :
+     a.kind === 'dog' ? `<ellipse cx="11" cy="24" rx="4" ry="8" fill="#8A5A3B"/><ellipse cx="35" cy="24" rx="4" ry="8" fill="#8A5A3B"/>` :
+     a.kind === 'owl' ? `<rect x="11" y="10" width="24" height="3" fill="#18323A"/><circle cx="18" cy="25" r="5" fill="#fff"/><circle cx="28" cy="25" r="5" fill="#fff"/>` : `<path d="M10 30a13 9 0 0 1 26 0z" fill="#3F7D3A"/>`) +
+    `<circle cx="18" cy="25" r="2" fill="#18323A"/><circle cx="28" cy="25" r="2" fill="#18323A"/>`;
+}
+function goAnimal(i){
+  if (!player || !player.g.visible) return openChat(i);
+  if (locked()){ toast(sleeping ? '大家都睡了，動物也睡了' : '請看講師'); return; }
+  const g = animalObjs[i];
+  if (player.pos.distanceTo(g.position) < 2.4) return openChat(i);
+  const dir = player.pos.clone().sub(g.position); dir.y = 0; if (dir.lengthSq() < .01) dir.set(0, 0, 1);
+  walkTo(g.position.clone().add(dir.normalize().multiplyScalar(1.4)), () => openChat(i));
+}
+let chatStep = 0, typeT = null;
+function typeText(txt){
+  clearInterval(typeT); const el = $('#chatText'); let k = 0; el.textContent = '';
+  typeT = setInterval(() => { el.textContent = txt.slice(0, ++k); if (k >= txt.length) clearInterval(typeT); }, 35);
+}
+function chatLines(i){
+  const a = ANIMALS[i], k = knowAt(i);
+  return [`嗨！我是${a.name}。研習島上的大家都在學怎麼幫助孩子，我也知道一件新知識喔！`, `我想告訴你的是「${k.t}」。`, k.b];
+}
+function openChat(i){
+  closeSheet(); chatAid = i; chatStep = 0;
+  $('#chatAva').innerHTML = animalSVG(i); $('#chatName').textContent = ANIMALS[i].name;
+  $('#chatCard').innerHTML = ''; $('#chat').hidden = false; $('#nearBtn').hidden = true;
+  showChatStep();
+}
+function showChatStep(){
+  const lines = chatLines(chatAid);
+  typeText(lines[chatStep]);
+  const last = chatStep === lines.length - 1;
+  $('#chatNext').textContent = last ? (cards.has(chatAid) ? '再收一次知識卡' : '收下知識卡') : '下一句';
+}
+$('#chatNext').onclick = () => {
+  const lines = chatLines(chatAid);
+  if (chatStep < lines.length - 1){ chatStep++; return showChatStep(); }
+  const k = knowAt(chatAid), first = !cards.has(chatAid);
+  cards.add(chatAid); store.set('cards', [...cards]); renderHUD();
+  $('#chatCard').innerHTML = `<div class="kcard"><small>知識卡 ${cards.size}/${ANIMALS.length}</small><b>${esc(k.t)}</b>${esc(k.b)}</div>`;
+  $('#chatNext').textContent = '謝謝，再見！';
+  $('#chatNext').onclick = closeChat;
+  if (first) confetti();
+};
+$('#chatSay').onclick = () => speak($('#chatText').textContent, $('#chatText'));
+function closeChat(){
+  $('#chat').hidden = true; chatAid = -1; clearInterval(typeT); nearSid = -1;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  $('#chatNext').onclick = chatNextHandler;
+}
+const chatNextHandler = $('#chatNext').onclick;
+$('#chatClose').onclick = closeChat;
+
+function updateFrags(t){
+  fragObj.forEach((g, i) => {
+    g.visible = !frags.has(i) && explorersOn;
+    if (!g.visible || reduced) return;
+    g.userData.scroll.position.y = g.userData.tie.position.y = .9 + Math.sin(t*2 + i)*.12;
+    g.userData.glow.rotation.y = t*2; g.userData.glow.position.y = 1.6 + Math.sin(t*3 + i)*.1;
+  });
+}
+function checkFrags(){
+  if (!player) return;
+  FRAGS.forEach((f, i) => {
+    if (frags.has(i) || Math.hypot(player.pos.x - f.pos[0], player.pos.z - f.pos[1]) > 1.3) return;
+    frags.add(i); store.set('frags', [...frags]); renderHUD(); confetti();
+    toast(`撿到藏寶圖碎片 ${frags.size}/${FRAGS.length}：${f.tip}`);
+    if (frags.size >= FRAGS.length && oresDone() === 6) setTimeout(() => banner('藏寶圖拼好了！快去資源寶箱拿黃金船票', 5000), 2800);
+  });
+}
+
+// a boat hull seen from above: flat stern, pointed bow toward +z
+function hullGeo(w, l, h){
+  const sh = new THREE.Shape();
+  sh.moveTo(-w/2, -l/2); sh.lineTo(w/2, -l/2); sh.lineTo(w/2, l*.15);
+  sh.quadraticCurveTo(w/2, l*.4, 0, l/2); sh.quadraticCurveTo(-w/2, l*.4, -w/2, l*.15); sh.closePath();
+  const g = new THREE.ExtrudeGeometry(sh, {depth:h, bevelEnabled:false});
+  g.rotateX(Math.PI/2); g.translate(0, h, 0); return g;
+}
+// ferry: sails in when class starts, sails away when class ends
+const ferry = new THREE.Group();
+{
+  const hull = mesh(hullGeo(2.4, 5.6, 1.1), 0xFFFFFF); hull.position.y = -.25; ferry.add(hull);
+  const stripe = mesh(hullGeo(2.46, 5.7, .2), 0xEE6F57); stripe.position.y = .5; ferry.add(stripe);
+  const fdeck = mesh(hullGeo(2.1, 5.2, .08), 0xD9B48A); fdeck.position.y = .82; ferry.add(fdeck);
+  const cabin = mesh(new THREE.BoxGeometry(1.8, .9, 2), 0x2A8C8C); cabin.position.set(0, 1.25, -.6); ferry.add(cabin);
+  const win = mesh(new THREE.BoxGeometry(1.84, .3, 1.4), 0xFFE08A, {emissive:0xFFC844, emissiveIntensity:.3}); win.position.set(0, 1.35, -.6); ferry.add(win);
+  const stack = mesh(new THREE.CylinderGeometry(.26, .3, .9, 8), 0xEE6F57); stack.position.set(0, 2.1, -1.1); ferry.add(stack);
+  const pcs = [0xEE6F57, 0x5FA651, 0x2A8C8C, 0xD46FA0, 0x7A63C9, 0x3B7FC4];
+  pcs.forEach((c, i) => {
+    const p = new THREE.Group();
+    const b = mesh(new THREE.CylinderGeometry(.16, .2, .4, 8), c); b.position.y = .2; p.add(b);
+    const h = mesh(new THREE.SphereGeometry(.17, 8, 6), 0xF6CDA8); h.position.y = .52; p.add(h);
+    p.position.set(i % 2 ? .6 : -.6, .8, .6 + Math.floor(i/2)*.7); ferry.add(p);
+  });
+  const fl = flag(); fl.position.set(0, 1.7, -.6); fl.visible = true; ferry.add(fl); ferry.userData.cloth = fl.userData.cloth;
+}
+// sailing ship: shows up at the dock when class ends and carries everyone home
+const liner = new THREE.Group();
+{
+  const hull = mesh(hullGeo(2.7, 6.4, 1.3), 0x8A5A3B); hull.position.y = -.25; liner.add(hull);
+  const rail = mesh(hullGeo(2.76, 6.5, .16), 0xF4B740); rail.position.y = .98; liner.add(rail);
+  const deck = mesh(hullGeo(2.4, 6, .1), 0xD9B48A); deck.position.y = .95; liner.add(deck);
+  [[1.2, 3.6, 1.9], [-1.1, 3, 1.6]].forEach(([z, h, w]) => {
+    const mast = mesh(new THREE.CylinderGeometry(.07, .09, h, 6), 0x5A3B24); mast.position.set(0, 1 + h/2, z); liner.add(mast);
+    const sail = mesh(new THREE.BoxGeometry(w, h*.62, .06), 0xFFF7E8); sail.position.set(0, 1.25 + h*.45, z + .12); sail.rotation.x = -.08; liner.add(sail);
+  });
+  const pennant = mesh(new THREE.ConeGeometry(.2, .9, 3), 0xEE6F57); pennant.rotation.z = -Math.PI/2; pennant.position.set(.45, 4.75, 1.2); liner.add(pennant);
+  const lan = mesh(new THREE.SphereGeometry(.16, 8, 6), 0xFFE08A, {emissive:0xFFC844, emissiveIntensity:1}); lan.position.set(0, 1.3, -2.5); liner.add(lan);
+  liner.userData.cloth = pennant; liner.visible = false;
+  const pcs = [0xEE6F57, 0x5FA651, 0x2A8C8C, 0xD46FA0, 0x7A63C9, 0x3B7FC4];
+  liner.userData.pass = [];
+  for (let i = 0; i < 16; i++){
+    const p = new THREE.Group();
+    const b = mesh(new THREE.CylinderGeometry(.15, .19, .38, 8), pcs[i % 6]); b.position.y = .19; p.add(b);
+    const h = mesh(new THREE.SphereGeometry(.16, 8, 6), 0xF6CDA8); h.position.y = .5; p.add(h);
+    p.position.set(i % 2 ? .65 : -.65, 1.05, -2.1 + Math.floor(i/2)*.6); p.visible = false; liner.add(p); liner.userData.pass.push(p);
+  }
+}
+function updatePassengers(){
+  let n = boarded ? 1 : 0;
+  if (phase === 'gone') n = Math.max(n, rosterRows().length + (nick ? 1 : 0));
+  else peerPres().forEach(p => { if (p.b) n++; });
+  liner.userData.pass.forEach((p, i) => p.visible = i < n);
+}
+const FERRY = {
+  dock:PU.clone().multiplyScalar(24.5).add(PV.clone().multiplyScalar(3.4)),
+  away:PU.clone().multiplyScalar(85).add(PV.clone().multiplyScalar(14)),
+  gone:PU.clone().multiplyScalar(70).add(PV.clone().multiplyScalar(-70))
+};
+const DOCK_FACE = FERRY.dock.clone().sub(PU);
+ferry.scale.setScalar(1.35); liner.scale.setScalar(1.45);
+ferry.position.copy(FERRY.dock); faceTo(ferry, DOCK_FACE);
+scene.add(ferry, liner);
+let ferryAnim = null; // {ship, from, to, k, kind}
+// yaw-only facing, so the rocking animation can own rotation.z without flipping the ship
+function faceTo(o, v){ o.rotation.set(0, Math.atan2(v.x - o.position.x, v.z - o.position.z), 0); }
+function sailFerry(kind, instant){
+  const ship = kind === 'arrive' ? ferry : liner, other = kind === 'arrive' ? liner : ferry;
+  const from = kind === 'leave' ? FERRY.dock : FERRY.away, to = kind === 'leave' ? FERRY.gone : FERRY.dock;
+  other.visible = false; ship.visible = true;
+  if (kind === 'leave'){ showExplorers(false); updatePassengers(); }
+  if (instant || reduced){
+    ship.position.copy(to); ferryAnim = null;
+    if (kind === 'leave') ship.visible = false;
+    else faceTo(ship, DOCK_FACE);
+    if (kind === 'arrive'){ showExplorers(true); if (player && !instant){ player.pos.copy(SPAWN); flyToPlayer(); } }
+    return;
+  }
+  ship.position.copy(from); faceTo(ship, to);
+  ferryAnim = {ship, from, to, k:0, kind, wait:kind === 'leave' ? 1.5 : 0};
+  if (kind === 'arrive'){ showExplorers(false); if (player){ player.target = null; player.onArrive = null; } }
+  camAnim = null; if (controls) controls.autoRotate = false; shipCam = true;
+}
+let shipCam = false;
+const _shipEye = new THREE.Vector3();
+// while a ship sails, the camera rides alongside it
+function followShip(ship){
+  if (!controls) return;
+  _shipEye.copy(ship.position).addScaledVector(PV, 15).addScaledVector(PU, -7); _shipEye.y = 9;
+  camera.position.lerp(_shipEye, .04); controls.target.lerp(ship.position, .08);
+}
+function showExplorers(v){
+  explorersOn = v;
+  if (player) player.g.visible = v && !boarded;
+  syncPeers(); updateBoardBtn(); applySleep();
+}
+function ferryAway(){ ferry.visible = false; liner.visible = false; ferryAnim = null; }
+
+/* ---------------- night: break time turns the island to evening ---------------- */
+const DAY = {sky:new THREE.Color(SKY), water:new THREE.Color(0x3AA6B9), sun:new THREE.Color(0xfff1d6)};
+const NIGHT = {sky:new THREE.Color(0x101A36), water:new THREE.Color(0x1B3550), sun:new THREE.Color(0x9FB4FF)};
+const stars = (() => {
+  const n = 600, pos = new Float32Array(n*3);
+  for (let i = 0; i < n; i++){
+    const a = rnd()*Math.PI*2, el = .12 + rnd()*1.35, r = 130;
+    pos[i*3] = Math.cos(a)*Math.cos(el)*r; pos[i*3 + 1] = Math.sin(el)*r; pos[i*3 + 2] = Math.sin(a)*Math.cos(el)*r;
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({color:0xFFFFFF, size:1.1, transparent:true, opacity:0, fog:false, depthWrite:false}));
+  p.visible = false; scene.add(p); return p;
+})();
+const moon = mesh(new THREE.SphereGeometry(4, 16, 12), 0xFFF6D8, {emissive:0xFFF0C0, emissiveIntensity:1, fog:false});
+moon.position.set(-60, 55, -80); moon.castShadow = false; moon.visible = false; scene.add(moon);
+const beamGeo = new THREE.ConeGeometry(1.8, 18, 20, 1, true); beamGeo.translate(0, -9, 0); beamGeo.rotateZ(Math.PI/2);
+const beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({color:0xFFE6A0, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, fog:false}));
+const beamPivot = new THREE.Group(); beamPivot.position.y = 4.85; beamPivot.add(beam); beamPivot.visible = false; stationObj[1].g.add(beamPivot);
+const fire = new THREE.Group();
+{
+  for (let i = 0; i < 3; i++){ const l = mesh(new THREE.CylinderGeometry(.09, .09, .9, 6), 0x6B4226); l.rotation.z = Math.PI/2; l.rotation.y = i*Math.PI/3; l.position.y = .1; fire.add(l); }
+  for (let i = 0; i < 6; i++){ const s = mesh(new THREE.DodecahedronGeometry(.13, 0), 0x9C9A8C); s.position.set(Math.cos(i)*.55, .06, Math.sin(i)*.55); fire.add(s); }
+  const flame = mesh(new THREE.ConeGeometry(.3, .8, 7), 0xFF9A3C, {emissive:0xFF7A1A, emissiveIntensity:1.4}); flame.position.y = .5; flame.castShadow = false; fire.add(flame);
+  const light = new THREE.PointLight(0xFFA04A, 0, 14, 1.6); light.position.y = 1; fire.add(light);
+  fire.userData = {flame, light}; fire.position.set(2.5, GROUND, 8.3); scene.add(fire);
+}
+let nightK = 0, nightTarget = 0;
+function updateNight(dt, t){
+  nightK = reduced ? nightTarget : nightK + (nightTarget - nightK)*Math.min(1, dt*1.2);
+  const k = nightK;
+  scene.background.copy(DAY.sky).lerp(NIGHT.sky, k); scene.fog.color.copy(scene.background);
+  water.material.color.copy(DAY.water).lerp(NIGHT.water, k);
+  sun.color.copy(DAY.sun).lerp(NIGHT.sun, k); sun.intensity = .95 - .7*k; hemi.intensity = .78 - .5*k;
+  stars.visible = moon.visible = beamPivot.visible = k > .02;
+  stars.material.opacity = k; beam.material.opacity = .2*k; beamPivot.rotation.y = t*.7;
+  stationObj[3].g.userData.win.material.emissiveIntensity = .3 + 1.3*k;
+  const f = fire.userData; f.flame.visible = k > .15;
+  f.light.intensity = k*(1.6 + (reduced ? 0 : Math.sin(t*13)*.25 + Math.sin(t*7)*.2));
+  if (!reduced) f.flame.scale.y = 1 + Math.sin(t*11)*.15;
+}
+
+/* ---------------- explorers: the viewer walks the island, peers walk alongside ---------------- */
+function nameSprite(text){
+  const cv = document.createElement('canvas'); cv.width = 320; cv.height = 72;
+  const c = cv.getContext('2d');
+  c.font = '700 34px "Noto Sans TC",sans-serif';
+  const w = Math.min(300, c.measureText(text).width + 36);
+  roundRect(c, (320 - w)/2, 8, w, 56, 28); c.fillStyle = 'rgba(255,255,255,.92)'; c.fill();
+  c.fillStyle = '#18323A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 160, 37, 280);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true}));
+  sp.scale.set(2.2, .5, 1); sp.position.y = 2.35; sp.renderOrder = 9; return sp;
+}
+function zzzSprite(){
+  const cv = document.createElement('canvas'); cv.width = 128; cv.height = 128;
+  const c = cv.getContext('2d'); c.fillStyle = '#FFFFFF'; c.strokeStyle = '#2B3A67'; c.lineWidth = 6;
+  [[20, 100, 40], [56, 66, 32], [86, 36, 26]].forEach(([x, y, f]) => { c.font = `900 ${f}px sans-serif`; c.strokeText('Z', x, y); c.fillText('Z', x, y); });
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true}));
+  sp.scale.set(1, 1, 1); sp.position.set(.5, 1.4, 0); sp.renderOrder = 9; sp.visible = false; return sp;
+}
+function faceSprite(src){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const tex = new THREE.CanvasTexture(cv);
+  const img = new Image();
+  img.onload = () => {
+    const c = cv.getContext('2d');
+    c.save(); c.beginPath(); c.arc(64, 64, 60, 0, Math.PI*2); c.clip(); c.drawImage(img, 0, 0, 128, 128); c.restore();
+    c.lineWidth = 6; c.strokeStyle = '#FFFFFF'; c.beginPath(); c.arc(64, 64, 60, 0, Math.PI*2); c.stroke();
+    tex.needsUpdate = true;
+  };
+  img.src = src;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true}));
+  sp.scale.set(.95, .95, 1); sp.position.y = 1.55; return sp;
+}
+function makeExplorer(ch, name){
+  const g = new THREE.Group(), b = new THREE.Group(), legs = [];
+  g.add(b);
+  [-.15, .15].forEach(x => {
+    const pv = new THREE.Group(); pv.position.set(x, .5, 0);
+    const l = mesh(new THREE.CylinderGeometry(.1, .1, .5, 6), '#2C3E50'); l.position.y = -.25; pv.add(l); b.add(pv); legs.push(pv);
+  });
+  const body = mesh(new THREE.CylinderGeometry(.3, .38, .7, 8), ch.body || ch.accC); body.position.y = .85; b.add(body);
+  const pack = mesh(new THREE.BoxGeometry(.42, .5, .22), '#9A5B2E'); pack.position.set(0, .9, -.36); b.add(pack);
+  if (ch.img){
+    b.add(faceSprite(ch.img));
+  } else {
+    const head = mesh(new THREE.SphereGeometry(.34, 12, 10), ch.skin); head.position.y = 1.48; b.add(head);
+    const hair = mesh(new THREE.SphereGeometry(.36, 12, 8, 0, Math.PI*2, 0, Math.PI/2), ch.hair); hair.position.y = 1.52; hair.rotation.x = -.25; b.add(hair);
+    [-.12, .12].forEach(x => { const e = mesh(new THREE.SphereGeometry(.045, 6, 5), '#18323A'); e.position.set(x, 1.5, .31); b.add(e); });
+    const a = ch.acc;
+    if (a === 'cap' || a === 'captain' || a === 'beanie'){
+      const top = mesh(new THREE.CylinderGeometry(.3, .36, .2, 10), a === 'captain' ? '#FFFFFF' : ch.accC); top.position.y = 1.82; b.add(top);
+      if (a !== 'beanie'){ const brim = mesh(new THREE.CylinderGeometry(.42, .42, .04, 12), ch.accC); brim.position.set(0, 1.73, .08); b.add(brim); }
+      else { const pom = mesh(new THREE.SphereGeometry(.1, 8, 6), ch.accC); pom.position.y = 1.98; b.add(pom); }
+    } else if (a === 'wizard'){
+      const hat = mesh(new THREE.ConeGeometry(.36, .8, 10), ch.accC); hat.position.y = 2.05; b.add(hat);
+      const brim = mesh(new THREE.CylinderGeometry(.5, .5, .04, 12), ch.accC); brim.position.y = 1.72; b.add(brim);
+    } else if (a === 'crown'){
+      const cr = mesh(new THREE.CylinderGeometry(.24, .24, .2, 5, 1, true), ch.accC, {side:THREE.DoubleSide, metalness:.4}); cr.position.y = 1.86; b.add(cr);
+    } else {
+      const tuft = mesh(new THREE.IcosahedronGeometry(.13, 0), ch.accC); tuft.position.set(.18, 1.85, 0); b.add(tuft);
+    }
+  }
+  const label = nameSprite(name); g.add(label);
+  const zzz = zzzSprite(); g.add(zzz);
+  return {g, b, legs, label, zzz, name};
+}
+function setPose(m, asleep, t){
+  m.b.rotation.x = asleep ? -Math.PI/2 : 0;
+  m.b.position.y = asleep ? .38 : 0;
+  m.label.position.y = asleep ? 1.2 : 2.35;
+  m.zzz.visible = asleep;
+  if (asleep && !reduced){ m.zzz.position.y = 1.5 + (t*.6 % 1)*.6; m.zzz.material.opacity = 1 - (t*.6 % 1)*.7; }
+}
+const SPAWN = PU.clone().multiplyScalar(12.5).setY(GROUND);
+const BLOCK = {1:1.6, 2:2.3, 3:2.0, 4:1.0, 5:3.5, 6:1.1, 7:1.3};
+function clampWalk(v){
+  const a = Math.atan2(v.z, v.x), lim = 10.1*S*shapeR(a), r = Math.hypot(v.x, v.z);
+  if (r > lim && !onPier(v)){ v.x *= lim/r; v.z *= lim/r; }
+  STATIONS.forEach(s => {
+    const dx = v.x - s.pos[0], dz = v.z - s.pos[1], d = Math.hypot(dx, dz), R = BLOCK[s.id];
+    if (d < R && d > 1e-3){ v.x = s.pos[0] + dx/d*R; v.z = s.pos[1] + dz/d*R; }
+  });
+  return v;
+}
+let player = null, follow = true, nearSid = 0;
+const keys = new Set();
+function spawnPlayer(){
+  if (player){ scene.remove(player.g); }
+  player = makeExplorer(specFor(charIdx), nick);
+  player.pos = SPAWN.clone(); player.target = null; player.onArrive = null; player.heading = Math.PI;
+  player.g.position.copy(player.pos); player.g.rotation.y = player.heading;
+  player.g.visible = explorersOn && !boarded;
+  scene.add(player.g);
+  $('#viewBtn').hidden = false;
+  flyToPlayer();
+}
+function flyToPlayer(){
+  if (!player) return;
+  follow = true; $('#viewBtn').textContent = '鳥瞰全島';
+  const p = player.pos;
+  flyTo(new THREE.Vector3(p.x + 3, p.y + 9, p.z + 13), new THREE.Vector3(p.x, p.y + 1, p.z));
+}
+function walkTo(v, onArrive, force){
+  if (!player || (!force && locked())) return;
+  player.target = clampWalk(v.clone().setY(GROUND)); player.onArrive = onArrive || null;
+  if (!follow) flyToPlayer();
+}
+function walkToStation(st){
+  const c = new THREE.Vector3(st.pos[0], GROUND, st.pos[1]);
+  const dir = player.pos.clone().sub(c); dir.y = 0;
+  if (dir.lengthSq() < .01) dir.set(0, 0, 1);
+  dir.normalize().multiplyScalar(BLOCK[st.id] + .9);
+  walkTo(c.add(dir), () => openStation(st.id));
+}
+function phasePaused(){ return !$('#attn').hidden; }
+function locked(){ return phasePaused() || sleeping || boarded || !explorersOn; }
+let lastPos = 0;
+function pushPos(force){
+  if (!room || !player) return;
+  const now = performance.now(); if (!force && now - lastPos < 180) return; lastPos = now;
+  room.presence({x:Math.round(player.pos.x*10)/10, z:Math.round(player.pos.z*10)/10, h:Math.round(player.heading*10)/10, s:sleeping ? 1 : 0, b:boarded ? 1 : 0}).catch(() => {});
+}
+const _f = new THREE.Vector3(), _r = new THREE.Vector3(), _d = new THREE.Vector3();
+function updatePlayer(dt, t){
+  if (!player) return;
+  _d.set(0, 0, 0);
+  if (keys.size && !locked()){
+    camera.getWorldDirection(_f); _f.y = 0; _f.normalize(); _r.set(-_f.z, 0, _f.x);
+    if (keys.has('w')) _d.add(_f); if (keys.has('s')) _d.sub(_f);
+    if (keys.has('d')) _d.add(_r); if (keys.has('a')) _d.sub(_r);
+    if (_d.lengthSq()){ player.target = null; player.onArrive = null; if (!follow) flyToPlayer(); }
+  } else if (player.target){
+    _d.copy(player.target).sub(player.pos); _d.y = 0;
+    if (_d.length() < .2){
+      player.target = null; _d.set(0, 0, 0);
+      const cb = player.onArrive; player.onArrive = null; if (cb) cb();
+    }
+  }
+  const moving = _d.lengthSq() > 0;
+  if (moving){
+    _d.normalize();
+    const before = player.pos.clone(), step = 5.6*dt;
+    player.pos.addScaledVector(_d, step); clampWalk(player.pos);
+    if (player.target && player.pos.distanceTo(before) < step*.5){
+      // head-on into a landmark: sidestep along whichever side ends closer to the goal
+      const tries = [new THREE.Vector3(-_d.z, 0, _d.x), new THREE.Vector3(_d.z, 0, -_d.x)].map(s => clampWalk(before.clone().addScaledVector(s.add(_d.clone().multiplyScalar(.3)).normalize(), step)));
+      tries.sort((a, b) => a.distanceTo(player.target) - b.distanceTo(player.target));
+      player.pos.copy(tries[0]);
+      _d.copy(player.pos).sub(before); if (_d.lengthSq()) _d.normalize();
+    }
+    const h = Math.atan2(_d.x, _d.z);
+    let dh = h - player.heading; while (dh > Math.PI) dh -= Math.PI*2; while (dh < -Math.PI) dh += Math.PI*2;
+    player.heading += dh*Math.min(1, dt*12);
+    if (follow && !camAnim){ const delta = player.pos.clone().sub(before); camera.position.add(delta); controls.target.add(delta); }
+    if (player.target && player.pos.distanceTo(before) < step*.1){ player.target = null; player.onArrive = null; } // truly stuck
+    pushPos();
+  }
+  const swing = moving && !reduced ? Math.sin(t*11)*.6 : 0;
+  player.legs[0].rotation.x = swing; player.legs[1].rotation.x = -swing;
+  setPose(player, sleeping, t);
+  if (moving) checkFrags();
+  player.g.position.set(player.pos.x, GROUND + (moving && !reduced ? Math.abs(Math.sin(t*11))*.06 : 0), player.pos.z);
+  player.g.rotation.y = player.heading;
+  // nearby station prompt
+  let near = 0;
+  STATIONS.forEach(s => { if (Math.hypot(player.pos.x - s.pos[0], player.pos.z - s.pos[1]) < BLOCK[s.id] + 1.6) near = s.id; });
+  animalObjs.forEach((g, i) => { if (g.visible && player.pos.distanceTo(g.position) < 2.4) near = 100 + i; });
+  if (locked()) near = 0;
+  if (near !== nearSid){
+    nearSid = near; const b = $('#nearBtn');
+    if (near >= 100) b.textContent = `和「${ANIMALS[near - 100].name}」聊天（E）`;
+    else if (near){ const s = STATIONS[near - 1]; b.textContent = isOpen(s) ? `進入「${s.name}」（E）` : `「${s.name}」尚未開放`; }
+    b.hidden = !near || !$('#sheet').hidden || !$('#chat').hidden;
+  }
+}
+// other explorers in the room
+const peerMeshes = new Map();
+// a peer's look: preset index, or an AI spec packed in presence plus a portrait from the "faces" room
+const faceMap = new Map();
+function peerSpec(peer, p){
+  if (+p.c === CUSTOM){ const sp = unpackSpec(p.av, faceMap.get(peer)); if (sp) return sp; }
+  return CHARS[Math.max(0, Math.min(CHARS.length - 1, +p.c || 0))];
+}
+function peerPres(){ return room ? room.peers().filter(pr => !pr.isMe && pr.kind === 'viewer').map(pr => pr.presence || {}) : []; }
+function syncPeers(){
+  if (!room) return;
+  const alive = new Set();
+  room.peers().forEach(pr => {
+    if (pr.isMe || pr.kind !== 'viewer') return;
+    const p = pr.presence || {};
+    if (typeof p.nick !== 'string' || !p.nick.trim() || typeof p.x !== 'number' || typeof p.z !== 'number') return;
+    if (alive.size >= 40) return;
+    alive.add(pr.peer);
+    const spec = peerSpec(pr.peer, p), name = p.nick.trim().slice(0, 16), key = packSpec(spec) + (spec.img ? spec.img.length : 0);
+    let m = peerMeshes.get(pr.peer);
+    if (m && (m.key !== key || m.name !== name)){ scene.remove(m.g); m = null; }
+    if (!m){
+      m = makeExplorer(spec, name); m.key = key; m.cur = new THREE.Vector3(p.x, GROUND, p.z); m.h = +p.h || 0;
+      scene.add(m.g); peerMeshes.set(pr.peer, m);
+    }
+    m.goal = clampWalk(new THREE.Vector3(p.x, GROUND, p.z)); m.goalH = +p.h || 0;
+    m.sleep = !!p.s; m.g.visible = explorersOn && !p.b;
+  });
+  updatePassengers();
+  [...peerMeshes.keys()].forEach(k => { if (!alive.has(k)){ scene.remove(peerMeshes.get(k).g); peerMeshes.delete(k); } });
+}
+function updatePeers(dt, t){
+  peerMeshes.forEach(m => {
+    const dist = m.cur.distanceTo(m.goal), moving = dist > .05;
+    m.cur.lerp(m.goal, Math.min(1, dt*6));
+    m.h += (m.goalH - m.h)*Math.min(1, dt*8);
+    const swing = moving && !reduced ? Math.sin(t*11)*.6 : 0;
+    m.legs[0].rotation.x = swing; m.legs[1].rotation.x = -swing;
+    setPose(m, m.sleep, t);
+    m.g.position.copy(m.cur); m.g.rotation.y = m.h;
+  });
+}
+addEventListener('keydown', e => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const k = {arrowup:'w', arrowdown:'s', arrowleft:'a', arrowright:'d', w:'w', a:'a', s:'s', d:'d'}[e.key.toLowerCase()];
+  if (k && player){ keys.add(k); e.preventDefault(); }
+  if (e.key.toLowerCase() === 'e' && nearSid > 0 && $('#sheet').hidden && $('#chat').hidden && !locked()) nearSid >= 100 ? openChat(nearSid - 100) : openStation(nearSid);
+});
+addEventListener('keyup', e => { const k = {arrowup:'w', arrowdown:'s', arrowleft:'a', arrowright:'d', w:'w', a:'a', s:'s', d:'d'}[e.key.toLowerCase()]; if (k) keys.delete(k); });
+addEventListener('blur', () => keys.clear());
+
+// picking
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let downAt = null;
+canvas.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
+  const r = canvas.getBoundingClientRect();
+  ptr.set((e.clientX - r.left)/r.width*2 - 1, -(e.clientY - r.top)/r.height*2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const ah = ray.intersectObjects(animalObjs, true).find(x => x.object.userData.aid != null);
+  if (ah && (!player || !locked())){ goAnimal(ah.object.userData.aid); return; }
+  const hits = ray.intersectObjects(pickables, true);
+  const h = hits.find(x => x.object.userData.sid);
+  if (!player || !player.g.visible){ if (h) openStation(h.object.userData.sid); return; }
+  if (locked()){ toast(sleeping ? '島上夜晚，大家都在睡覺，等天亮再走喔' : boarded ? '你已經在船上了' : '請看講師'); return; }
+  if (h){
+    const st = STATIONS[h.object.userData.sid - 1];
+    if (!isOpen(st)) { toast(lockReason(st)); return; }
+    walkToStation(st); return;
+  }
+  const g = ray.intersectObjects([grass, sand, pier], true)[0];
+  if (g) walkTo(g.point);
+});
+canvas.addEventListener('pointermove', e => {
+  if (e.buttons) return;
+  const r = canvas.getBoundingClientRect();
+  ptr.set((e.clientX - r.left)/r.width*2 - 1, -(e.clientY - r.top)/r.height*2 + 1);
+  ray.setFromCamera(ptr, camera);
+  canvas.style.cursor = ray.intersectObjects(pickables, true).length ? 'pointer' : 'grab';
+});
+
+// camera fly
+let camAnim = null;
+function flyTo(pos, tgt){
+  if (!controls) return;
+  controls.autoRotate = false;
+  if (reduced){ camera.position.copy(pos); controls.target.copy(tgt); return; }
+  camAnim = {p0:camera.position.clone(), t0:controls.target.clone(), p1:pos, t1:tgt, k:0};
+}
+function focusStation(st){
+  const c = new THREE.Vector3(st.pos[0], GROUND + 1.5, st.pos[1]);
+  const dir = new THREE.Vector3(st.pos[0], 0, st.pos[1]).normalize();
+  if (!isFinite(dir.x) || dir.lengthSq() < .01) dir.set(0, 0, 1);
+  const side = innerWidth > 640 ? new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(-4) : new THREE.Vector3();
+  flyTo(c.clone().add(dir.multiplyScalar(13)).add(new THREE.Vector3(0, 9, 0)).add(side), c.clone().add(side.clone().multiplyScalar(.3)).add(new THREE.Vector3(0, innerWidth > 640 ? 0 : -2.5, 0)));
+}
+function resetView(){ flyTo(HOME_POS.clone(), HOME_TGT.clone()); }
+
+function resize(){
+  if (!renderer) return;
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w/h;
+  camera.fov = w < 640 ? 58 : 45; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+const clock = new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);
+  if (!renderer) return;
+  const t = clock.getElapsedTime(), now = performance.now(), dt = Math.min((now - (loop.last || now))/1000, .05); loop.last = now;
+  updatePlayer(dt, t); updatePeers(dt, t); updateNight(dt, t); updateFrags(t); updateAnimals(dt, t);
+  if (!reduced){
+    const p = waterGeo.attributes.position;
+    for (let i = 0; i < p.count; i++){
+      const x = wBase[i*3], z = wBase[i*3 + 2];
+      p.array[i*3 + 1] = Math.sin(x*.16 + t*.9)*.16 + Math.cos(z*.19 + t*1.2)*.14;
+    }
+    p.needsUpdate = true; waterGeo.computeVertexNormals();
+    STATIONS.forEach(st => { const o = stationObj[st.id]; o.sp.position.y = o.baseY + Math.sin(t*1.6 + st.id)*.15; o.f.userData.cloth.rotation.y = Math.sin(t*3 + st.id)*.3; });
+    const boat = stationObj[6].g.userData.boat; boat.position.y = .05 + Math.sin(t*1.4)*.08; boat.rotation.z = Math.sin(t*1.1)*.06;
+    clouds.forEach((c, i) => { c.position.x += .012 + i*.002; if (c.position.x > 60) c.position.x = -60; });
+    stationObj[1].g.userData.lamp.material.emissiveIntensity = .6 + Math.sin(t*2.5)*.35 + nightK*1.2;
+  }
+  if (ferryAnim && ferryAnim.wait > 0) ferryAnim.wait -= dt;
+  else if (ferryAnim){
+    const ship = ferryAnim.ship;
+    if (shipCam && !camAnim) followShip(ship);
+    ferryAnim.k = Math.min(1, ferryAnim.k + dt/7);
+    const k = ferryAnim.k, e = ferryAnim.kind === 'arrive' ? 1 - Math.pow(1 - k, 3) : k*k;
+    ship.position.lerpVectors(ferryAnim.from, ferryAnim.to, e);
+    if (k >= 1){
+      const kind = ferryAnim.kind; ferryAnim = null; shipCam = false;
+      if (kind === 'leave') ship.visible = false;
+      else if (kind === 'dock'){
+        faceTo(ship, DOCK_FACE);
+        setTimeout(() => { if (player && !boarded) flyToPlayer(); }, 900);
+      } else {
+        showExplorers(true);
+        faceTo(ship, DOCK_FACE);
+        setTimeout(() => {
+          if (!player) return resetView();
+          // step off the ferry and walk down the pier onto the island
+          player.pos.copy(PIER_B); player.target = null; flyToPlayer(); lastPos = 0; pushPos();
+          walkTo(SPAWN.clone(), null, true);
+          toast('下船囉！點地面、地標或動物就會走過去');
+        }, 500);
+      }
+    }
+  }
+  if (!reduced) [ferry, liner].forEach(s => { if (s.visible){ s.position.y = Math.sin(t*1.3)*.1; s.rotation.z = Math.sin(t*1.05)*.04; s.userData.cloth.rotation.y = Math.sin(t*3)*.3; } });
+  const chest = stationObj[7].g.userData;
+  chest.lid.rotation.x += ((chest.lidTarget || 0) - chest.lid.rotation.x) * .08;
+  if (camAnim){
+    camAnim.k = Math.min(1, camAnim.k + dt*1.3);
+    const e = 1 - Math.pow(1 - camAnim.k, 3);
+    camera.position.lerpVectors(camAnim.p0, camAnim.p1, e);
+    controls.target.lerpVectors(camAnim.t0, camAnim.t1, e);
+    if (camAnim.k >= 1) camAnim = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+resize();
+if (!renderer){ toast('這台裝置無法顯示 3D，請用下方關卡按鈕闖關'); }
+loop();
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => STATIONS.forEach(updateMarker));
+
+/* ---------------- join / nickname ---------------- */
+let pickChar = charIdx;
+function renderChars(){
+  $('#chars').innerHTML = CHARS.map((c, i) => `<button type="button" class="char" role="radio" aria-checked="${i === pickChar}" data-c="${i}"><span class="av">${avatarHTML(i)}</span>${esc(c.name)}</button>`).join('') +
+    (custom ? `<button type="button" class="char" role="radio" aria-checked="${pickChar === CUSTOM}" data-c="${CUSTOM}"><span class="av">${avatarHTML(custom)}</span>${esc(custom.name)}</button>` : '');
+}
+const NAMES = ['海風旅人','小島探險家','椰子學者','珊瑚老師','浪花博士','星光島民','海鷗信差','貝殼收藏家'];
+const pickOne = a => a[Math.floor(Math.random()*a.length)];
+$('#aiGen').onclick = () => {
+  if (custom && custom.img && !confirm('要用隨機角色取代你上傳的頭像嗎？')) return;
+  custom = cleanSpec({name:pickOne(NAMES), skin:pickOne(['#F6CDA8','#E9B98E','#F3C9A0','#E2AE82','#C98E62']),
+    hair:pickOne(['#3B2A22','#6B3E1F','#1F1B1A','#B0582E','#8A8A8A','#D9A84E']),
+    body:pickOne(['#2A8C8C','#EE6F57','#5FA651','#7A63C9','#3B7FC4','#D46FA0','#F4B740']),
+    acc:pickOne(ACCS), accC:pickOne(['#EE6F57','#F4B740','#7A63C9','#2A8C8C','#D46FA0','#3B7FC4']),
+    bg:pickOne(['#FFE1D9','#DDF0D6','#D6EEEE','#F7DDEB','#E5DFF7','#DCE8F7','#FFF3CF'])});
+  store.set('custom', custom); pickChar = CUSTOM; renderChars();
+  $('#aiMsg').textContent = `「${custom.name}」已加入角色清單，不喜歡可以再按一次`;
+};
+$('#gptCopy').onclick = async () => {
+  const desc = $('#aiDesc').value.trim() || '（在這裡描述你的角色）';
+  const txt = `請幫我畫一張 Q 版可愛風格的大頭貼角色圖：正方形、臉部置中且占畫面大部分、背景單一淺色、色彩鮮明、線條簡潔，不要有文字。角色：${desc}`;
+  try { await navigator.clipboard.writeText(txt); $('#aiMsg').textContent = '已複製，貼到 ChatGPT 生圖'; }
+  catch(e){ prompt('複製以下提示詞，貼到 ChatGPT：', txt); }
+};
+// shrink an uploaded portrait until it fits in three presence strings
+$('#imgUp').onchange = e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    const S = 96, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    const c = cv.getContext('2d'), m = Math.min(img.width, img.height);
+    c.fillStyle = '#fff'; c.fillRect(0, 0, S, S);
+    c.drawImage(img, (img.width - m)/2, (img.height - m)/2, m, m, 0, 0, S, S);
+    let q = .8, data = cv.toDataURL('image/jpeg', q);
+    while (data.length > 14000 && q > .2){ q -= .1; data = cv.toDataURL('image/jpeg', q); }
+    if (data.length > 14000){ $('#aiMsg').textContent = '這張圖片太複雜，換一張試試'; return; }
+    custom = Object.assign(cleanSpec(custom || {name:'我的頭像'}), {name:'我的頭像', img:data});
+    store.set('custom', custom); pickChar = CUSTOM; renderChars();
+    $('#aiMsg').textContent = '頭像已上傳！';
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); $('#aiMsg').textContent = '讀不到這張圖片'; };
+  img.src = url;
+};
+$('#chars').onclick = e => { const b = e.target.closest('[data-c]'); if (b){ pickChar = +b.dataset.c; renderChars(); } };
+function askNick(){
+  pickChar = charIdx; renderChars();
+  $('#nickInput').value = nick; $('#codeInput').value = '';
+  $('#myCodeBox').hidden = !nick; $('#myCode').textContent = makeCode();
+  $('#join').hidden = false; setTimeout(() => $('#nickInput').focus(), 50);
+}
+$('#codeInput').addEventListener('input', () => {
+  const r = readCode($('#codeInput').value);
+  if ($('#codeInput').value.length < 4){ $('#codeMsg').textContent = '輸入後會帶回角色、礦石與碎片'; return; }
+  if (!r){ $('#codeMsg').textContent = '接續碼不正確，請再確認一次'; return; }
+  pickChar = r.charIdx; renderChars();
+  $('#codeMsg').textContent = `找到了！${specFor(r.charIdx).name}・${r.done.length} 顆礦石・${r.frags.length} 片碎片`;
+});
+$('#joinForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#nickInput').value.trim().slice(0, 16); if (!v) return;
+  const r = readCode($('#codeInput').value);
+  if (r){ r.done.forEach(i => done.add(i)); store.set('done', [...done]); r.frags.forEach(i => frags.add(i)); store.set('frags', [...frags]); }
+  nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx);
+  $('#join').hidden = true; renderHUD();
+  const keepPos = player && player.pos.clone();
+  spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
+  lastPos = 0; pushPos();
+  pushFace();
+  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '角色準備好了！等講師按「登島」');
+});
+$('#hostSkip').onclick = () => {
+  if (isHost){ $('#join').hidden = true; openHost(); return; }
+  const pin = prompt('請輸入講師密碼');
+  if (pin == null) return;
+  if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
+  becomeHost(); store.set('host', true); $('#join').hidden = true; openHost();
+};
+function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); }
+$('#meChip').onclick = askNick;
+
+/* ---------------- live: room presence + shared state ---------------- */
+let lastPresence = '';
+function pushPresence(){
+  if (!room || !nick) return;
+  const p = {nick, c:charIdx, av:charIdx === CUSTOM && custom ? packSpec(custom) : null, done:[...done].sort().join(','), fr:frags.size, at:currentSid || 0};
+  const k = JSON.stringify(p); if (k === lastPresence) return; lastPresence = k;
+  room.presence(p).catch(() => {});
+}
+function rosterRows(withOffline){
+  if (!room) return [];
+  const seen = new Map();
+  if (withOffline) joined.forEach((v, n) => seen.set(n, {n, d:v.d || 0, at:0, c:v.c ? unpackSpec(v.c) || CHARS[0] : CHARS[Math.max(0, Math.min(CHARS.length - 1, v.ci || 0))], off:true}));
+  room.peers().forEach(pr => {
+    if (pr.kind !== 'viewer' || !pr.presence || typeof pr.presence.nick !== 'string') return;
+    const n = pr.presence.nick.trim().slice(0, 16); if (!n) return;
+    const d = String(pr.presence.done || '').split(',').filter(Boolean).length;
+    const at = +pr.presence.at || 0;
+    const c = peerSpec(pr.peer, pr.presence);
+    const prev = seen.get(n);
+    if (!prev || prev.off || d > prev.d) seen.set(n, {n, d, at, c, s:!!pr.presence.s, b:!!pr.presence.b});
+  });
+  return [...seen.values()].sort((a, b) => b.d - a.d || a.n.localeCompare(b.n, 'zh-Hant'));
+}
+function renderRoster(){
+  if ($('#host').hidden) return;
+  const rows = rosterRows(true), on = rows.filter(r => !r.off).length;
+  $('#rosterCount').textContent = rows.length ? `（線上 ${on} 人／共 ${rows.length} 人）` : '';
+  $('#roster').innerHTML = rows.length ? rows.map(r => `<tr style="${r.off ? 'opacity:.45' : ''}"><td><span class="row" style="flex-wrap:nowrap"><span class="av sm">${avatarHTML(r.c)}</span>${esc(r.n)}</span></td><td class="num">${r.d}</td><td>${r.off ? '離線' : r.b ? '已登船' : r.s ? '睡覺中' : r.at ? esc(STATIONS[r.at-1].name) : '島上'}</td></tr>`).join('')
+    : `<tr><td colspan="3" class="small">${connected ? '目前還沒有學員加入。' : '未連線：可用「手動名單」抽籤。'}</td></tr>`;
+}
+function applyLive(d){
+  liveState = d || null;
+  const o = d && Number.isFinite(+d.open) ? Math.max(1, Math.min(7, +d.open)) : 7;
+  if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost && o < 7) toast(`講師已開放到第 ${o} 站`); }
+  renderOpenGrid();
+  renderHist();
+  applyClass(d);
+  const dr = d && d.draw;
+  if (dr && dr.id && dr.id !== seenDraw){
+    const fresh = Date.now() - (+dr.at || 0) < 90000;
+    const first = seenDraw === undefined;
+    seenDraw = dr.id;
+    if (!(first && !fresh) && !(isHost && dr.byMe)) showDraw(dr.name, Array.isArray(dr.pool) ? dr.pool : [], typeof dr.q === 'string' ? dr.q : '');
+  } else if (seenDraw === undefined) seenDraw = null;
+}
+let seenDraw;
+
+/* ---------------- class phase: before → class → ended, plus attention pause ---------------- */
+let phase;          // undefined until the first live state arrives
+function applyClass(d){
+  const ph = d && ['before','class','ended','gone'].includes(d.phase) ? d.phase : null;
+  const fresh = d && Date.now() - (+d.phaseAt || 0) < 20000;
+  const first = phase === undefined;
+  if (ph !== phase){
+    const prev = phase; phase = ph;
+    if (ph === 'before'){ ferryAway(); boarded = false; showExplorers(false); }
+    if (ph === 'class'){
+      boarded = false; $('#endOv').hidden = true;
+      if (first && !fresh || prev === 'ended') sailFerry('arrive', true);
+      else { closeSheet(); sailFerry('arrive'); banner('登島囉！渡輪正開進研習島嶼', 6500); landTitle('登島！'); }
+    }
+    if (ph === 'ended'){
+      if (first && !fresh) sailFerry('dock', true);
+      else { sailFerry('dock'); banner('離島時間！大船靠岸了，集滿寶藏就能登船', 7000); }
+      if (prev === 'before' || prev === undefined && !explorersOn) showExplorers(true);
+    }
+    if (ph === 'gone'){
+      boarded = !!nick; pushPos(true);
+      if (first && !fresh){ ferryAway(); showExplorers(false); }
+      else { closeSheet(); sailFerry('leave'); landTitle('一路順風！'); }
+      if (!isHost && nick) showEnd();
+    }
+    if (ph === null && !first){ boarded = false; sailFerry('arrive', true); }
+    updateBoardBtn(); pushPos(true);
+  }
+  waitBanner();
+  const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20)} : null;
+  if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
+  // attention pause
+  const att = !!(d && d.attention) && ph !== 'ended';
+  if (!isHost){
+    const was = !$('#attn').hidden;
+    $('#attn').hidden = !att;
+    if (att && !was){ keys.clear(); if (player){ player.target = null; player.onArrive = null; } if ('speechSynthesis' in window) speechSynthesis.cancel(); if (document.activeElement) document.activeElement.blur(); }
+    if (controls) controls.enabled = !att;
+  }
+  $('#cAttn').classList.toggle('on', att);
+  $('#cAttnSub').textContent = att ? '解除暫停' : '暫停全班畫面';
+  $('#cStart').classList.toggle('cur', ph === 'class');
+  $('#cEnd').classList.toggle('cur', ph === 'ended');
+  $('#cSail').classList.toggle('cur', ph === 'gone');
+  $('#liveChip').title = att ? '全班暫停中' : '';
+  const until = (d && d.rest && +d.rest.until) || 0;
+  if (until !== restUntil){ restUntil = until; tickRest(); }
+}
+// activity timer: one countdown everyone sees
+let timer = null, timerT = null;
+function tickTimer(){
+  clearInterval(timerT);
+  const box = $('#timerBox');
+  const draw = () => {
+    if (!timer){ box.hidden = true; clearInterval(timerT); return; }
+    const left = timer.until - Date.now();
+    if (left < -60000){ box.hidden = true; clearInterval(timerT); return; }
+    const sec = Math.max(0, Math.ceil(left/1000));
+    box.hidden = false; box.classList.toggle('over', left <= 0);
+    $('#timerLabel').textContent = left > 0 ? timer.label : timer.label + '・時間到';
+    $('#timerClock').textContent = `${String(Math.floor(sec/60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+  };
+  draw(); timerT = setInterval(draw, 500);
+}
+$('#tStart').onclick = () => {
+  const m = Math.max(1, Math.min(120, +$('#tMin').value || 5));
+  writeLive({timer:{until:Date.now() + m*60000, label:$('#tLabel').value.trim().slice(0, 20) || '計時'}});
+};
+$('#tStop').onclick = () => writeLive({timer:null});
+
+// sleep: at night every explorer walks to a spot by the campfire and lies down
+function fireSlot(){
+  let h = 0; for (const ch of (nick || 'x')) h = (h*31 + ch.charCodeAt(0)) % 997;
+  const a = h/997*Math.PI*2, r = 1.8 + (h % 3)*.55;
+  return new THREE.Vector3(fire.position.x + Math.cos(a)*r, GROUND, fire.position.z + Math.sin(a)*r);
+}
+let wantSleep = false, sleepApplied = false;
+function setSleep(on){
+  if (on === wantSleep) return;
+  wantSleep = on; applySleep();
+}
+function applySleep(){
+  const on = wantSleep && !!player && !boarded && explorersOn;
+  if (on === sleepApplied) return;
+  sleepApplied = on;
+  if (on){
+    closeSheet(); keys.clear();
+    walkTo(fireSlot(), () => { if (sleepApplied){ sleeping = true; lastPos = 0; pushPos(true); } }, true);
+    if (!player.target){ sleeping = true; pushPos(true); }
+  } else if (player){
+    const was = sleeping; sleeping = false; player.target = null; player.onArrive = null; lastPos = 0; pushPos(true);
+    if (was && !wantSleep) toast('天亮了！起床繼續闖關');
+  }
+}
+
+// break: night falls and everyone sees the same countdown (host's clock)
+let restUntil = 0, restTimer = null;
+function tickRest(){
+  clearInterval(restTimer);
+  const box = $('#restBox');
+  const draw = () => {
+    const left = restUntil - Date.now();
+    if (restUntil && left > 0){
+      const s = Math.ceil(left/1000);
+      box.hidden = false; box.classList.remove('over');
+      $('#restLabel').textContent = '休息時間';
+      $('#restClock').textContent = `${String(Math.floor(s/60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+      $('#restNote').textContent = '島上入夜了，島民都去睡覺囉。起來走走、喝口水吧';
+      nightTarget = 1; setSleep(true);
+    } else if (restUntil && left > -15000){
+      box.hidden = false; box.classList.add('over');
+      $('#restLabel').textContent = '休息結束'; $('#restClock').textContent = '00:00';
+      $('#restNote').textContent = '天亮了！請回到座位，準備繼續研習';
+      nightTarget = 0; setSleep(false);
+    } else { box.hidden = true; nightTarget = 0; setSleep(false); clearInterval(restTimer); }
+    const on = restUntil && left > 0;
+    $('#cRest').classList.toggle('on', !!on);
+    $('#cRestSub').textContent = on ? '提早結束休息' : '島上入夜＋計時';
+    waitBanner();
+  };
+  draw(); restTimer = setInterval(draw, 500);
+}
+let landT;
+function landTitle(msg){
+  if (reduced) return;
+  $('#landText').textContent = msg; const el = $('#landTitle'); el.hidden = false;
+  const d = $('#landText'); d.style.animation = 'none'; void d.offsetWidth; d.style.animation = '';
+  clearTimeout(landT); landT = setTimeout(() => el.hidden = true, 3300);
+}
+let bannerT, bannerMsg = '';
+function banner(msg, ms){
+  const b = $('#banner'); bannerMsg = msg; b.className = 'banner'; b.textContent = msg; b.hidden = false;
+  clearTimeout(bannerT); bannerT = setTimeout(() => { bannerMsg = ''; waitBanner(); }, ms);
+}
+function waitBanner(){
+  const b = $('#banner');
+  if (restUntil && restUntil > Date.now() - 15000){ b.hidden = true; return; }
+  if (bannerMsg){ b.hidden = false; return; }
+  if (phase === 'before'){ b.className = 'banner wait'; b.textContent = isHost ? '學員等待中：按「登島」讓渡輪開進島' : '等待講師按「登島」…渡輪準備出發'; b.hidden = false; }
+  else b.hidden = true;
+}
+function showEnd(onBoard){
+  $('#endEyebrow').textContent = onBoard ? '登船成功' : '離島囉';
+  $('#endTitle').textContent = onBoard ? '你已經登上大船，等講師開船！' : '船要開走了，謝謝參與！';
+  $('#endSum').textContent = `${nick || '你'} 這次挖到 ${oresDone()} / 6 顆礦石、找到 ${frags.size} / ${FRAGS.length} 片藏寶圖${done.has(7) ? '，並拿到黃金船票' : ''}。`;
+  $('#endCode').textContent = makeCode();
+  $('#endOv').hidden = false;
+}
+$('#endClose').onclick = () => $('#endOv').hidden = true;
+$('#cStart').onclick = () => writeLive({phase:'class', phaseAt:Date.now(), attention:false, rest:null});
+$('#cEnd').onclick = () => writeLive({phase:'ended', phaseAt:Date.now(), attention:false, rest:null});
+$('#cSail').onclick = () => writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null});
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[]}); };
+
+// boarding: with the golden ticket, walk to the pier and step aboard
+
+function updateBoardBtn(){
+  const b = $('#boardBtn'); if (!b) return;
+  const show = phase === 'ended' && !!player && explorersOn && !boarded;
+  b.hidden = !show; if (!show) return;
+  b.textContent = done.has(7) ? '登船離島' : `還差寶藏：礦石 ${oresDone()}/6、碎片 ${frags.size}/${FRAGS.length}`;
+  b.classList.toggle('boardBtn', done.has(7));
+}
+$('#boardBtn').onclick = () => {
+  if (!done.has(7)){ toast(done.size ? '集滿 6 顆礦石和藏寶圖碎片，打開資源寶箱拿黃金船票，才能登船' : '先去闖關挖礦石吧！'); return; }
+  if (locked()) return;
+  closeSheet();
+  walkTo(PIER_A.clone(), () => walkTo(PIER_B.clone(), () => {
+    boarded = true; player.g.visible = false; lastPos = 0; pushPos(true); updatePassengers(); updateBoardBtn();
+    flyTo(FERRY.dock.clone().add(PV.clone().multiplyScalar(-14)).add(PU.clone().multiplyScalar(-8)).setY(10), FERRY.dock.clone().setY(1)); showEnd(true); confetti();
+  }, true), true);
+  toast('走向碼頭登船…');
+};
+$('#cRest').onclick = () => writeLive({attention:false, rest:restUntil > Date.now() ? null : {until:Date.now() + (+$('#restMin').value)*60000}});
+$('#cAttn').onclick = () => writeLive({attention:!(liveState && liveState.attention)});
+
+async function writeLive(patch){
+  const next = Object.assign({open:openUpTo, draw:null, history:[], timer:null}, liveState || {}, patch);
+  liveState = next;
+  if (isHost) mqPub('state', next, true);
+  applyLive(next);
+}
+
+/* ---------------- host panel ---------------- */
+function renderOpenGrid(){
+  $('#openGrid').innerHTML = [1,2,3,4,5,6,7].map(n => `<button type="button" data-open="${n}" class="${n <= openUpTo ? 'on' : ''}">${n === 7 ? '全部' : '到 ' + n}</button>`).join('');
+}
+$('#openGrid').onclick = e => { const b = e.target.closest('[data-open]'); if (b) writeLive({open:+b.dataset.open}); };
+function renderHist(){
+  const h = (liveState && Array.isArray(liveState.history)) ? liveState.history : [];
+  $('#hist').innerHTML = h.length ? h.map(n => `<span>${esc(n)}</span>`).join('') + '<button class="ghost" id="clearHist" type="button" style="padding:2px 10px;font-size:13px">清除紀錄</button>' : '';
+  const c = $('#clearHist'); if (c) c.onclick = () => writeLive({history:[]});
+}
+$('#manual').value = store.get('manual', '');
+$('#manual').addEventListener('input', () => store.set('manual', $('#manual').value));
+$('#drawBtn').onclick = () => {
+  const mode = document.querySelector('input[name="pool"]:checked').value;
+  let pool;
+  if (mode === 'manual') pool = $('#manual').value.split('\n').map(s => s.trim()).filter(Boolean);
+  else if (mode === 'done') pool = rosterRows(true).filter(r => r.d >= +$('#minDone').value).map(r => r.n);
+  else if (mode === 'online') pool = rosterRows().map(r => r.n);
+  else pool = rosterRows(true).map(r => r.n);
+  pool = [...new Set(pool)];
+  const hist = (liveState && liveState.history) || [];
+  if ($('#noRepeat').checked) pool = pool.filter(n => !hist.includes(n));
+  if (!pool.length){ $('#drawMsg').textContent = mode === 'manual' ? '名單是空的，或都已經抽過了。' : '沒有符合條件的學員（或都已經抽過了）。可改用手動名單。'; return; }
+  $('#drawMsg').textContent = `從 ${pool.length} 人中抽出…`;
+  const name = pool[Math.floor(Math.random()*pool.length)];
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const qv = $('#qSel').value;
+  const q = qv === 'none' ? '' : qv === 'rand' ? QUESTIONS[Math.floor(Math.random()*QUESTIONS.length)] : qv === 'custom' ? $('#qCustom').value.trim().slice(0, 80) : QUESTIONS[+qv] || '';
+  seenDraw = id;
+  showDraw(name, pool, q);
+  writeLive({draw:{id, name, q, pool:shuffle(pool).slice(0, 24), at:Date.now()}, history:[...hist, name].slice(-30)});
+};
+$('#qSel').innerHTML = '<option value="rand">隨機出題（講義題庫）</option><option value="none">不附問題</option>' +
+  QUESTIONS.map((q, i) => `<option value="${i}">${esc(q)}</option>`).join('') + '<option value="custom">自訂問題…</option>';
+$('#qSel').onchange = () => $('#qCustomWrap').hidden = $('#qSel').value !== 'custom';
+
+/* ---------------- QR code for learners to join ---------------- */
+const ARTIFACT_URL = location.origin + location.pathname + (params.get('room') ? '?room=' + encodeURIComponent(ROOM) : '');
+$('#qrUrl').value = /^https:/.test(location.href) ? ARTIFACT_URL : store.get('qrUrl', '');
+$('#qrUrl').addEventListener('input', () => store.set('qrUrl', $('#qrUrl').value.trim()));
+$('#qrShow').onclick = () => {
+  const url = $('#qrUrl').value.trim() || ARTIFACT_URL;
+  if (!/^https:\/\//.test(url)){ toast('請先貼上本頁的分享連結'); return; }
+  const box = $('#qrBig'); box.innerHTML = '';
+  if (typeof QRCode === 'undefined'){ toast('QR Code 元件載入失敗，請直接分享連結'); }
+  else new QRCode(box, {text:url, width:512, height:512, correctLevel:QRCode.CorrectLevel.M});
+  $('#qrText').textContent = url; $('#qrOv').hidden = false;
+};
+$('#qrClose').onclick = () => $('#qrOv').hidden = true;
+
+$('#kSel').innerHTML = ANIMALS.map((a, i) => `<option value="${i}">${esc(a.name)}</option>`).join('');
+function fillKnow(){ const k = knowAt(+$('#kSel').value); $('#kTitle').value = k.t; $('#kBody').value = k.b; }
+$('#kSel').onchange = fillKnow;
+$('#kSave').onclick = () => {
+  const know = ANIMALS.map((a, i) => knowAt(i));
+  know[+$('#kSel').value] = {t:$('#kTitle').value.trim().slice(0, 40) || '新知識', b:$('#kBody').value.trim().slice(0, 400)};
+  writeLive({know}); toast('知識卡已更新');
+};
+
+$('#rosterClear').onclick = () => { if (!confirm('清空學員名單？目前在線的學員會再自動加回來。')) return; joined.clear(); store.set('joined.' + ROOM, {}); renderRoster(); };
+function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderHist(); renderRoster(); }
+$('#hostBtn').onclick = openHost;
+$('#hostClose').onclick = () => $('#host').hidden = true;
+
+/* ---------------- draw overlay ---------------- */
+let drawTimer;
+function showDraw(name, pool, q){
+  clearTimeout(drawTimer);
+  const reel = $('#reel'), ov = $('#drawOv');
+  ov.hidden = false; reel.className = 'reel'; $('#meFlag').hidden = true; $('#drawClose').hidden = true; $('#drawSub').textContent = ''; $('#drawQ').hidden = true;
+  const names = pool.length ? pool : [name];
+  let k = 0, delay = 60, total = 0;
+  const finish = () => {
+    reel.textContent = name; reel.className = 'reel final';
+    const mine = !isHost && nick && name === nick;
+    $('#meFlag').hidden = !mine; $('#drawSub').textContent = q ? '請回答這個問題：' : '恭喜抽中！';
+    $('#drawQ').textContent = q || ''; $('#drawQ').hidden = !q;
+    $('#drawClose').hidden = false; confetti();
+  };
+  if (reduced) return finish();
+  const tick = () => {
+    reel.textContent = names[k++ % names.length]; total += delay; delay *= 1.12;
+    if (total > 2600) return finish();
+    drawTimer = setTimeout(tick, delay);
+  };
+  tick();
+}
+$('#drawClose').onclick = () => $('#drawOv').hidden = true;
+
+$('#nearBtn').onclick = () => { if (nearSid >= 100) openChat(nearSid - 100); else if (nearSid > 0) openStation(nearSid); };
+$('#viewBtn').onclick = () => {
+  if (follow){ follow = false; $('#viewBtn').textContent = '回到我的探險者'; resetView(); }
+  else flyToPlayer();
+};
+
+/* ---------------- boot ---------------- */
+renderHUD();
+if (!nick) askNick(); else spawnPlayer();
+if (store.get('host', false)) becomeHost();
+function pushFace(){
+  const img = charIdx === CUSTOM && custom && custom.img ? custom.img : '';
+  mqPub('f/' + myId, img ? {img} : null, true);
+}
+
+connectNet();
+})();
+</script>
