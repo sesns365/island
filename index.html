@@ -238,7 +238,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 
 <div class="hud top">
   <div class="brand">
-    <small>台東大學 特教師培生研習・傅碧柔（瑪莉）老師</small>
+    <small id="brandSub">台東大學 特教師培生研習・傅碧柔（瑪莉）老師</small>
     <h1>特教研習島嶼</h1>
     <div class="badges" id="badges" aria-label="已獲得的徽章"></div>
   </div>
@@ -352,6 +352,32 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </section>
   </div>
 </aside>
+
+<div class="overlay" id="setup" hidden style="z-index:45">
+  <div class="dialog">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">研習島嶼</small>
+    <h2>特教研習島嶼</h2>
+    <div id="setupHost" class="field" style="gap:10px">
+      <div style="font:900 18px var(--display)">講師：建立研習場次</div>
+      <label class="field">講師密碼<input id="sPin" type="password" inputmode="numeric" autocomplete="off"></label>
+      <label class="field">研習名稱（會顯示在學員畫面左上角）<input id="sTitle" maxlength="40"></label>
+      <label class="field">場次代碼（學員也可以用這組代碼加入）<input id="sRoom" maxlength="12" autocomplete="off"></label>
+      <button class="primary" id="sCreate" type="button">建立場次，產生學員連結</button>
+      <div id="sRecent"></div>
+    </div>
+    <div id="setupDone" class="field" hidden style="gap:10px;align-items:center;text-align:center">
+      <div style="font:900 18px var(--display)">把這個連結分享給學員</div>
+      <div id="sQr" style="background:#fff;padding:10px;border-radius:14px;line-height:0"></div>
+      <div class="qr-url" id="sUrl"></div>
+      <div class="row" style="justify-content:center"><button class="ghost" id="sCopy" type="button">複製學員連結</button><button class="primary" id="sGo" type="button">進入講師主控台</button></div>
+      <p class="small" style="margin:0">學員打開連結、選好角色，就會等你按「登島」。主控台裡也可以隨時再投影這個 QR Code。</p>
+    </div>
+    <div class="field" style="border-top:1px solid var(--line);padding-top:12px">
+      <div style="font:900 18px var(--display)">學員：輸入場次代碼</div>
+      <div class="row"><input id="sJoinCode" maxlength="12" autocomplete="off" placeholder="講師給的代碼" style="flex:1;font:inherit;font-size:16px;border:2px solid var(--line);border-radius:12px;padding:10px 12px"><button class="ghost" id="sJoin" type="button">加入</button></div>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="join" hidden style="z-index:42">
   <form class="dialog" id="joinForm">
@@ -704,13 +730,18 @@ let room = null, db = null, user = null;
    each learner keeps a retained profile+position (p/<id>) and portrait (f/<id>);
    the host's control state is one retained message (state). */
 const params = new URLSearchParams(location.search);
-const ROOM = (params.get('room') || 'tt1151120').replace(/[^\w-]/g, '').slice(0, 24) || 'tt1151120';
+const cleanRoom = v => String(v || '').replace(/[^\w-]/g, '').slice(0, 12);
+const HAS_ROOM = !!cleanRoom(params.get('room'));
+const ROOM = cleanRoom(params.get('room')) || 'lobby';
+const DEFAULT_TITLE = '台東大學 特教師培生研習・傅碧柔（瑪莉）老師';
+const roomUrl = code => location.origin + location.pathname + '?room=' + encodeURIComponent(code);
 const BROKERS = {emqx:'wss://broker.emqx.io:8084/mqtt', hivemq:'wss://broker.hivemq.com:8884/mqtt', mosquitto:'wss://test.mosquitto.org:8081/mqtt'};
 const BROKER = BROKERS[params.get('broker')] || BROKERS.emqx;
 const TOPIC = 'sesns365-island/v1/' + ROOM + '/';
 const HOST_PIN = '0506';          // 講師密碼：要換就改這裡
 const myId = store.get('cid', '') || (() => { const v = Math.random().toString(36).slice(2, 10); store.set('cid', v); return v; })();
 const joined = new Map(Object.entries(store.get('joined.' + ROOM, {})));
+let pendingInit = null;
 let mq = null, connected = false, myPres = {}, presT = null, lastPresSent = 0, peersRaf = 0;
 const peerMap = new Map(), peerCbs = [], connCbs = [];
 function mqPub(sub, obj, retain){
@@ -766,6 +797,7 @@ function connectNet(){
     connected = true; mq.subscribe(TOPIC + '#');
     $('#liveDot').classList.add('live'); $('#liveText').textContent = '已連線';
     lastPresence = ''; pushPresence(); lastPos = 0; pushPos(true); pushFace();
+    if (pendingInit){ const f = pendingInit; pendingInit = null; setTimeout(f, 600); }
   });
   mq.on('close', () => { connected = false; $('#liveDot').classList.remove('live'); $('#liveText').textContent = '重新連線中'; });
   mq.on('message', onMsg);
@@ -1916,7 +1948,7 @@ $('#hostSkip').onclick = () => {
   const pin = prompt('請輸入講師密碼');
   if (pin == null) return;
   if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
-  becomeHost(); store.set('host', true); $('#join').hidden = true; openHost();
+  becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true; openHost();
 };
 function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); }
 $('#meChip').onclick = askNick;
@@ -1953,6 +1985,7 @@ function renderRoster(){
 }
 function applyLive(d){
   liveState = d || null;
+  $('#brandSub').textContent = d && typeof d.title === 'string' && d.title.trim() ? d.title.trim().slice(0, 40) : DEFAULT_TITLE;
   const o = d && Number.isFinite(+d.open) ? Math.max(1, Math.min(7, +d.open)) : 7;
   if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost && o < 7) toast(`講師已開放到第 ${o} 站`); }
   renderOpenGrid();
@@ -2246,15 +2279,56 @@ $('#viewBtn').onclick = () => {
   else flyToPlayer();
 };
 
+/* ---------------- setup: the host creates a session and shares its link ---------------- */
+function showSetup(){
+  $('#join').hidden = true;
+  $('#sTitle').value = store.get('lastTitle', DEFAULT_TITLE);
+  $('#sRoom').value = String(Math.floor(1000 + Math.random()*9000));
+  $('#sPin').parentElement.hidden = !!store.get('hostAuth', false);
+  const recent = store.get('rooms', []);
+  $('#sRecent').innerHTML = recent.length ? '<div class="small" style="font-weight:700">最近建立的場次</div><div class="row">' +
+    recent.map(r => `<a class="ghost" style="text-decoration:none;color:inherit" href="${esc(roomUrl(r.code))}">${esc(r.code)}・${esc(r.title.slice(0, 10))}</a>`).join('') + '</div>' : '';
+  $('#setup').hidden = false;
+}
+$('#sCreate').onclick = () => {
+  if (!store.get('hostAuth', false) && $('#sPin').value.trim() !== HOST_PIN){ toast('講師密碼不正確'); return; }
+  const code = cleanRoom($('#sRoom').value); if (!code){ toast('請輸入場次代碼（英文或數字）'); return; }
+  const title = $('#sTitle').value.trim().slice(0, 40) || DEFAULT_TITLE;
+  store.set('hostAuth', true); store.set('host.' + code, true); store.set('lastTitle', title);
+  store.set('init.' + code, {title});
+  store.set('rooms', [{code, title}, ...store.get('rooms', []).filter(r => r.code !== code)].slice(0, 6));
+  const url = roomUrl(code);
+  $('#sUrl').textContent = url; $('#sQr').innerHTML = '';
+  if (typeof QRCode !== 'undefined') new QRCode($('#sQr'), {text:url, width:240, height:240, correctLevel:QRCode.CorrectLevel.M});
+  $('#setupHost').hidden = true; $('#setupDone').hidden = false;
+  $('#sGo').onclick = () => { location.href = url; };
+};
+$('#sCopy').onclick = async () => {
+  const url = $('#sUrl').textContent;
+  try { await navigator.clipboard.writeText(url); toast('已複製學員連結'); } catch(e){ prompt('複製這個連結給學員：', url); }
+};
+$('#sJoin').onclick = () => { const c = cleanRoom($('#sJoinCode').value); if (c) location.href = roomUrl(c); else toast('請輸入講師給的代碼'); };
+$('#sJoinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sJoin').click(); });
+
 /* ---------------- boot ---------------- */
 renderHUD();
-if (!nick) askNick(); else spawnPlayer();
-if (store.get('host', false)) becomeHost();
+if (!HAS_ROOM){ showSetup(); }
+else if (store.get('host.' + ROOM, false)){
+  becomeHost(); $('#join').hidden = true;
+  if (nick) spawnPlayer();
+  const init = store.get('init.' + ROOM, null);
+  if (init){
+    store.set('init.' + ROOM, null);
+    pendingInit = () => writeLive({phase:'before', phaseAt:Date.now(), title:init.title, attention:false, rest:null, timer:null, draw:null, history:[]});
+    setTimeout(() => { openHost(); $('#qrShow').click(); }, 300);
+  } else openHost();
+}
+else if (!nick) askNick(); else spawnPlayer();
 function pushFace(){
   const img = charIdx === CUSTOM && custom && custom.img ? custom.img : '';
   mqPub('f/' + myId, img ? {img} : null, true);
 }
 
-connectNet();
+if (HAS_ROOM) connectNet();
 })();
 </script>
