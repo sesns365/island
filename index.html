@@ -232,6 +232,29 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   .badge{width:22px;height:22px;font-size:11px}
   .hint{display:none}
 }
+/* interaction: chat bubbles, polls, idea wall */
+.fab{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:42%;z-index:6;display:flex;flex-direction:column;gap:8px}
+.fab .chip{justify-content:center;min-width:76px}
+.fab .chip.hot{background:var(--sun);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.07)}}
+.say-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:30;background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:10px;width:min(460px,calc(100% - 32px));display:flex;flex-direction:column;gap:8px}
+.say-bar input{flex:1;min-width:0;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick button{border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px}
+.poll-opt{position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:12px 14px;font-weight:700;font-size:16px;overflow:hidden}
+.poll-opt .bar{position:absolute;inset:0 auto 0 0;background:#D6EEEE;z-index:0;transition:width .5s}
+.poll-opt > span{position:relative;z-index:1}
+.poll-opt.picked{border-color:var(--teal);border-width:3px}
+.poll-opts{display:flex;flex-direction:column;gap:8px}
+.wall-dialog{width:min(960px,100%)}
+.wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:4px}
+.note-card{background:#FFF3CF;border-radius:6px;padding:10px 12px 8px;box-shadow:0 3px 8px rgba(24,50,58,.15);font-size:15px;line-height:1.5;word-break:break-word}
+.note-card:nth-child(3n+2){background:#DDF0D6}.note-card:nth-child(3n){background:#F7DDEB}
+.note-card small{display:block;margin-top:6px;color:var(--ink-soft);font-weight:700;font-size:12px}
+.proj .note-card{font-size:22px}.proj .wall-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.proj .poll-opt{font-size:24px;padding:18px 20px}.proj h2{font-size:34px}
+.chat-log{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:14px;border:2px solid var(--line);border-radius:12px;padding:8px}
+.chat-log b{color:var(--teal-deep)}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -256,6 +279,16 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <div class="hint" id="hint">點地面或地標就會走過去・方向鍵／WASD 移動・拖曳旋轉視角・闖關挖礦石、找藏寶圖碎片</div>
   <nav class="stations" id="stations" aria-label="關卡列表"></nav>
 </div>
+
+<div class="fab" id="fab" hidden>
+  <button class="chip" id="sayBtn" type="button">說話</button>
+  <button class="chip" id="wallBtn" type="button">想法牆</button>
+  <button class="chip" id="pollBtn" type="button" hidden>投票</button>
+</div>
+<form class="say-bar" id="sayBar" hidden>
+  <div class="quick" id="quick"></div>
+  <div class="row" style="flex-wrap:nowrap"><input id="sayInput" maxlength="40" autocomplete="off" placeholder="想說的話，會出現在你的角色頭上"><button class="primary" type="submit" style="padding:10px 14px">送出</button><button class="ghost" id="sayClose" type="button" aria-label="關閉">×</button></div>
+</form>
 
 <aside class="sheet" id="sheet" hidden aria-live="polite">
   <div class="sheet-head">
@@ -300,6 +333,24 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       </div>
       <div class="row"><button class="primary" id="tStart" type="button">開始計時</button><button class="ghost" id="tStop" type="button">停止</button></div>
       <p class="small">倒數會同步顯示在每位學員畫面下方。</p>
+    </section>
+    <section>
+      <h3>即時投票</h3>
+      <label class="field">題目<input id="pQ" maxlength="60" placeholder="例如：你最想先在課堂試哪個工具？"></label>
+      <label class="field">選項（一行一個，2 到 6 個）<textarea id="pOpts" rows="4" placeholder="Canva&#10;Padlet&#10;Kahoot&#10;還沒想好"></textarea></label>
+      <div class="row"><button class="primary" id="pStart" type="button">發布投票</button><button class="ghost" id="pStop" type="button">結束投票</button><button class="ghost" id="pShow" type="button">投影結果</button></div>
+      <p class="small" id="pSum">發布後學員手機會跳出投票框，結果即時更新。</p>
+    </section>
+    <section>
+      <h3>想法牆</h3>
+      <label class="field">引導問題<input id="wQ" maxlength="60" placeholder="例如：數位工具最能幫助哪一類學生？"></label>
+      <div class="row"><button class="primary" id="wStart" type="button">開放想法牆</button><button class="ghost" id="wStop" type="button">停止投稿</button><button class="ghost" id="wShow" type="button">投影想法牆</button><button class="ghost" id="wClear" type="button">清空</button></div>
+      <p class="small" id="wCount">學員也可以走到島上的布告欄貼便利貼。</p>
+    </section>
+    <section>
+      <h3>聊天紀錄</h3>
+      <div class="chat-log" id="chatLog"><span class="small">學員按「說話」送出的話會出現在這裡。</span></div>
+      <div class="row"><button class="ghost" id="logCsv" type="button">下載互動紀錄</button><button class="ghost" id="chatMute" type="button">暫停學員聊天</button></div>
     </section>
     <section>
       <h3>學員登入 QR Code</h3>
@@ -415,6 +466,27 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </div>
     <button class="ghost" id="hostSkip" type="button" style="font-size:13px;align-self:center;border:0;color:var(--ink-soft)">講師登入</button>
   </form>
+</div>
+
+<div class="overlay" id="pollOv" hidden>
+  <div class="dialog" id="pollBox">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em" id="pollEyebrow">講師投票</small>
+    <h2 id="pollQ"></h2>
+    <div class="poll-opts" id="pollOpts"></div>
+    <p class="small" id="pollMsg"></p>
+    <button class="ghost" id="pollClose" type="button">關閉</button>
+  </div>
+</div>
+
+<div class="overlay" id="wallOv" hidden>
+  <div class="dialog wall-dialog" id="wallBox">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">想法牆</small>
+    <h2 id="wallQ"></h2>
+    <form class="row" id="wallForm" style="flex-wrap:nowrap"><input id="wallInput" maxlength="80" autocomplete="off" placeholder="寫下你的想法（80 字內）" style="flex:1;min-width:0;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit"><button class="primary" type="submit" style="padding:10px 14px">貼上</button></form>
+    <p class="small" id="wallMsg"></p>
+    <div class="wall-grid" id="wallGrid"></div>
+    <button class="ghost" id="wallClose" type="button">關閉</button>
+  </div>
 </div>
 
 <div class="overlay" id="drawOv" hidden>
@@ -783,8 +855,10 @@ function onMsg(topic, buf){
   let v = null;
   if (txt){ try { v = JSON.parse(txt); } catch(e){ return; } }
   if (sub === 'state'){ applyLive(v && typeof v === 'object' ? v : null); return; }
+  if (sub === 'ideas'){ if (!isHost) gotIdeas(v); return; }
   const [kind, id] = sub.split('/');
   if (!id || id === myId) return;
+  if (kind === 'say' || kind === 'vote' || kind === 'idea'){ gotInteract(kind, id, v); return; }
   if (kind === 'p'){
     if (v && typeof v === 'object' && typeof v.nick === 'string' && Date.now() - (+v.t || 0) < 3*3600e3){
       peerMap.set(id, {presence:v, t:Date.now()}); noteJoin(v);
@@ -1100,6 +1174,7 @@ const pier = new THREE.Group();
   }
   pier.position.copy(PU.clone().multiplyScalar(22.3)); pier.rotation.y = -.75; scene.add(pier);
 }
+const BOARD_POS = PU.clone().multiplyScalar(10.5).add(PV.clone().multiplyScalar(-3.2)).setY(GROUND); // idea-wall notice board
 const onPier = v => { const t = v.x*PU.x + v.z*PU.z, w = v.x*PV.x + v.z*PV.z; return t > 13 && t < 30.8 && Math.abs(w) < .7; };
 // seeded random
 let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1113,11 +1188,24 @@ function tree(x, z, s = 1){
 const TREES = []; // loose trees explorers walk around: [x, z, radius]
 const nearStation = (x, z, d) => STATIONS.some(s => Math.hypot(s.pos[0]-x, s.pos[1]-z) < d);
 const nearKeep = (x, z) => ANIMALS.some(a => Math.hypot(a.home[0]-x, a.home[1]-z) < 3.6) || FRAGS.some(f => Math.hypot(f.pos[0]-x, f.pos[1]-z) < 2) ||
-  Math.hypot(x - 2.5, z - 8.3) < 3.5 || Math.hypot(x - PIER_A.x, z - PIER_A.z) < 3.5;
+  Math.hypot(x - 2.5, z - 8.3) < 3.5 || Math.hypot(x - PIER_A.x, z - PIER_A.z) < 3.5 || Math.hypot(x - BOARD_POS.x, z - BOARD_POS.z) < 3;
 for (let i = 0, n = 0; i < 400 && n < 120; i++){
   const a = rnd()*Math.PI*2, r = (3 + rnd()*7)*S;
   const x = Math.cos(a)*r*shapeR(a), z = Math.sin(a)*r*shapeR(a);
   if (!nearStation(x, z, 3.6) && !nearKeep(x, z)){ const sc = .7 + rnd()*.6; scene.add(tree(x, z, sc)); TREES.push([x, z, .5*sc + .3]); n++; }
+}
+const pickables = [];
+const board = new THREE.Group();
+{
+  for (const x of [-1.1, 1.1]){ const leg = mesh(new THREE.CylinderGeometry(.09, .09, 2.2, 6), 0x7A5A3B); leg.position.set(x, 1.1, 0); board.add(leg); }
+  const panel = mesh(new THREE.BoxGeometry(2.6, 1.5, .12), 0xB0855A); panel.position.y = 1.55; board.add(panel);
+  const roof = mesh(new THREE.BoxGeometry(2.9, .12, .5), 0x8A5A3B); roof.position.y = 2.36; board.add(roof);
+  [[-.75, 1.8, 0xFFE08A], [0, 1.75, 0xBFE3B4], [.75, 1.82, 0xF5C6DD], [-.4, 1.3, 0xF5C6DD], [.45, 1.28, 0xFFE08A]].forEach(([x, y, c]) => {
+    const n = mesh(new THREE.BoxGeometry(.5, .42, .03), c); n.position.set(x, y, .08); n.rotation.z = (x*7 % 3 - 1)*.08; board.add(n);
+  });
+  board.position.copy(BOARD_POS); board.lookAt(0, GROUND, 0);
+  board.traverse(o => o.userData.board = true);
+  scene.add(board); pickables.push(board); TREES.push([BOARD_POS.x, BOARD_POS.z, 1.4]);
 }
 for (let i = 0; i < 28; i++){
   const a = rnd()*Math.PI*2, r = (11.6 + rnd()*1.4)*S;
@@ -1206,7 +1294,6 @@ const builders = {
     return 2.8;
   }
 };
-const pickables = [];
 STATIONS.forEach(st => {
   const g = new THREE.Group();
   const h = builders[st.id](g);
@@ -1717,10 +1804,12 @@ function updatePlayer(dt, t){
   let near = 0;
   STATIONS.forEach(s => { if (Math.hypot(player.pos.x - s.pos[0], player.pos.z - s.pos[1]) < BLOCK[s.id] + 1.6) near = s.id; });
   animalObjs.forEach((g, i) => { if (g.visible && player.pos.distanceTo(g.position) < 2.4) near = 100 + i; });
+  if (Math.hypot(player.pos.x - BOARD_POS.x, player.pos.z - BOARD_POS.z) < 3) near = 200;
   if (locked()) near = 0;
   if (near !== nearSid){
     nearSid = near; const b = $('#nearBtn');
-    if (near >= 100) b.textContent = `和「${ANIMALS[near - 100].name}」聊天（E）`;
+    if (near === 200) b.textContent = '打開想法牆（E）';
+    else if (near >= 100) b.textContent = `和「${ANIMALS[near - 100].name}」聊天（E）`;
     else if (near){ const s = STATIONS[near - 1]; b.textContent = isOpen(s) ? `進入「${s.name}」（E）` : `「${s.name}」尚未開放`; }
     b.hidden = !near || !$('#sheet').hidden || !$('#chat').hidden;
   }
@@ -1771,7 +1860,7 @@ addEventListener('keydown', e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const k = {arrowup:'w', arrowdown:'s', arrowleft:'a', arrowright:'d', w:'w', a:'a', s:'s', d:'d'}[e.key.toLowerCase()];
   if (k && player){ keys.add(k); e.preventDefault(); }
-  if (e.key.toLowerCase() === 'e' && nearSid > 0 && $('#sheet').hidden && $('#chat').hidden && !locked()) nearSid >= 100 ? openChat(nearSid - 100) : openStation(nearSid);
+  if (e.key.toLowerCase() === 'e' && nearSid > 0 && $('#sheet').hidden && $('#chat').hidden && !locked()) nearSid === 200 ? openWall() : nearSid >= 100 ? openChat(nearSid - 100) : openStation(nearSid);
 });
 addEventListener('keyup', e => { const k = {arrowup:'w', arrowdown:'s', arrowleft:'a', arrowright:'d', w:'w', a:'a', s:'s', d:'d'}[e.key.toLowerCase()]; if (k) keys.delete(k); });
 addEventListener('blur', () => keys.clear());
@@ -1788,6 +1877,10 @@ canvas.addEventListener('pointerup', e => {
   const ah = ray.intersectObjects(animalObjs, true).find(x => x.object.userData.aid != null);
   if (ah && (!player || !locked())){ goAnimal(ah.object.userData.aid); return; }
   const hits = ray.intersectObjects(pickables, true);
+  if (hits[0] && hits[0].object.userData.board){
+    if (!player || !player.g.visible || locked()) return openWall();
+    return walkTo(BOARD_POS.clone().multiplyScalar(.86), openWall);
+  }
   const h = hits.find(x => x.object.userData.sid);
   if (!player || !player.g.visible){ if (h) openStation(h.object.userData.sid); return; }
   if (locked()){ toast(sleeping ? '島上夜晚，大家都在睡覺，等天亮再走喔' : boarded ? '你已經在船上了' : '請看講師'); return; }
@@ -1981,7 +2074,7 @@ $('#joinForm').addEventListener('submit', e => {
   const r = readCode($('#codeInput').value);
   if (r){ r.done.forEach(i => done.add(i)); store.set('done', [...done]); r.frags.forEach(i => frags.add(i)); store.set('frags', [...frags]); }
   nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx);
-  $('#join').hidden = true; renderHUD();
+  $('#join').hidden = true; renderHUD(); showFab();
   const keepPos = player && player.pos.clone();
   spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
   lastPos = 0; pushPos();
@@ -1996,7 +2089,7 @@ $('#hostSkip').onclick = () => {
   becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true; openHost();
   if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null});
 };
-function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); }
+function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
 
 /* ---------------- live: room presence + shared state ---------------- */
@@ -2037,6 +2130,7 @@ function applyLive(d){
   renderOpenGrid();
   renderHist();
   applyClass(d);
+  applyInteract(d);
   const dr = d && d.draw;
   if (dr && dr.id && dr.id !== seenDraw){
     const fresh = Date.now() - (+dr.at || 0) < 90000;
@@ -2359,7 +2453,7 @@ function showDraw(name, pool, q){
 }
 $('#drawClose').onclick = () => $('#drawOv').hidden = true;
 
-$('#nearBtn').onclick = () => { if (nearSid >= 100) openChat(nearSid - 100); else if (nearSid > 0) openStation(nearSid); };
+$('#nearBtn').onclick = () => { if (nearSid === 200) openWall(); else if (nearSid >= 100) openChat(nearSid - 100); else if (nearSid > 0) openStation(nearSid); };
 $('#viewBtn').onclick = () => {
   if (follow){ follow = false; $('#viewBtn').textContent = '回到我的探險者'; resetView(); }
   else flyToPlayer();
@@ -2396,6 +2490,214 @@ $('#sCopy').onclick = async () => {
 $('#sJoin').onclick = () => { const c = cleanRoom($('#sJoinCode').value); if (c) location.href = roomUrl(c); else toast('請輸入講師給的代碼'); };
 $('#sJoinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sJoin').click(); });
 
+/* ---------------- interaction: chat bubbles, live polls, idea wall ----------------
+   say/<id>  one line of chat (not kept), shown as a bubble over that explorer
+   vote/<id> retained ballot {p:poll id, o:option}, tallied by everyone
+   idea/<id> a sticky note sent to the host, who republishes the whole wall as retained `ideas` */
+const QUICK = ['我懂了！', '好有趣', '有問題想問', '+1 同意', '讚', '需要再說明一次'];
+const chatLog = store.get('chat.' + ROOM, []);
+let ideas = store.get('ideas.' + ROOM, {w:'', list:[]});
+const votes = new Map();          // peer id → {p, o, n}
+let poll = null, wall = null, muted = false, seenPoll = null, seenWall = null, lastSay = 0;
+function showFab(){ $('#fab').hidden = !(nick || isHost) || !HAS_ROOM; }
+function bubbleSprite(text){
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 200;
+  const c = cv.getContext('2d'); c.font = '700 38px "Noto Sans TC",sans-serif';
+  const lines = []; let cur = '';
+  for (const ch of text){ if (c.measureText(cur + ch).width > 440){ lines.push(cur); cur = ''; if (lines.length === 2) break; } cur += ch; }
+  if (lines.length < 2 && cur) lines.push(cur); else if (cur && lines.length === 2) lines[1] = lines[1].slice(0, -1) + '…';
+  const w = Math.max(...lines.map(l => c.measureText(l).width)) + 48, h = lines.length*48 + 30;
+  roundRect(c, (512 - w)/2, 4, w, h, 26); c.fillStyle = '#FFFFFF'; c.fill(); c.lineWidth = 5; c.strokeStyle = '#2A8C8C'; c.stroke();
+  c.beginPath(); c.moveTo(236, h + 2); c.lineTo(256, h + 30); c.lineTo(276, h + 2); c.fill();
+  c.fillStyle = '#18323A'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  lines.forEach((l, i) => c.fillText(l, 256, 4 + 15 + 24 + i*48));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true}));
+  sp.scale.set(4.4, 1.72, 1); sp.position.y = 3.5; sp.renderOrder = 10; return sp;
+}
+function showBubble(m, text){
+  if (!m || !m.g) return;
+  if (m.bubble){ m.g.remove(m.bubble); clearTimeout(m.bubbleT); }
+  m.bubble = bubbleSprite(text); m.g.add(m.bubble);
+  m.bubbleT = setTimeout(() => { if (m.bubble){ m.g.remove(m.bubble); m.bubble = null; } }, 7000);
+}
+function logChat(n, x){
+  if (!isHost) return;
+  chatLog.push({t:Date.now(), n, x}); if (chatLog.length > 500) chatLog.splice(0, chatLog.length - 500);
+  store.set('chat.' + ROOM, chatLog); renderChatLog();
+}
+function renderChatLog(){
+  if (!isHost) return;
+  const el = $('#chatLog'); if (!chatLog.length) return;
+  const hm = t => new Date(t).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false});
+  el.innerHTML = chatLog.slice(-60).map(r => `<div><span class="small">${hm(r.t)}</span> <b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+const cleanText = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
+function gotInteract(kind, id, v){
+  if (kind === 'say'){
+    if (!v || muted) return;
+    const x = cleanText(v.x, 40), n = cleanText(v.n, 16); if (!x || !n) return;
+    showBubble(peerMeshes.get(id), x); logChat(n, x);
+  } else if (kind === 'vote'){
+    if (v && typeof v === 'object' && typeof v.p === 'string') votes.set(id, {p:v.p, o:+v.o, n:cleanText(v.n, 16)}); else votes.delete(id);
+    renderPoll();
+  } else if (kind === 'idea' && isHost && v && wall && v.w === wall.id){
+    addIdea(cleanText(v.n, 16), cleanText(v.x, 80), cleanText(v.k, 20));
+  }
+}
+// --- chat ---
+$('#quick').innerHTML = QUICK.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
+$('#quick').onclick = e => { const b = e.target.closest('[data-q]'); if (b) say(b.dataset.q); };
+$('#sayBtn').onclick = () => {
+  if (!nick && !isHost) return askNick();
+  if (muted && !isHost) return toast('講師暫停了聊天');
+  $('#sayBar').hidden = !$('#sayBar').hidden; if (!$('#sayBar').hidden) $('#sayInput').focus();
+};
+$('#sayClose').onclick = () => $('#sayBar').hidden = true;
+$('#sayBar').addEventListener('submit', e => { e.preventDefault(); say($('#sayInput').value); });
+function say(text){
+  const x = cleanText(text, 40); if (!x) return;
+  if (muted && !isHost) return toast('講師暫停了聊天');
+  if (phasePaused() && !isHost) return toast('請先看講師');
+  if (Date.now() - lastSay < 2500) return toast('說慢一點，2 秒後再送');
+  lastSay = Date.now();
+  const n = nick || '講師';
+  mqPub('say/' + myId, {n, x, at:Date.now()});
+  if (player) showBubble(player, x);
+  logChat(n, x);
+  $('#sayInput').value = ''; $('#sayBar').hidden = true;
+}
+$('#chatMute').onclick = () => writeLive({mute:!muted});
+// --- polls ---
+function applyInteract(d){
+  muted = !!(d && d.mute);
+  $('#chatMute').textContent = muted ? '恢復學員聊天' : '暫停學員聊天';
+  const p = d && d.poll && typeof d.poll.id === 'string' && Array.isArray(d.poll.opts) ? {id:d.poll.id, q:cleanText(d.poll.q, 60), opts:d.poll.opts.slice(0, 6).map(o => cleanText(o, 30)), open:!!d.poll.open} : null;
+  const newPoll = p && p.id !== (poll && poll.id);
+  poll = p; $('#pollBtn').hidden = !poll; $('#pollBtn').classList.toggle('hot', !!poll && poll.open && !myVote());
+  if (newPoll && seenPoll !== null && p.open && !isHost && nick && !myVote()) openPoll();
+  if (seenPoll === null || newPoll) seenPoll = p ? p.id : '';
+  renderPoll();
+  const w = d && d.wall && typeof d.wall.id === 'string' ? {id:d.wall.id, q:cleanText(d.wall.q, 60), open:!!d.wall.open} : null;
+  const newWall = w && w.id !== (wall && wall.id);
+  wall = w; $('#wallBtn').classList.toggle('hot', !!wall && wall.open && !isHost);
+  if (newWall && seenWall !== null && w.open && !isHost && nick){ banner('講師開放想法牆：' + w.q, 6000); openWall(); }
+  if (seenWall === null || newWall) seenWall = w ? w.id : '';
+  if (isHost && w && ideas.w !== w.id){ ideas = {w:w.id, list:[]}; saveIdeas(); }
+  renderWall();
+}
+const myVote = () => poll && votes.has(myId) && votes.get(myId).p === poll.id ? votes.get(myId) : null;
+function tally(){
+  const c = poll ? poll.opts.map(() => 0) : [];
+  votes.forEach(v => { if (poll && v.p === poll.id && c[v.o] != null) c[v.o]++; });
+  return c;
+}
+function openPoll(proj){
+  if (!poll){ toast('目前沒有投票'); return; }
+  $('#pollBox').classList.toggle('proj', !!proj); $('#pollBox').style.width = proj ? 'min(900px,100%)' : '';
+  $('#pollOv').hidden = false; renderPoll();
+}
+function renderPoll(){
+  const c = tally(), total = c.reduce((a, b) => a + b, 0), mine = myVote();
+  if (isHost) $('#pSum').textContent = poll ? `「${poll.q}」${poll.open ? '投票中' : '已結束'}・${total} 票：` + poll.opts.map((o, i) => `${o} ${c[i]}`).join('、') : '發布後學員手機會跳出投票框，結果即時更新。';
+  if ($('#pollOv').hidden || !poll) return;
+  const showRes = isHost || !!mine || !poll.open;
+  $('#pollEyebrow').textContent = poll.open ? '講師投票・投票中' : '講師投票・已結束';
+  $('#pollQ').textContent = poll.q;
+  $('#pollOpts').innerHTML = poll.opts.map((o, i) => {
+    const pct = total ? Math.round(c[i]/total*100) : 0;
+    return `<button type="button" class="poll-opt${mine && mine.o === i ? ' picked' : ''}" data-o="${i}"${!poll.open || isHost ? ' disabled' : ''}>${showRes ? `<i class="bar" style="width:${pct}%"></i>` : ''}<span>${esc(o)}</span>${showRes ? `<span>${c[i]} 票・${pct}%</span>` : ''}</button>`;
+  }).join('');
+  $('#pollMsg').textContent = isHost ? `共 ${total} 票` : !poll.open ? `投票結束，共 ${total} 票` : mine ? '已投票，可以改選其他選項' : '點一個選項投票';
+}
+$('#pollOpts').onclick = e => {
+  const b = e.target.closest('[data-o]'); if (!b || !poll || !poll.open || isHost) return;
+  const v = {p:poll.id, o:+b.dataset.o, n:nick};
+  votes.set(myId, v); mqPub('vote/' + myId, v, true); renderPoll(); $('#pollBtn').classList.remove('hot');
+};
+$('#pollBtn').onclick = () => openPoll(isHost);
+$('#pollClose').onclick = () => $('#pollOv').hidden = true;
+$('#pStart').onclick = () => {
+  const q = cleanText($('#pQ').value, 60), opts = $('#pOpts').value.split('\n').map(o => cleanText(o, 30)).filter(Boolean).slice(0, 6);
+  if (!q || opts.length < 2) return toast('請輸入題目和至少 2 個選項');
+  writeLive({poll:{id:Date.now().toString(36), q, opts, open:true}});
+  toast('投票已發布');
+};
+$('#pStop').onclick = () => { if (poll) writeLive({poll:Object.assign({}, liveState.poll, {open:false})}); };
+$('#pShow').onclick = () => openPoll(true);
+// --- idea wall ---
+function saveIdeas(){
+  store.set('ideas.' + ROOM, ideas);
+  clearTimeout(saveIdeas.t); saveIdeas.t = setTimeout(() => mqPub('ideas', ideas, true), 400);
+}
+function addIdea(n, x, k){
+  if (!n || !x || ideas.list.some(i => i.k === k)) return;
+  ideas.list.push({n, x, k: k || Date.now().toString(36), t:Date.now()});
+  if (ideas.list.length > 150) ideas.list.shift();
+  saveIdeas(); renderWall();
+}
+function gotIdeas(v){
+  ideas = v && typeof v === 'object' && Array.isArray(v.list) ? {w:cleanText(v.w, 20), list:v.list.slice(-150).map(i => ({n:cleanText(i.n, 16), x:cleanText(i.x, 80), k:cleanText(i.k, 20)}))} : {w:'', list:[]};
+  renderWall();
+}
+function openWall(proj){
+  $('#wallBox').classList.toggle('proj', !!proj);
+  $('#wallOv').hidden = false; renderWall();
+  if (!proj && wall && wall.open && !isHost) setTimeout(() => $('#wallInput').focus(), 60);
+}
+function renderWall(){
+  const list = wall && ideas.w === wall.id ? ideas.list : [];
+  if (isHost) $('#wCount').textContent = wall ? `「${wall.q}」${wall.open ? '投稿中' : '已停止投稿'}・${list.length} 則想法` : '學員也可以走到島上的布告欄貼便利貼。';
+  if ($('#wallOv').hidden) return;
+  const proj = $('#wallBox').classList.contains('proj');
+  $('#wallQ').textContent = wall ? wall.q : '講師還沒開放想法牆';
+  $('#wallForm').hidden = !wall || !wall.open || proj || isHost && !nick;
+  $('#wallMsg').textContent = !wall ? '等講師出題後，就可以在這裡貼上你的想法。' : wall.open ? `已經有 ${list.length} 則想法` : `投稿已停止，共 ${list.length} 則想法`;
+  $('#wallGrid').innerHTML = list.slice().reverse().map(i => `<div class="note-card">${esc(i.x)}<small>${esc(i.n)}</small></div>`).join('');
+}
+$('#wallForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const x = cleanText($('#wallInput').value, 80); if (!x || !wall || !wall.open) return;
+  if (!nick && !isHost) return askNick();
+  const k = myId + Date.now().toString(36), n = nick || '講師';
+  if (isHost) addIdea(n, x, k);
+  else {
+    mqPub('idea/' + myId, {w:wall.id, n, x, k});
+    if (!ideas.list.some(i => i.k === k) && ideas.w === wall.id) ideas.list.push({n, x, k});
+    if (ideas.w !== wall.id) ideas = {w:wall.id, list:[{n, x, k}]};
+  }
+  $('#wallInput').value = ''; renderWall(); toast('已貼上想法牆'); confetti();
+});
+$('#wallBtn').onclick = () => openWall(isHost && !!wall);
+$('#wallClose').onclick = () => $('#wallOv').hidden = true;
+$('#wStart').onclick = () => {
+  const q = cleanText($('#wQ').value, 60); if (!q) return toast('請輸入引導問題');
+  if (wall && wall.q === q && !wall.open) return writeLive({wall:Object.assign({}, liveState.wall, {open:true})});
+  writeLive({wall:{id:Date.now().toString(36), q, open:true}}); toast('想法牆已開放');
+};
+$('#wStop').onclick = () => { if (wall) writeLive({wall:Object.assign({}, liveState.wall, {open:false})}); };
+$('#wShow').onclick = () => openWall(true);
+$('#wClear').onclick = () => { if (wall && confirm('清空想法牆上的所有便利貼？')){ ideas = {w:wall.id, list:[]}; saveIdeas(); renderWall(); } };
+// --- export everything as one CSV ---
+$('#logCsv').onclick = () => {
+  const t2s = t => t ? new Date(t).toLocaleString('zh-TW', {hour12:false}) : '';
+  const cell = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const rows = [['類型', '時間', '暱稱', '內容']];
+  chatLog.forEach(r => rows.push(['聊天', t2s(r.t), r.n, r.x]));
+  if (wall) ideas.list.forEach(i => rows.push(['想法牆：' + wall.q, t2s(i.t), i.n, i.x]));
+  if (poll){
+    const c = tally();
+    poll.opts.forEach((o, i) => rows.push(['投票結果：' + poll.q, '', '', `${o}：${c[i]} 票`]));
+    votes.forEach(v => { if (v.p === poll.id) rows.push(['投票：' + poll.q, '', v.n, poll.opts[v.o] || '']); });
+  }
+  if (rows.length < 2) return toast('還沒有互動紀錄');
+  const blob = new Blob(['﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `研習島嶼互動紀錄_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+renderChatLog();
+
 /* ---------------- boot ---------------- */
 renderHUD();
 if (!HAS_ROOM){ showSetup(); }
@@ -2410,6 +2712,7 @@ else if (store.get('host.' + ROOM, false)){
   } else openHost();
 }
 else if (!nick) askNick(); else spawnPlayer();
+showFab();
 function pushFace(){
   const img = charIdx === CUSTOM && custom && custom.img ? custom.img : '';
   mqPub('f/' + myId, img ? {img} : null, true);
