@@ -434,13 +434,13 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <form class="dialog" id="joinForm">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">歡迎登島</small>
     <h2>特教研習島嶼</h2>
-    <p>跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開資源寶箱拿到黃金船票！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
+    <p>你是登島尋寶的探險家！跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開資源寶箱拿到黃金船票！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
     <div id="joinStep1" class="field" style="gap:12px">
-    <div class="field">第 1 步：先選擇你的島民角色
-      <div class="chars" id="chars" role="radiogroup" aria-label="選擇角色"></div>
+    <div class="field">第 1 步：選一位探險家
+      <div class="chars" id="chars" role="radiogroup" aria-label="選擇探險家"></div>
     </div>
     <details class="ai-box" id="aiBox">
-      <summary>或：做一個自己的專屬角色</summary>
+      <summary>或：打造自己的專屬探險家</summary>
       <label class="field" style="font-weight:500">描述你想要的角色（外型、顏色、配件）
         <textarea id="aiDesc" rows="2" maxlength="120" placeholder="例如：戴紫色巫師帽、綠色衣服、短捲髮的魔法老師（給 ChatGPT 生圖用）"></textarea></label>
       <div class="row"><button class="ghost" id="aiGen" type="button">隨機生成角色</button><span class="small" id="aiMsg"></span></div>
@@ -723,15 +723,15 @@ const QUESTIONS = [
    Presets below; a learner can also make one with AI (Claude designs the
    colours and accessory) or upload a portrait made in ChatGPT. */
 const CHARS = [
-  {name:'燈塔守護者', bg:'#FFE1D9', skin:'#F6CDA8', hair:'#3B2A22', acc:'cap',     accC:'#EE6F57', img:''},
-  {name:'森林探險家', bg:'#DDF0D6', skin:'#E9B98E', hair:'#6B3E1F', acc:'leaf',    accC:'#5FA651', img:''},
-  {name:'小屋播報員', bg:'#D6EEEE', skin:'#F6CDA8', hair:'#1F1B1A', acc:'phones',  accC:'#2A8C8C', img:''},
-  {name:'花園園丁',   bg:'#F7DDEB', skin:'#F3C9A0', hair:'#B0582E', acc:'bow',     accC:'#D46FA0', img:''},
-  {name:'登山數學家', bg:'#E5DFF7', skin:'#E2AE82', hair:'#2C2C3A', acc:'glasses', accC:'#7A63C9', img:''},
-  {name:'港口船長',   bg:'#DCE8F7', skin:'#F6CDA8', hair:'#8A8A8A', acc:'captain', accC:'#3B7FC4', img:''}
+  {name:'叢林探險家', bg:'#F3E7C9', skin:'#F6CDA8', hair:'#3B2A22', acc:'safari', accC:'#D8C08A', body:'#9C8150', img:''},
+  {name:'洞穴礦工',   bg:'#FFE7C2', skin:'#E9B98E', hair:'#1F1B1A', acc:'miner',  accC:'#F4B740', body:'#E07B39', img:''},
+  {name:'尋寶海盜',   bg:'#DCE8F7', skin:'#F3C9A0', hair:'#6B3E1F', acc:'pirate', accC:'#D9513A', body:'#2E4A7A', img:''},
+  {name:'深海潛水員', bg:'#D6EEEE', skin:'#F6CDA8', hair:'#B0582E', acc:'diver',  accC:'#2A8C8C', body:'#3B7FC4', img:''},
+  {name:'沙漠考古家', bg:'#EFE3CF', skin:'#E2AE82', hair:'#2C2C3A', acc:'ranger', accC:'#8A5A3B', body:'#7A8B4A', img:''},
+  {name:'雪山嚮導',   bg:'#E5DFF7', skin:'#F6CDA8', hair:'#8A8A8A', acc:'beanie', accC:'#D9513A', body:'#7A63C9', img:''}
 ];
 const CUSTOM = 9;
-const ACCS = ['cap','leaf','phones','bow','glasses','captain','crown','wizard','flower','beanie'];
+const ACCS = ['cap','leaf','phones','bow','glasses','captain','crown','wizard','flower','beanie','safari','miner','pirate','diver','ranger'];
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 let custom = store.get('custom', null);
 function specFor(ci){ return ci === CUSTOM && custom ? custom : (CHARS[ci] || CHARS[0]); }
@@ -760,6 +760,11 @@ function avatarHTML(i){
     crown:`<path d="M20 24l2-11 6 6 4-8 4 8 6-6 2 11z" fill="${c.accC}" stroke="#B97F12" stroke-width="1"/>`,
     wizard:`<path d="M16 25 34 2l14 23z" fill="${c.accC}"/><circle cx="33" cy="14" r="2" fill="#FFE08A"/><rect x="13" y="22" width="38" height="5" rx="2.5" fill="${c.accC}"/>`,
     flower:`<g fill="${c.accC}"><circle cx="44" cy="16" r="4"/><circle cx="50" cy="20" r="4"/><circle cx="44" cy="24" r="4"/><circle cx="38" cy="20" r="4"/></g><circle cx="44" cy="20" r="3" fill="#FFE08A"/>`,
+    safari:`<path d="M15 27c0-15 34-15 34 0z" fill="${c.accC}"/><ellipse cx="32" cy="27" rx="22" ry="4" fill="${c.accC}"/><rect x="16" y="22.5" width="32" height="3" fill="#8A5A3B"/>`,
+    miner:`<path d="M16 27c0-15 32-15 32 0z" fill="${c.accC}"/><rect x="13" y="25" width="38" height="4" rx="2" fill="${c.accC}"/><circle cx="32" cy="19" r="4.5" fill="#FFF3B0" stroke="#8A6A1A" stroke-width="1.5"/>`,
+    pirate:`<path d="M16 29c0-16 32-16 32 0z" fill="${c.accC}"/><g fill="#fff"><circle cx="24" cy="22" r="1.6"/><circle cx="32" cy="18" r="1.6"/><circle cx="40" cy="22" r="1.6"/></g><path d="M46 25l9 3-6 6z" fill="${c.accC}"/>`,
+    diver:`<rect x="16" y="31" width="32" height="11" rx="5.5" fill="#BDE7F0" fill-opacity=".55" stroke="${c.accC}" stroke-width="3"/><path d="M50 46V22" stroke="#F4B740" stroke-width="3.5" stroke-linecap="round"/>`,
+    ranger:`<path d="M20 26c1-13 23-13 24 0z" fill="${c.accC}"/><ellipse cx="32" cy="26" rx="21" ry="3.6" fill="${c.accC}"/><rect x="20.5" y="21.5" width="23" height="3" fill="#3B2A22"/>`,
     beanie:`<path d="M16 28c0-14 32-14 32 0z" fill="${c.accC}"/><rect x="15" y="25" width="34" height="5" rx="2.5" fill="#fff" opacity=".7"/><circle cx="32" cy="12" r="4" fill="${c.accC}"/>`
   }[c.acc] || '';
   return `<svg viewBox="0 0 64 64" role="img" aria-label="${esc(c.name)}"><circle cx="32" cy="32" r="32" fill="${c.bg}"/>
@@ -1673,6 +1678,10 @@ function makeExplorer(ch, name){
   });
   const body = mesh(new THREE.CylinderGeometry(.3, .38, .7, 8), ch.body || ch.accC); body.position.y = .85; b.add(body);
   const pack = mesh(new THREE.BoxGeometry(.42, .5, .22), '#9A5B2E'); pack.position.set(0, .9, -.36); b.add(pack);
+  const pick = new THREE.Group();
+  const handle = mesh(new THREE.CylinderGeometry(.03, .03, .8, 5), '#7A5A3B'); pick.add(handle);
+  const headP = mesh(new THREE.BoxGeometry(.42, .07, .07), '#9AA9AA', {metalness:.5}); headP.position.y = .38; pick.add(headP);
+  pick.position.set(.12, 1.05, -.5); pick.rotation.z = -.5; b.add(pick);
   if (ch.img){
     b.add(faceSprite(ch.img));
   } else {
@@ -1684,6 +1693,20 @@ function makeExplorer(ch, name){
       const top = mesh(new THREE.CylinderGeometry(.3, .36, .2, 10), a === 'captain' ? '#FFFFFF' : ch.accC); top.position.y = 1.82; b.add(top);
       if (a !== 'beanie'){ const brim = mesh(new THREE.CylinderGeometry(.42, .42, .04, 12), ch.accC); brim.position.set(0, 1.73, .08); b.add(brim); }
       else { const pom = mesh(new THREE.SphereGeometry(.1, 8, 6), ch.accC); pom.position.y = 1.98; b.add(pom); }
+    } else if (a === 'safari' || a === 'miner' || a === 'pirate' || a === 'ranger'){
+      // explorer headgear: a dome plus a brim, lamp or bandana knot
+      const dome = mesh(new THREE.SphereGeometry(a === 'ranger' ? .3 : .38, 12, 8, 0, Math.PI*2, 0, Math.PI/2), ch.accC);
+      dome.position.y = a === 'ranger' ? 1.72 : 1.6; if (a === 'ranger') dome.scale.y = 1.2; b.add(dome);
+      if (a !== 'pirate'){
+        const brim = mesh(new THREE.CylinderGeometry(a === 'miner' ? .44 : .58, a === 'miner' ? .44 : .58, .04, 14), ch.accC); brim.position.y = a === 'ranger' ? 1.72 : 1.62; b.add(brim);
+      }
+      if (a === 'safari' || a === 'ranger'){ const band = mesh(new THREE.CylinderGeometry(a === 'ranger' ? .305 : .385, a === 'ranger' ? .305 : .385, .07, 14), a === 'ranger' ? '#3B2A22' : '#8A5A3B'); band.position.y = a === 'ranger' ? 1.77 : 1.67; b.add(band); }
+      if (a === 'miner'){ const lamp = mesh(new THREE.CylinderGeometry(.09, .09, .08, 10), '#FFF3B0', {emissive:0xFFD24A, emissiveIntensity:1}); lamp.rotation.x = Math.PI/2; lamp.position.set(0, 1.8, .36); b.add(lamp); }
+      if (a === 'pirate'){ const knot = mesh(new THREE.ConeGeometry(.1, .3, 5), ch.accC); knot.rotation.x = -Math.PI/2.5; knot.position.set(.1, 1.6, -.4); b.add(knot); }
+    } else if (a === 'diver'){
+      const mask = mesh(new THREE.BoxGeometry(.5, .16, .1), '#BDE7F0', {transparent:true, opacity:.75}); mask.position.set(0, 1.5, .32); b.add(mask);
+      const band = mesh(new THREE.TorusGeometry(.35, .035, 6, 16), ch.accC); band.rotation.x = Math.PI/2; band.position.y = 1.5; b.add(band);
+      const snorkel = mesh(new THREE.CylinderGeometry(.04, .04, .6, 6), '#F4B740'); snorkel.position.set(.36, 1.6, .05); b.add(snorkel);
     } else if (a === 'wizard'){
       const hat = mesh(new THREE.ConeGeometry(.36, .8, 10), ch.accC); hat.position.y = 2.05; b.add(hat);
       const brim = mesh(new THREE.CylinderGeometry(.5, .5, .04, 12), ch.accC); brim.position.y = 1.72; b.add(brim);
@@ -2003,21 +2026,21 @@ function renderChars(){
   $('#chars').innerHTML = CHARS.map((c, i) => `<button type="button" class="char" role="radio" aria-checked="${i === pickChar}" data-c="${i}"><span class="av">${avatarHTML(i)}</span>${esc(c.name)}</button>`).join('') +
     (custom ? `<button type="button" class="char" role="radio" aria-checked="${pickChar === CUSTOM}" data-c="${CUSTOM}"><span class="av">${avatarHTML(custom)}</span>${esc(custom.name)}</button>` : '');
 }
-const NAMES = ['海風旅人','小島探險家','椰子學者','珊瑚老師','浪花博士','星光島民','海鷗信差','貝殼收藏家'];
+const NAMES = ['寶藏獵人','地圖解謎家','火山探險家','珊瑚尋寶員','密林偵察兵','星空航海家','古城考古家','冰原探勘員'];
 const pickOne = a => a[Math.floor(Math.random()*a.length)];
 $('#aiGen').onclick = () => {
   if (custom && custom.img && !confirm('要用隨機角色取代你上傳的頭像嗎？')) return;
   custom = cleanSpec({name:pickOne(NAMES), skin:pickOne(['#F6CDA8','#E9B98E','#F3C9A0','#E2AE82','#C98E62']),
     hair:pickOne(['#3B2A22','#6B3E1F','#1F1B1A','#B0582E','#8A8A8A','#D9A84E']),
     body:pickOne(['#2A8C8C','#EE6F57','#5FA651','#7A63C9','#3B7FC4','#D46FA0','#F4B740']),
-    acc:pickOne(ACCS), accC:pickOne(['#EE6F57','#F4B740','#7A63C9','#2A8C8C','#D46FA0','#3B7FC4']),
+    acc:pickOne(['safari','miner','pirate','diver','ranger','beanie']), accC:pickOne(['#EE6F57','#F4B740','#7A63C9','#2A8C8C','#D46FA0','#3B7FC4']),
     bg:pickOne(['#FFE1D9','#DDF0D6','#D6EEEE','#F7DDEB','#E5DFF7','#DCE8F7','#FFF3CF'])});
   store.set('custom', custom); pickChar = CUSTOM; renderChars();
   $('#aiMsg').textContent = `「${custom.name}」已加入角色清單，不喜歡可以再按一次`;
 };
 $('#gptCopy').onclick = async () => {
   const desc = $('#aiDesc').value.trim() || '（在這裡描述你的角色）';
-  const txt = `請幫我畫一張 Q 版可愛風格的大頭貼角色圖：正方形、臉部置中且占畫面大部分、背景單一淺色、色彩鮮明、線條簡潔，不要有文字。角色：${desc}`;
+  const txt = `請幫我畫一張 Q 版可愛風格的探險家大頭貼：正方形、臉部置中且占畫面大部分、背景單一淺色、色彩鮮明、線條簡潔，不要有文字。角色：${desc}`;
   try { await navigator.clipboard.writeText(txt); $('#aiMsg').textContent = '已複製，貼到 ChatGPT 生圖'; }
   catch(e){ prompt('複製以下提示詞，貼到 ChatGPT：', txt); }
 };
@@ -2079,7 +2102,7 @@ $('#joinForm').addEventListener('submit', e => {
   spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
   lastPos = 0; pushPos();
   pushFace();
-  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '角色準備好了！等講師按「登島」');
+  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '探險家準備好了！等講師按「登島」出發挖寶');
 });
 $('#hostSkip').onclick = () => {
   if (isHost){ $('#join').hidden = true; openHost(); return; }
