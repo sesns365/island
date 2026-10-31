@@ -737,10 +737,12 @@ let room = null, db = null, user = null;
    the host's control state is one retained message (state). */
 const params = new URLSearchParams(location.search);
 const cleanRoom = v => String(v || '').replace(/[^\w-]/g, '').slice(0, 12);
-const HAS_ROOM = !!cleanRoom(params.get('room'));
-const ROOM = cleanRoom(params.get('room')) || 'lobby';
+// this workshop uses one fixed link: the bare page joins FIXED_ROOM; ?setup opens the session builder
+const FIXED_ROOM = 'ttu1120';
+const HAS_ROOM = !params.has('setup');
+const ROOM = cleanRoom(params.get('room')) || FIXED_ROOM;
 const DEFAULT_TITLE = '台東大學 特教師培生研習・傅碧柔（瑪莉）老師';
-const roomUrl = code => location.origin + location.pathname + '?room=' + encodeURIComponent(code);
+const roomUrl = code => location.origin + location.pathname + (code === FIXED_ROOM ? '' : '?room=' + encodeURIComponent(code));
 const BROKERS = {emqx:'wss://broker.emqx.io:8084/mqtt', hivemq:'wss://broker.hivemq.com:8884/mqtt', mosquitto:'wss://test.mosquitto.org:8081/mqtt'};
 const BROKER = BROKERS[params.get('broker')] || BROKERS.emqx;
 const TOPIC = 'sesns365-island/v1/' + ROOM + '/';
@@ -1992,6 +1994,7 @@ $('#hostSkip').onclick = () => {
   if (pin == null) return;
   if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
   becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true; openHost();
+  if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null});
 };
 function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); }
 $('#meChip').onclick = askNick;
