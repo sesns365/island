@@ -284,8 +284,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
         <button type="button" class="start" id="cStart">登島<br><span class="small" style="color:inherit">渡輪開進島</span></button>
         <button type="button" class="pause" id="cAttn">注意！<br><span class="small" style="color:inherit" id="cAttnSub">暫停全班畫面</span></button>
         <button type="button" class="rest" id="cRest">休息<br><span class="small" style="color:inherit" id="cRestSub">島上入夜，角色睡覺</span></button>
-        <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，集滿寶藏可登船</span></button>
-        <button type="button" class="sail" id="cSail" style="grid-column:1 / -1">全員開船<br><span class="small" style="color:inherit">所有人上船，船開走</span></button>
+        <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，全員登船開走</span></button>
         <button type="button" class="end" id="cReset" style="grid-column:1 / -1;background:#9AA9AA">重設島嶼<br><span class="small" style="color:inherit">回到登島前，清除計時與抽籤紀錄</span></button>
       </div>
       <label class="row small">休息時間
@@ -348,7 +347,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <div class="roster-wrap">
         <table><thead><tr><th>暱稱</th><th>礦石</th><th>正在</th></tr></thead><tbody id="roster"></tbody></table>
       </div>
-      <p class="small" id="rosterHint">學員掃描加入後會自動出現在這裡；離線的學員以淺色顯示，仍保留在抽籤名單中。<button class="ghost" id="rosterClear" type="button" style="padding:2px 10px;font-size:13px;margin-left:4px">清空名單</button></p>
+      <p class="small" id="rosterHint">學員掃描加入後會自動出現在這裡；離線的學員以淺色顯示，仍保留在抽籤名單中。</p>
+      <div class="row"><button class="ghost" id="rosterCsv" type="button" style="padding:2px 10px;font-size:13px">下載名單（Excel 可開）</button><button class="ghost" id="rosterClear" type="button" style="padding:2px 10px;font-size:13px">清空名單</button></div>
     </section>
   </div>
 </aside>
@@ -383,8 +383,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <form class="dialog" id="joinForm">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">歡迎登島</small>
     <h2>特教研習島嶼</h2>
-    <p>跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開資源寶箱拿到黃金船票，才能登船離島。講師也會隨機抽人回答問題喔！</p>
-    <div class="field">1．選擇你的島民角色
+    <p>跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開資源寶箱拿到黃金船票！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
+    <div id="joinStep1" class="field" style="gap:12px">
+    <div class="field">第 1 步：先選擇你的島民角色
       <div class="chars" id="chars" role="radiogroup" aria-label="選擇角色"></div>
     </div>
     <details class="ai-box" id="aiBox">
@@ -397,7 +398,11 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
         <label class="ghost" style="cursor:pointer">上傳圖片<input id="imgUp" type="file" accept="image/*" hidden></label></div>
       <span class="small">在 ChatGPT 生成圖片後存到手機，再按「上傳圖片」，就會變成你在島上的頭像。</span>
     </details>
-    <label class="field">2．輸入暱稱或座號
+    <button class="primary" id="joinNext" type="button">選好了，下一步</button>
+    </div>
+    <div id="joinStep2" class="field" style="gap:12px" hidden>
+    <div class="row" style="flex-wrap:nowrap"><span class="av" id="joinPicked"></span><span><b id="joinPickedName"></b><br><button class="ghost" id="joinBack" type="button" style="padding:2px 10px;font-size:13px">換角色</button></span></div>
+    <label class="field">第 2 步：輸入暱稱或座號
       <input id="nickInput" maxlength="16" autocomplete="off" placeholder="例如：12號 小芸" required>
     </label>
     <details class="resume" id="resumeBox">
@@ -407,6 +412,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </details>
     <div id="myCodeBox" hidden class="field">我的接續碼（換裝置時輸入）<div class="code" id="myCode"></div></div>
     <button class="primary" type="submit">完成，準備登島</button>
+    </div>
     <button class="ghost" id="hostSkip" type="button" style="font-size:13px;align-self:center;border:0;color:var(--ink-soft)">講師登入</button>
   </form>
 </div>
@@ -766,8 +772,8 @@ function noteJoin(p){
   if (!isHost) return;
   const n = String(p.nick).trim().slice(0, 16); if (!n) return;
   const d = String(p.done || '').split(',').filter(Boolean).length, prev = joined.get(n);
-  const v = {ci:+p.c || 0, c:+p.c === CUSTOM ? p.av : '', d};
-  if (prev && prev.ci === v.ci && prev.c === v.c && prev.d === v.d) return;
+  const v = {ci:+p.c || 0, c:+p.c === CUSTOM ? p.av : '', d, fr:+p.fr || 0, tk:/(^|,)7(,|$)/.test(String(p.done || '')), t:prev && prev.t || Date.now()};
+  if (prev && prev.ci === v.ci && prev.c === v.c && prev.d === v.d && prev.fr === v.fr && prev.t) return;
   joined.set(n, v); store.set('joined.' + ROOM, Object.fromEntries(joined));
 }
 function onMsg(topic, buf){
@@ -1019,7 +1025,7 @@ function showDone(st, first){
   const body = $('#sheetBody');
   body.innerHTML = `<div class="done-card">${gemSVG(st.id, 'gem-big')}
     <h3 style="font-size:22px">${st.id === 7 ? (first ? '拿到黃金船票！' : '再次通關！') : first ? `獲得${esc(GEMS[st.id-1].name)}！` : '再次通關！'}</h3>
-    <p style="margin:0">「${esc(st.name)}」完成。礦石 <b>${oresDone()}</b> / 6・藏寶圖碎片 <b>${frags.size}</b> / ${FRAGS.length}${all ? '・已有黃金船票，離島時可以登船' : ''}</p>
+    <p style="margin:0">「${esc(st.name)}」完成。礦石 <b>${oresDone()}</b> / 6・藏寶圖碎片 <b>${frags.size}</b> / ${FRAGS.length}${all ? '・已拿到黃金船票' : ''}</p>
     ${!all && oresDone() === 6 && frags.size < FRAGS.length ? '<p class="small" style="margin:0">礦石集滿了！島上還藏著發光的藏寶圖碎片，走過去就能撿起來。</p>' : ''}
     <p class="small" style="margin:0">換裝置接續用的接續碼：<b class="code" style="font-size:18px;padding:2px 10px">${makeCode()}</b></p>
     ${all && st.id === 7 ? '<p class="quote" style="text-align:left">數位工具是橋，而我們的陪伴與專業，才是真正引導孩子勇敢過橋的力量。</p>' : ''}
@@ -1083,16 +1089,16 @@ const sand = mesh(blob(new THREE.CylinderGeometry(13, 13.6, .9, 48, 1)), 0xF1D9A
 const grass = mesh(blob(new THREE.CylinderGeometry(10.8, 11.6, 1.1, 48, 1)), 0x8CC66B); grass.position.y = .65; grass.scale.set(S, 1, S); scene.add(grass);
 // the pier runs from the shore out to where the ships dock
 const PU = new THREE.Vector3(Math.cos(.75), 0, Math.sin(.75)), PV = new THREE.Vector3(-PU.z, 0, PU.x);
-const PIER_A = PU.clone().multiplyScalar(14).setY(GROUND), PIER_B = PU.clone().multiplyScalar(26.5).setY(GROUND);
+const PIER_A = PU.clone().multiplyScalar(14).setY(GROUND), PIER_B = PU.clone().multiplyScalar(30.5).setY(GROUND);
 const pier = new THREE.Group();
 {
-  const deck = mesh(new THREE.BoxGeometry(13.5, .22, 1.8), 0xB0855A); deck.position.y = GROUND - .08; pier.add(deck);
-  for (let i = 0; i < 6; i++) for (const sz of [-.8, .8]){
-    const post = mesh(new THREE.CylinderGeometry(.1, .1, 2.2, 6), 0x7A5A3B); post.position.set(-6 + i*2.4, 0, sz); pier.add(post);
+  const deck = mesh(new THREE.BoxGeometry(17.5, .22, 1.8), 0xB0855A); deck.position.y = GROUND - .08; pier.add(deck);
+  for (let i = 0; i < 8; i++) for (const sz of [-.8, .8]){
+    const post = mesh(new THREE.CylinderGeometry(.1, .1, 2.2, 6), 0x7A5A3B); post.position.set(-8.2 + i*2.35, 0, sz); pier.add(post);
   }
-  pier.position.copy(PU.clone().multiplyScalar(20.3)); pier.rotation.y = -.75; scene.add(pier);
+  pier.position.copy(PU.clone().multiplyScalar(22.3)); pier.rotation.y = -.75; scene.add(pier);
 }
-const onPier = v => { const t = v.x*PU.x + v.z*PU.z, w = v.x*PV.x + v.z*PV.z; return t > 13 && t < 26.8 && Math.abs(w) < .7; };
+const onPier = v => { const t = v.x*PU.x + v.z*PU.z, w = v.x*PV.x + v.z*PV.z; return t > 13 && t < 30.8 && Math.abs(w) < .7; };
 // seeded random
 let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 function tree(x, z, s = 1){
@@ -1102,13 +1108,14 @@ function tree(x, z, s = 1){
   const c2 = mesh(new THREE.ConeGeometry(.58*s, 1.1*s, 7), 0x5FAE55); c2.position.y = 1.8*s; g.add(c2);
   g.position.set(x, GROUND, z); g.rotation.y = rnd()*6; return g;
 }
+const TREES = []; // loose trees explorers walk around: [x, z, radius]
 const nearStation = (x, z, d) => STATIONS.some(s => Math.hypot(s.pos[0]-x, s.pos[1]-z) < d);
 const nearKeep = (x, z) => ANIMALS.some(a => Math.hypot(a.home[0]-x, a.home[1]-z) < 3.6) || FRAGS.some(f => Math.hypot(f.pos[0]-x, f.pos[1]-z) < 2) ||
   Math.hypot(x - 2.5, z - 8.3) < 3.5 || Math.hypot(x - PIER_A.x, z - PIER_A.z) < 3.5;
 for (let i = 0, n = 0; i < 400 && n < 120; i++){
   const a = rnd()*Math.PI*2, r = (3 + rnd()*7)*S;
   const x = Math.cos(a)*r*shapeR(a), z = Math.sin(a)*r*shapeR(a);
-  if (!nearStation(x, z, 3.6) && !nearKeep(x, z)){ scene.add(tree(x, z, .7 + rnd()*.6)); n++; }
+  if (!nearStation(x, z, 3.6) && !nearKeep(x, z)){ const sc = .7 + rnd()*.6; scene.add(tree(x, z, sc)); TREES.push([x, z, .5*sc + .3]); n++; }
 }
 for (let i = 0; i < 28; i++){
   const a = rnd()*Math.PI*2, r = (11.6 + rnd()*1.4)*S;
@@ -1443,10 +1450,14 @@ function updatePassengers(){
   else peerPres().forEach(p => { if (p.b) n++; });
   liner.userData.pass.forEach((p, i) => p.visible = i < n);
 }
-const FERRY = {
-  dock:PU.clone().multiplyScalar(24.5).add(PV.clone().multiplyScalar(3.4)),
-  away:PU.clone().multiplyScalar(85).add(PV.clone().multiplyScalar(14)),
-  gone:PU.clone().multiplyScalar(70).add(PV.clone().multiplyScalar(-70))
+// ships moor beside the far end of the pier, out past the beach, bow toward shore
+const seaAt = (u, v) => PU.clone().multiplyScalar(u).add(PV.clone().multiplyScalar(v));
+const FERRY = {dock:seaAt(34, 3.1), away:seaAt(100, 40), gone:seaAt(75, -80)};
+// each route is a list of quadratic legs [from, control, to]; rev = sailing astern
+const ROUTES = {
+  arrive:() => [{p:[FERRY.away, seaAt(58, 3.1), FERRY.dock], dur:7, ease:k => 1 - Math.pow(1 - k, 3)}],
+  leave:() => [{p:[FERRY.dock, seaAt(39, 3.1), seaAt(44, 3.1)], dur:2.6, ease:k => k*k*(3 - 2*k), rev:true},
+               {p:[seaAt(44, 3.1), seaAt(66, 4), FERRY.gone], dur:7, ease:k => k*k}]
 };
 const DOCK_FACE = FERRY.dock.clone().sub(PU);
 ferry.scale.setScalar(1.35); liner.scale.setScalar(1.45);
@@ -1455,9 +1466,10 @@ scene.add(ferry, liner);
 let ferryAnim = null; // {ship, from, to, k, kind}
 // yaw-only facing, so the rocking animation can own rotation.z without flipping the ship
 function faceTo(o, v){ o.rotation.set(0, Math.atan2(v.x - o.position.x, v.z - o.position.z), 0); }
-function sailFerry(kind, instant){
+function sailFerry(kind, instant, then){
   const ship = kind === 'arrive' ? ferry : liner, other = kind === 'arrive' ? liner : ferry;
-  const from = kind === 'leave' ? FERRY.dock : FERRY.away, to = kind === 'leave' ? FERRY.gone : FERRY.dock;
+  const legs = ROUTES[kind === 'leave' ? 'leave' : 'arrive']();
+  const to = legs[legs.length - 1].p[2];
   other.visible = false; ship.visible = true;
   if (kind === 'leave'){ showExplorers(false); updatePassengers(); }
   if (instant || reduced){
@@ -1465,10 +1477,12 @@ function sailFerry(kind, instant){
     if (kind === 'leave') ship.visible = false;
     else faceTo(ship, DOCK_FACE);
     if (kind === 'arrive'){ showExplorers(true); if (player && !instant){ player.pos.copy(SPAWN); flyToPlayer(); } }
+    if (then) then();
     return;
   }
-  ship.position.copy(from); faceTo(ship, to);
-  ferryAnim = {ship, from, to, k:0, kind, wait:kind === 'leave' ? 1.5 : 0};
+  ship.position.copy(legs[0].p[0]);
+  if (kind !== 'leave') faceTo(ship, legs[0].p[1]);
+  ferryAnim = {ship, legs, k:0, kind, then, wait:kind === 'leave' ? 1.2 : 0};
   if (kind === 'arrive'){ showExplorers(false); if (player){ player.target = null; player.onArrive = null; } }
   camAnim = null; if (controls) controls.autoRotate = false; shipCam = true;
 }
@@ -1477,7 +1491,8 @@ const _shipEye = new THREE.Vector3();
 // while a ship sails, the camera rides alongside it
 function followShip(ship){
   if (!controls) return;
-  _shipEye.copy(ship.position).addScaledVector(PV, 15).addScaledVector(PU, -7); _shipEye.y = 9;
+  // stay on the seaward side so the island never blocks the view
+  _shipEye.copy(ship.position).addScaledVector(PV, 12).addScaledVector(PU, 14); _shipEye.y = 10;
   camera.position.lerp(_shipEye, .04); controls.target.lerp(ship.position, .08);
 }
 function showExplorers(v){
@@ -1609,6 +1624,12 @@ function clampWalk(v){
     const dx = v.x - s.pos[0], dz = v.z - s.pos[1], d = Math.hypot(dx, dz), R = BLOCK[s.id];
     if (d < R && d > 1e-3){ v.x = s.pos[0] + dx/d*R; v.z = s.pos[1] + dz/d*R; }
   });
+  for (const [tx, tz, R] of TREES){
+    const dx = v.x - tx, dz = v.z - tz;
+    if (Math.abs(dx) > R || Math.abs(dz) > R) continue;
+    const d = Math.hypot(dx, dz);
+    if (d < R && d > 1e-3){ v.x = tx + dx/d*R; v.z = tz + dz/d*R; }
+  }
   return v;
 }
 let player = null, follow = true, nearSid = 0;
@@ -1831,11 +1852,21 @@ function loop(){
   else if (ferryAnim){
     const ship = ferryAnim.ship;
     if (shipCam && !camAnim) followShip(ship);
-    ferryAnim.k = Math.min(1, ferryAnim.k + dt/7);
-    const k = ferryAnim.k, e = ferryAnim.kind === 'arrive' ? 1 - Math.pow(1 - k, 3) : k*k;
-    ship.position.lerpVectors(ferryAnim.from, ferryAnim.to, e);
-    if (k >= 1){
-      const kind = ferryAnim.kind; ferryAnim = null; shipCam = false;
+    const leg = ferryAnim.legs[0];
+    ferryAnim.k = Math.min(1, ferryAnim.k + dt/leg.dur);
+    const k = ferryAnim.k, e = leg.ease(k), [a, c, b] = leg.p, u = 1 - e;
+    ship.position.set(u*u*a.x + 2*u*e*c.x + e*e*b.x, 0, u*u*a.z + 2*u*e*c.z + e*e*b.z);
+    // turn smoothly toward the direction of travel (stern first when backing out)
+    const tx = u*(c.x - a.x) + e*(b.x - c.x), tz = u*(c.z - a.z) + e*(b.z - c.z);
+    if (tx || tz){
+      let dh = Math.atan2(tx, tz) + (leg.rev ? Math.PI : 0) - ship.rotation.y;
+      dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+      ship.rotation.set(0, ship.rotation.y + dh*Math.min(1, dt*(ferryAnim.kind === 'leave' ? 1.6 : 4)), 0);
+    }
+    if (k >= 1 && ferryAnim.legs.length > 1){ ferryAnim.legs.shift(); ferryAnim.k = 0; }
+    else if (k >= 1){
+      const kind = ferryAnim.kind, then = ferryAnim.then; ferryAnim = null; shipCam = false;
+      if (then) setTimeout(then, 0);
       if (kind === 'leave') ship.visible = false;
       else if (kind === 'dock'){
         faceTo(ship, DOCK_FACE);
@@ -1917,17 +1948,29 @@ $('#imgUp').onchange = e => {
   img.src = url;
 };
 $('#chars').onclick = e => { const b = e.target.closest('[data-c]'); if (b){ pickChar = +b.dataset.c; renderChars(); } };
+function joinStep(n){
+  $('#joinStep1').hidden = n !== 1; $('#joinStep2').hidden = n !== 2;
+  if (n === 2){
+    $('#joinPicked').innerHTML = avatarHTML(pickChar === CUSTOM ? custom : pickChar);
+    $('#joinPickedName').textContent = specFor(pickChar).name;
+    setTimeout(() => $('#nickInput').focus(), 50);
+  }
+  $('#joinForm').scrollTop = 0;
+}
+$('#joinNext').onclick = () => joinStep(2);
+$('#joinBack').onclick = () => joinStep(1);
 function askNick(){
   pickChar = charIdx; renderChars();
   $('#nickInput').value = nick; $('#codeInput').value = '';
   $('#myCodeBox').hidden = !nick; $('#myCode').textContent = makeCode();
-  $('#join').hidden = false; setTimeout(() => $('#nickInput').focus(), 50);
+  $('#join').hidden = false; joinStep(1);
 }
 $('#codeInput').addEventListener('input', () => {
   const r = readCode($('#codeInput').value);
   if ($('#codeInput').value.length < 4){ $('#codeMsg').textContent = '輸入後會帶回角色、礦石與碎片'; return; }
   if (!r){ $('#codeMsg').textContent = '接續碼不正確，請再確認一次'; return; }
   pickChar = r.charIdx; renderChars();
+  $('#joinPicked').innerHTML = avatarHTML(pickChar); $('#joinPickedName').textContent = specFor(pickChar).name;
   $('#codeMsg').textContent = `找到了！${specFor(r.charIdx).name}・${r.done.length} 顆礦石・${r.frags.length} 片碎片`;
 });
 $('#joinForm').addEventListener('submit', e => {
@@ -2021,10 +2064,8 @@ function applyClass(d){
       if (prev === 'before' || prev === undefined && !explorersOn) showExplorers(true);
     }
     if (ph === 'gone'){
-      boarded = !!nick; pushPos(true);
-      if (first && !fresh){ ferryAway(); showExplorers(false); }
-      else { closeSheet(); sailFerry('leave'); landTitle('一路順風！'); }
-      if (!isHost && nick) showEnd();
+      if (first && !fresh){ boarded = !!nick; ferryAway(); showExplorers(false); if (!isHost && nick) showEnd(); }
+      else leaveIsland(prev === 'ended' && liner.visible && !ferryAnim);
     }
     if (ph === null && !first){ boarded = false; sailFerry('arrive', true); }
     updateBoardBtn(); pushPos(true);
@@ -2043,8 +2084,7 @@ function applyClass(d){
   $('#cAttn').classList.toggle('on', att);
   $('#cAttnSub').textContent = att ? '解除暫停' : '暫停全班畫面';
   $('#cStart').classList.toggle('cur', ph === 'class');
-  $('#cEnd').classList.toggle('cur', ph === 'ended');
-  $('#cSail').classList.toggle('cur', ph === 'gone');
+  $('#cEnd').classList.toggle('cur', ph === 'ended' || ph === 'gone');
   $('#liveChip').title = att ? '全班暫停中' : '';
   const until = (d && d.rest && +d.rest.until) || 0;
   if (until !== restUntil){ restUntil = until; tickRest(); }
@@ -2151,10 +2191,39 @@ function showEnd(onBoard){
 }
 $('#endClose').onclick = () => $('#endOv').hidden = true;
 $('#cStart').onclick = () => writeLive({phase:'class', phaseAt:Date.now(), attention:false, rest:null});
-$('#cEnd').onclick = () => writeLive({phase:'ended', phaseAt:Date.now(), attention:false, rest:null});
-$('#cSail').onclick = () => writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null});
+$('#cEnd').onclick = () => {
+  if (phase === 'gone') return toast('大家已經離島了；要重來請按「重設島嶼」');
+  if (confirm('確定離島？大船會靠岸，所有學員登船後開走。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null});
+};
 $('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[]}); };
 
+// one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
+function leaveIsland(docked){
+  closeSheet(); $('#endOv').hidden = true; sleeping = false;
+  banner('離島囉！大船來接大家回家', 9000);
+  const go = () => {
+    if (phase !== 'gone') return;
+    boarded = !!nick; pushPos(true);
+    sailFerry('leave'); landTitle('一路順風！');
+    if (!isHost && nick) setTimeout(() => { if (phase === 'gone') showEnd(); }, 5000);
+  };
+  const board = () => {
+    if (phase !== 'gone') return;
+    flyTo(FERRY.dock.clone().add(PV.clone().multiplyScalar(-15)).add(PU.clone().multiplyScalar(-9)).setY(11), FERRY.dock.clone().setY(1));
+    if (player && explorersOn && !boarded){
+      if (player.pos.distanceTo(PIER_A) > 12){ player.pos.copy(PIER_A); player.g.position.copy(PIER_A); }
+      walkTo(PIER_A.clone(), () => walkTo(PIER_B.clone(), () => {
+        boarded = true; player.g.visible = false; lastPos = 0; pushPos(true); updatePassengers();
+      }, true), true);
+      follow = false;
+    }
+    // sail once this explorer is aboard (or after 10 s, so a slow walker never holds the ship)
+    const t0 = Date.now(), wait = setInterval(() => {
+      if (phase !== 'gone' || boarded || !player || !explorersOn || Date.now() - t0 > 10000){ clearInterval(wait); setTimeout(go, 1500); }
+    }, 300);
+  };
+  if (docked) board(); else sailFerry('dock', false, board);
+}
 // boarding: with the golden ticket, walk to the pier and step aboard
 
 function updateBoardBtn(){
@@ -2243,6 +2312,20 @@ $('#kSave').onclick = () => {
   writeLive({know}); toast('知識卡已更新');
 };
 
+$('#rosterCsv').onclick = () => {
+  const rows = rosterRows(true);
+  if (!rows.length) return toast('名單還是空的');
+  const t2s = t => t ? new Date(t).toLocaleString('zh-TW', {hour12:false}) : '';
+  const cell = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const lines = [['暱稱','礦石','藏寶圖碎片','黃金船票','狀態','加入時間']].concat(rows.map(r => {
+    const j = joined.get(r.n) || {};
+    return [r.n, j.tk ? Math.max(0, (j.d || 0) - 1) : j.d || 0, j.fr || 0, j.tk ? '有' : '', r.off ? '離線' : '在線', t2s(j.t)];
+  }));
+  const blob = new Blob(['\ufeff' + lines.map(l => l.map(cell).join(',')).join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `研習島嶼名單_${ROOM}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
 $('#rosterClear').onclick = () => { if (!confirm('清空學員名單？目前在線的學員會再自動加回來。')) return; joined.clear(); store.set('joined.' + ROOM, {}); renderRoster(); };
 function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderHist(); renderRoster(); }
 $('#hostBtn').onclick = openHost;
