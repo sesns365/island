@@ -320,6 +320,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
         <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，全員登船開走</span></button>
         <button type="button" class="end" id="cReset" style="grid-column:1 / -1;background:#9AA9AA">重設島嶼<br><span class="small" style="color:inherit">回到登島前，清除計時與抽籤紀錄</span></button>
       </div>
+      <label class="field small">離島祝福話（按「離島」時顯示在全班畫面）
+        <textarea id="farewell" rows="3" maxlength="160"></textarea></label>
       <label class="row small">休息時間
         <select id="restMin" aria-label="休息分鐘數"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select> 分鐘
       </label>
@@ -520,8 +522,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <div class="dialog draw-box">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em" id="endEyebrow">離島囉</small>
     <h2 id="endTitle">船要開走了，謝謝參與！</h2>
+    <div class="quote" id="endBless" style="text-align:left;white-space:pre-line"></div>
     <p id="endSum"></p>
-    <div class="field" style="align-items:center">我的接續碼<div class="code" id="endCode"></div></div>
+    <div class="field" id="endCodeBox" style="align-items:center">我的接續碼<div class="code" id="endCode"></div></div>
     <button class="ghost" id="endClose" type="button">留在島上繼續逛</button>
   </div>
 </div>
@@ -2184,7 +2187,7 @@ function applyClass(d){
       if (prev === 'before' || prev === undefined && !explorersOn) showExplorers(true);
     }
     if (ph === 'gone'){
-      if (first && !fresh){ boarded = !!nick; ferryAway(); showExplorers(false); if (!isHost && nick) showEnd(); }
+      if (first && !fresh){ boarded = !!nick; ferryAway(); showExplorers(false); if (nick || isHost) showEnd(); }
       else leaveIsland(prev === 'ended' && liner.visible && !ferryAnim);
     }
     if (ph === null && !first){ boarded = false; sailFerry('arrive', true); }
@@ -2302,9 +2305,14 @@ function waitBanner(){
   if (phase === 'before'){ b.className = 'banner wait'; b.textContent = isHost ? '學員等待中：按「登島」讓渡輪開進島' : '等待講師按「登島」…渡輪準備出發'; b.hidden = false; }
   else b.hidden = true;
 }
+const DEFAULT_FAREWELL = '謝謝大家今天的參與！\n願你帶著今天挖到的寶藏回到教室，成為孩子最好的學習探險夥伴。\n祝教學順利，一路順風！';
+const farewellText = () => (liveState && typeof liveState.farewell === 'string' && liveState.farewell.trim() ? liveState.farewell.trim().slice(0, 160) : DEFAULT_FAREWELL);
 function showEnd(onBoard){
   $('#endEyebrow').textContent = onBoard ? '登船成功' : '離島囉';
-  $('#endTitle').textContent = onBoard ? '你已經登上大船，等講師開船！' : '船要開走了，謝謝參與！';
+  $('#endTitle').textContent = onBoard ? '你已經登上大船，等講師開船！' : isHost ? '一路順風！' : `${nick || '探險家'}，一路順風！`;
+  $('#endBless').hidden = !!onBoard; $('#endBless').textContent = farewellText();
+  $('#endSum').hidden = isHost && !nick; $('#endCodeBox').hidden = isHost && !nick;
+  $('#endClose').textContent = isHost ? '關閉' : '留在島上繼續逛';
   $('#endSum').textContent = `${nick || '你'} 這次挖到 ${oresDone()} / 6 顆礦石、找到 ${frags.size} / ${FRAGS.length} 片藏寶圖${done.has(7) ? '，並拿到黃金船票' : ''}。`;
   $('#endCode').textContent = makeCode();
   $('#endOv').hidden = false;
@@ -2313,19 +2321,21 @@ $('#endClose').onclick = () => $('#endOv').hidden = true;
 $('#cStart').onclick = () => writeLive({phase:'class', phaseAt:Date.now(), attention:false, rest:null});
 $('#cEnd').onclick = () => {
   if (phase === 'gone') return toast('大家已經離島了；要重來請按「重設島嶼」');
-  if (confirm('確定離島？大船會靠岸，所有學員登船後開走。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null});
+  const farewell = $('#farewell').value.trim().slice(0, 160);
+  store.set('farewell', farewell);
+  if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
 $('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[]}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
   closeSheet(); $('#endOv').hidden = true; sleeping = false;
-  banner('離島囉！大船來接大家回家', 9000);
+  banner('離島囉！謝謝大家今天的參與，大船來接大家回家', 9000);
   const go = () => {
     if (phase !== 'gone') return;
     boarded = !!nick; pushPos(true);
     sailFerry('leave'); landTitle('一路順風！');
-    if (!isHost && nick) setTimeout(() => { if (phase === 'gone') showEnd(); }, 5000);
+    if (nick || isHost) setTimeout(() => { if (phase === 'gone'){ showEnd(); confetti(); } }, 5000);
   };
   const board = () => {
     if (phase !== 'gone') return;
@@ -2383,6 +2393,7 @@ function renderHist(){
   $('#hist').innerHTML = h.length ? h.map(n => `<span>${esc(n)}</span>`).join('') + '<button class="ghost" id="clearHist" type="button" style="padding:2px 10px;font-size:13px">清除紀錄</button>' : '';
   const c = $('#clearHist'); if (c) c.onclick = () => writeLive({history:[]});
 }
+$('#farewell').value = store.get('farewell', '') || DEFAULT_FAREWELL;
 $('#manual').value = store.get('manual', '');
 $('#manual').addEventListener('input', () => store.set('manual', $('#manual').value));
 $('#drawBtn').onclick = () => {
