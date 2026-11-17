@@ -2,7 +2,7 @@
 <title>特教研習島嶼</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@500;700;900&family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
 /* Layout: full-bleed 3D island; HUD floats on top — brand + badges top-left, station dock along the bottom, challenge sheet slides in from the right (bottom sheet on phones). */
 :root{
@@ -10,7 +10,7 @@
   --teal:#2A8C8C; --teal-deep:#1D6B6B; --coral:#EE6F57; --sun:#F4B740; --leaf:#5FA651; --sky:#A9DDE6;
   --good:#2F9E5B; --warn:#D9513A;
   --display:"Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --body:"Huninn","Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --r:18px; --shadow:0 10px 30px rgba(24,50,58,.18);
   color-scheme:light;
 }
@@ -1454,11 +1454,11 @@ function updateMarker(st){
   roundRect(c, 14, 14, 484, 118, 59); c.fillStyle = d ? '#FFF3CF' : open ? '#FFFFFF' : '#E3E8E8'; c.fill(); c.restore();
   if (d){ c.lineWidth = 6; c.strokeStyle = '#F4B740'; roundRect(c, 14, 14, 484, 118, 59); c.stroke(); }
   c.beginPath(); c.arc(73, 73, 44, 0, Math.PI*2); c.fillStyle = open ? st.color : '#9AA9AA'; c.fill();
-  c.fillStyle = '#fff'; c.font = '900 50px "Chiron GoRound TC","Noto Sans TC",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#fff'; c.font = '900 50px "Chiron GoRound TC","Huninn","Chiron GoRound TC","Noto Sans TC",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText(d ? '✓' : String(st.id), 73, 76);
   c.textAlign = 'left'; c.fillStyle = open ? '#18323A' : '#6F8285';
-  c.font = '900 50px "Chiron GoRound TC","Noto Sans TC",sans-serif'; c.fillText(st.name, 134, 62);
-  c.font = '500 26px "Noto Sans TC",sans-serif'; c.fillStyle = '#4A6870';
+  c.font = '900 50px "Chiron GoRound TC","Huninn","Chiron GoRound TC","Noto Sans TC",sans-serif'; c.fillText(st.name, 134, 62);
+  c.font = '500 26px "Huninn","Chiron GoRound TC","Noto Sans TC",sans-serif'; c.fillStyle = '#4A6870';
   c.fillText(d ? '已挖到礦石' : open ? '點我闖關' : (st.id > openUpTo ? '尚未開放' : '集滿寶藏開啟'), 136, 106);
   o.tex.needsUpdate = true;
   o.f.visible = d;
@@ -1770,7 +1770,7 @@ function updateNight(dt, t){
 function nameSprite(text){
   const cv = document.createElement('canvas'); cv.width = 320; cv.height = 72;
   const c = cv.getContext('2d');
-  c.font = '700 34px "Noto Sans TC",sans-serif';
+  c.font = '700 34px "Huninn","Chiron GoRound TC","Noto Sans TC",sans-serif';
   const w = Math.min(300, c.measureText(text).width + 36);
   roundRect(c, (320 - w)/2, 8, w, 56, 28); c.fillStyle = 'rgba(255,255,255,.92)'; c.fill();
   c.fillStyle = '#18323A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 160, 37, 280);
@@ -2885,7 +2885,7 @@ function showFab(){
 }
 function bubbleSprite(text){
   const cv = document.createElement('canvas'); cv.width = 512; cv.height = 200;
-  const c = cv.getContext('2d'); c.font = '700 38px "Noto Sans TC",sans-serif';
+  const c = cv.getContext('2d'); c.font = '700 38px "Huninn","Chiron GoRound TC","Noto Sans TC",sans-serif';
   const lines = []; let cur = '';
   for (const ch of text){ if (c.measureText(cur + ch).width > 440){ lines.push(cur); cur = ''; if (lines.length === 2) break; } cur += ch; }
   if (lines.length < 2 && cur) lines.push(cur); else if (cur && lines.length === 2) lines[1] = lines[1].slice(0, -1) + '…';
