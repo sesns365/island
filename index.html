@@ -90,6 +90,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .kit{display:grid;gap:12px;margin:14px 0 4px}
 .kit-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--teal-deep);margin-bottom:6px}
 .tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.dialog .tools{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
 .tools a{display:block;text-decoration:none;color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--paper)}
 .tools a:hover{border-color:var(--teal)}
 .tools a b{display:block;font-size:14px}
@@ -353,6 +354,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 </div>
 
 <div class="fab" id="fab" hidden>
+  <button class="chip" id="packBtn" type="button">我的背包</button>
   <button class="chip" id="sayBtn" type="button">說話・表情</button>
   <button class="chip" id="feedBtn" type="button">聊天室 <span class="badge-n" id="feedN" hidden>0</span></button>
   <button class="chip" id="wallBtn" type="button">想法牆</button>
@@ -480,8 +482,14 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       </div>
     </section>
     <section>
+      <h3>學員背包</h3>
+      <label class="field">本日講義連結（貼上 Google Drive 分享連結）<input id="packUrl" maxlength="300" autocomplete="off" placeholder="https://drive.google.com/…"></label>
+      <div class="row"><button class="primary" id="packSave" type="button">更新講義連結</button><span class="small" id="packState"></span></div>
+      <p class="small">學員按左側「我的背包」就能打開本日講義、參考檔案、相關文獻和 Padlet。還沒貼講義連結時，講義會先連到參考檔案資料夾。</p>
+    </section>
+    <section>
       <h3>關卡開放進度</h3>
-      <p class="small" id="openHint">跟著講到哪一段，就開放到哪一站。學員畫面會同步上鎖或解鎖。</p>
+      <p class="small" id="openHint">各站預設都是鎖住的。跟著講到哪一段，就開放到哪一站（流程表的「開始」也會開放）。學員畫面會同步上鎖或解鎖。</p>
       <div class="open-grid" id="openGrid"></div>
     </section>
     <section>
@@ -629,6 +637,16 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <div class="wall-grid" id="wallGrid"></div>
     <button class="ghost" id="wallClose" type="button">關閉</button>
     <button class="ghost" id="wallHost" type="button" hidden style="font-size:13px;align-self:center;border:0;color:var(--ink-soft);text-decoration:underline">講師登入（輸入密碼）</button>
+  </div>
+</div>
+
+<div class="overlay" id="packOv" hidden>
+  <div class="dialog" style="gap:12px">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">探險家的背包</small>
+    <h2>我的背包</h2>
+    <div class="tools" id="packLinks"></div>
+    <div class="note" id="packMine"></div>
+    <button class="ghost" id="packClose" type="button">關閉</button>
   </div>
 </div>
 
@@ -1035,7 +1053,7 @@ let frags = new Set(store.get('frags', []));
 let sleeping = false, boarded = false, explorersOn = true;
 let cards = new Set(store.get('cards', []));
 const knowAt = i => { const k = liveState && Array.isArray(liveState.know) && liveState.know[i]; return k && k.t ? {t:String(k.t).slice(0, 40), b:String(k.b || '').slice(0, 400)} : ANIMALS[i].card; };
-let openUpTo = 7;          // host-controlled; 7 = all open
+let openUpTo = 0;          // host-controlled; 0 = every station locked until the host opens it, 7 = all open
 let liveState = null;      // last live/state doc
 let currentSid = null;
 let isHost = false;
@@ -2398,6 +2416,22 @@ function hostLogin(){
 }
 function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
+/* backpack: today's handout and reference folders, one tap away */
+const PACK_REF = 'https://drive.google.com/drive/folders/1iz7FVaATFl4hKBha3iY3mTYjc72e7FVH?usp=sharing';
+const PACK_LIT = 'https://drive.google.com/drive/folders/1AIEKzVvpxBXqNlU-hjd7XYfeJoArCHHs?usp=sharing';
+let packLink = '';
+function renderPack(){
+  const okUrl = /^https:\/\//.test(packLink);
+  const items = [['本日講義', okUrl ? '打開講義' : '在參考檔案資料夾裡', okUrl ? packLink : PACK_REF], ['參考檔案', 'Google Drive 資料夾', PACK_REF],
+    ['相關文獻', 'Google Drive 資料夾', PACK_LIT], ['成果分享 Padlet', '貼上你的實作', PADLET]];
+  $('#packLinks').innerHTML = items.map(t => `<a href="${esc(t[2])}" target="_blank" rel="noopener"><b>${esc(t[0])}</b><span>${esc(t[1])}</span></a>`).join('');
+  $('#packMine').innerHTML = nick ? `<b>${esc(nick)}</b> 的收藏：礦石 ${oresDone()}/6・藏寶圖 ${frags.size}/${FRAGS.length}${done.has(7) ? '・黃金船票' : ''}<br><span class="small">接續碼 ${esc(makeCode())}（換裝置時輸入）</span>` : '';
+  $('#packMine').hidden = !nick;
+  if (isHost && document.activeElement !== $('#packUrl')){ $('#packUrl').value = packLink; $('#packState').textContent = okUrl ? '已設定' : '尚未設定'; }
+}
+$('#packBtn').onclick = () => { renderPack(); $('#packOv').hidden = false; };
+$('#packClose').onclick = () => $('#packOv').hidden = true;
+$('#packSave').onclick = () => { const u = $('#packUrl').value.trim(); if (u && !/^https:\/\//.test(u)) return toast('請貼上 https:// 開頭的連結'); writeLive({handout:u}); toast(u ? '講義連結已更新' : '已清除講義連結'); };
 $('#wallHost').onclick = hostLogin;
 
 /* ---------------- live: room presence + shared state ---------------- */
@@ -2433,8 +2467,9 @@ function renderRoster(){
 function applyLive(d){
   liveState = d || null;
   $('#brandSub').textContent = d && typeof d.title === 'string' && d.title.trim() ? d.title.trim().slice(0, 40) : DEFAULT_TITLE;
-  const o = d && Number.isFinite(+d.open) ? Math.max(1, Math.min(7, +d.open)) : 7;
-  if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost && o < 7) toast(`講師已開放到第 ${o} 站`); }
+  const o = d && Number.isFinite(+d.open) ? Math.max(0, Math.min(7, +d.open)) : 0;
+  if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost) toast(o === 0 ? '講師還沒開放關卡' : o < 7 ? `講師已開放到第 ${o} 站` : '講師已開放全部關卡'); }
+  packLink = d && typeof d.handout === 'string' ? d.handout : ''; renderPack();
   renderOpenGrid();
   renderHist();
   applyClass(d);
@@ -2695,7 +2730,7 @@ $('#cEnd').onclick = () => {
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), open:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -2755,7 +2790,7 @@ async function writeLive(patch){
 
 /* ---------------- host panel ---------------- */
 function renderOpenGrid(){
-  $('#openGrid').innerHTML = [1,2,3,4,5,6,7].map(n => `<button type="button" data-open="${n}" class="${n <= openUpTo ? 'on' : ''}">${n === 7 ? '全部' : '到 ' + n}</button>`).join('');
+  $('#openGrid').innerHTML = [0,1,2,3,4,5,6,7].map(n => `<button type="button" data-open="${n}" class="${n === 0 ? (openUpTo === 0 ? 'on' : '') : n <= openUpTo ? 'on' : ''}">${n === 0 ? '全部關閉' : n === 7 ? '全部' : '到 ' + n}</button>`).join('');
 }
 $('#openGrid').onclick = e => { const b = e.target.closest('[data-open]'); if (b) writeLive({open:+b.dataset.open}); };
 function renderHist(){
