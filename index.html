@@ -74,6 +74,34 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .res div{border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .res b{display:block}
 .res span{font-size:13px;color:var(--ink-soft)}
+.quick{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--mist)}
+.quick span{font-size:12px;font-weight:700;color:var(--teal-deep)}
+.host .quick button{border:0;border-radius:10px;padding:6px 12px;background:var(--teal-deep);color:#fff;font-weight:700;font-size:13.5px}
+.agenda{display:grid;gap:6px}
+.ag{border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--paper)}
+.ag.now{border-color:var(--coral);background:#FFF4EF}
+.ag.past{opacity:.6}
+.ag-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.ag-top b{font-size:14.5px}
+.ag-top span{font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.ag-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.ag-btns button{border:2px solid var(--line);border-radius:10px;padding:4px 10px;background:#fff;font-weight:700;font-size:13px}
+.ag-btns button.go{background:var(--coral);border-color:var(--coral);color:#fff}
+.kit{display:grid;gap:12px;margin:14px 0 4px}
+.kit-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--teal-deep);margin-bottom:6px}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tools a{display:block;text-decoration:none;color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--paper)}
+.tools a:hover{border-color:var(--teal)}
+.tools a b{display:block;font-size:14px}
+.tools a span{font-size:12px;color:var(--ink-soft)}
+.make{background:#EEF7F2;border:2px solid #9CC9B4;border-radius:14px;padding:12px 14px}
+.make b.t{display:block;font-size:16px;margin-bottom:4px}
+.make p{margin:4px 0 8px;font-size:14px}
+.make p.frame{background:#fff;border-radius:10px;padding:8px 10px;font-size:13.5px;border-left:4px solid var(--sun)}
+.make .prompt{max-height:170px;overflow:auto;margin-bottom:8px}
+.make .row a{text-decoration:none}
+.make .row a.ghost{color:var(--ink);display:inline-block}
+a.primary.padlet-btn{background:#7A4CD9;box-shadow:0 4px 0 #5934A8}
 .readable{cursor:pointer;border-radius:10px;padding:8px 10px;border:2px solid transparent;transition:background .15s}
 .readable:hover{background:var(--mist)}
 .readable.speaking{background:#FFF0A8;border-color:#E2B54A}
@@ -361,6 +389,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </div>
     <button class="close" id="hostClose" type="button" aria-label="關閉">×</button>
   </div>
+  <div class="quick"><span>隨時可用</span><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button></div>
   <div class="sheet-body">
     <section>
       <h3>入港前分享</h3>
@@ -385,7 +414,12 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <p class="small" id="classHint">按「注意！」時，學員畫面會暫停並提醒看講師；再按一次解除。休息時島上入夜，學員角色會走到營火旁睡覺。</p>
     </section>
     <section>
-      <h3>活動計時器</h3>
+      <h3>研習流程（3 小時 30 分鐘）</h3>
+      <p class="small" id="agClock">流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。</p>
+      <div class="agenda" id="agenda"></div>
+    </section>
+    <section>
+      <h3 id="secTimer">活動計時器</h3>
       <div class="row">
         <label class="field" style="flex:1 1 140px">名稱<input id="tLabel" maxlength="20" value="實作時間"></label>
         <label class="field" style="width:90px">分鐘<input id="tMin" type="number" min="1" max="120" value="5"></label>
@@ -400,7 +434,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <p class="small">登島後學員會收到任務一，先打開個案資料做需求分析；你按「開放檢核闖關」後，學員才能在燈塔作答。</p>
     </section>
     <section>
-      <h3>野獸突襲</h3>
+      <h3 id="secBeast">野獸突襲</h3>
       <label class="field">戰鬥題目<select id="bSel"></select></label>
       <div id="bCustom" hidden>
         <label class="field">自訂題目<input id="bQ" maxlength="60"></label>
@@ -412,7 +446,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <div class="roster-wrap"><table class="fight-tbl"><thead><tr><th>學員</th><th>狀態</th><th>答錯</th><th>用時</th></tr></thead><tbody id="bTable"></tbody></table></div>
     </section>
     <section>
-      <h3>即時投票</h3>
+      <h3 id="secPoll">即時投票</h3>
       <label class="field">題目<input id="pQ" maxlength="60" placeholder="例如：你最想先在課堂試哪個工具？"></label>
       <label class="field">選項（一行一個，2 到 6 個）<textarea id="pOpts" rows="4" placeholder="Canva&#10;Padlet&#10;Kahoot&#10;還沒想好"></textarea></label>
       <div class="row"><button class="primary" id="pStart" type="button">發布投票</button><button class="ghost" id="pStop" type="button">結束投票</button><button class="ghost" id="pShow" type="button">投影結果</button></div>
@@ -451,7 +485,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <div class="open-grid" id="openGrid"></div>
     </section>
     <section>
-      <h3>隨機抽籤</h3>
+      <h3 id="secDraw">隨機抽籤</h3>
       <div class="seg" id="poolSeg">
         <label><input type="radio" name="pool" value="all" checked> 所有加入的學員</label>
         <label><input type="radio" name="pool" value="online"> 目前在線</label>
@@ -511,7 +545,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <form class="dialog" id="joinForm">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">歡迎登島</small>
     <h2>特教研習島嶼</h2>
-    <p>你是登島尋寶的探險家！跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開資源寶箱拿到黃金船票！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
+    <p>你是登島尋寶的探險家！跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開社交寶箱拿到黃金船票！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
     <div id="joinStep1" class="field" style="gap:12px">
     <div class="field">第 1 步：選一位探險家
       <div class="chars" id="chars" role="radiogroup" aria-label="選擇探險家"></div>
@@ -676,6 +710,31 @@ const store = {
 };
 
 /* ---------------- content (from the workshop slides) ---------------- */
+const PADLET = 'https://padlet.com/adpscyc/1151120-s023se0gak5s5qrqsd3w';
+const COMIC_PROMPT = `請以Q版可愛漫畫的風格，將課文內容全部句子都變成彩色的漫畫，每個slide三格，橫式排版。第一個Slide請寫出課文名稱與作者，後續課文內容的slide記得每個句子都要呈現。課文的文字必須用「工整的深黑色中性筆」手寫完成。請務必用繁體中文輸出。
+
+把資料來源內容的每一句話，繪製成一格一格的動畫，不能漏掉任何課文句子。每個slide三小格就好。繁體中文輸出。格子請加上流水號。另外，每一小格內容請檢查是否有語詞清單中的語詞，若有的話，請在每一小格下方，用便利貼的方式呈現這些語詞的簡單解釋（請勿用原始的解釋，必須簡化解釋，以幫助程度較差的學生理解句子的內容）。有些語詞若一再重複出現，請只要出現第一次的解釋就好，以免浪費輸出。另，每一小格裡原句子內容的語詞部份要用紅色highlight顯示。
+整體風格：彩色卡通動畫風格。畫風活潑生動，表情誇張。
+核心筆觸：內容主體必須用「工整的深黑色細字中性筆」手寫完成。繁體中文輸出。`;
+const SCENE_PROMPT = `請根據這一題生成「數學題目情境示意圖」：
+
+【題目】
+（把題目貼在這裡）
+
+【圖片要求】
+1. 請生成 1 張獨立圖片。
+2. 不要把題目完整再呈現在圖上。
+3. 請用圖像清楚呈現「已知條件、變化過程、未知量」。
+4. 不要有過多不必要的裝飾插圖。
+5. 版面簡潔、清楚、低認知負荷，適合國小學生理解。
+6. 請用教材風、教學圖卡風格。
+7. 未知量請用「？」表示，不要直接寫出答案。
+8. 背景要透明，輸出 PNG 圖。
+9. 圖中所有文字請使用繁體中文。`;
+const HANZI_SKILL = `https://github.com/sesns365/hanzi-visual-teaching
+請讀取這個網址，安裝 skill。`;
+const MATH_SKILL_SRC = 'https://raw.githubusercontent.com/sesns365/math-concept-visualizer/main/gpt-gemini/gemini-paste.md';
+
 const STATIONS = [
 { id:1, name:'需求燈塔', area:'個案學習需求分析', color:'#EE6F57', pos:[-8.2,4.2], task:true,
   intro:`<div class="note"><b>任務一</b>：先看見孩子的需求，再選工具。打開個案資料完成需求分析，再對照特教課程調整的<b>四大向度</b>：</div>
@@ -684,105 +743,161 @@ const STATIONS = [
   <li><b>環境</b>：調整「在哪裡學」— 座位、安靜角落、常規與氛圍</li>
   <li><b>評量</b>：調整「怎麼評量成果」— 報讀、延長時間、口試或電腦作答</li></ul>
   <p class="quote">調整不是降低標準，而是打開學習的可能。</p>`,
+  make:{t:'分享你的需求分析', how:'用一句話寫下：這個孩子最需要的調整是哪個向度？你打算怎麼調整？貼到 Padlet 和大家交流。'},
   steps:[
     {type:'mc', q:'做課程調整之前，第一步應該先做什麼？', opts:['挑選最新的數位工具','分析個案的能力、優弱勢與學習需求','直接降低作業難度','讓個案跟上全班進度'], a:1,
-      why:'先做個案需求分析，才知道要調整哪個向度、選哪一種工具。'},
+      why:'不是策略先，而是分析先。先做需求分析，才知道要調整哪個向度、選哪一種工具。'},
     {type:'sort', q:'把每一個調整做法，放進正確的向度。', buckets:['內容','歷程','環境','評量'], items:[
       ['生字量由 10 個減為 5 個',0],['提供核心概念替代繁複細節',0],['工作分析法：拆成小步驟',1],['放慢教學節奏、多給示範',1],
       ['座位靠前、遠離門窗干擾',2],['設置安靜角落',2],['延長作答時間',3],['以實作作品取代紙筆測驗',3]]},
     {type:'mc', q:'小安閱讀長篇文字有困難，但聽理解不錯。段考時提供「報讀服務」，屬於哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:3,
       why:'報讀是改變「怎麼評量成果」，讓評量測到真正的能力，而不是閱讀障礙。'},
+    {type:'mc', q:'下列哪一項「不是」學習障礙的鑑定基準？', opts:['智力表現在正常程度或以上','個人內在能力有顯著差異','聽、說、讀、寫、算等學業表現顯著低於同年級','經一般教育介入仍難有效改善','主要是因為視覺障礙或環境不利造成'], a:4,
+      why:'學習障礙是神經心理功能異常所致，不是感官障礙、情緒或文化刺激不足等因素直接造成。'},
     {type:'mc', q:'「調整不是降低標準，而是＿＿＿＿。」', opts:['讓作業變少','打開學習的可能','統一全班進度','減少教學時間'], a:1,
       why:'調整的目的，是讓每個孩子都找到適合自己的學習方式。'}
   ]},
-{ id:2, name:'國語森林', area:'國語領域・閱讀理解', color:'#5FA651', pos:[-6,-5.6],
+{ id:2, name:'識字森林', area:'國語・識字與寫字', color:'#5FA651', pos:[-6,-5.6],
   guard:{name:'森林守門獸', k:3, q:'森林守門獸擋住去路！選出國語文的 6 項「學習表現」，每選對一項就攻擊牠一次。',
     opts:['聆聽','口語表達','標音符號與運用','識字與寫字','閱讀','寫作','字詞','句段','篇章','文本表述','文化內涵','書法比賽'], right:[0,1,2,3,4,5],
     miss:'這是國語文的「學習內容」，不是學習表現喔！'},
   intro:`<div class="note">國語文學習表現：<b>聆聽、口語表達、標音符號與運用、識字與寫字、閱讀、寫作</b>。</div>
-  <ul><li><b>文本簡化與注音標註</b>：在 Gemini 點「試用 Canvas」，和 AI 協作建立自己的教材格式</li>
-  <li><b>課文朗讀檢核系統</b>：注音認讀、拼讀皆可，訓練閱讀流暢性</li>
-  <li><b>課文漫畫</b>：用 Gemini／NotebookLM 把每一句課文畫成 Q 版漫畫格</li>
-  <li><b>課文動畫</b>：搭配 PointerFocus 聚焦重點</li></ul>
-  <div class="prompt"><span class="tag">提示詞重點（課文漫畫）</span>每個 slide 三格、格子加流水號、不能漏掉任何句子；語詞用便利貼呈現「簡化後」的解釋，重複的語詞只解釋第一次；原句中的語詞用紅色標示。</div>`,
+  <ul><li><b>識字的認知成分</b>：聲韻覺識、組字規則、詞素覺知、流暢性</li>
+  <li><b>識字教學順序</b>：識其音 → 識其義 → 辨其形 → 書寫</li>
+  <li><b>形聲字三步驟</b>：看部首（意思）→ 找聲符（聲音）→ 懂組合</li>
+  <li><b>策略</b>：圖詞析字卡・分析字頻、字形圖像聯想、部件拆解＋口訣、強制回憶寫字教學法</li></ul>`,
+  tools:[
+    {n:'圖詞析字卡', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/7285877/%E5%9C%96%E8%A9%9E%E6%9E%90%E5%AD%97%E5%8D%A1'},
+    {n:'圖詞配對', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/8937793/%E5%9C%96%E8%A9%9E%E9%85%8D%E5%B0%8D'},
+    {n:'特工365 圖卡', d:'識字圖卡', u:'https://cards.se365edu.com/'},
+    {n:'The Literacy Ark', d:'識字資源總覽', u:'https://linktr.ee/theliteracyark'},
+    {n:'每日一字動畫', d:'部件拆解＋形近字', u:'https://www.youtube.com/watch?v=LGjvIttFeMQ'},
+    {n:'字族文學習單', d:'產生器', u:'https://spedmix.pages.dev/character-family-generator'},
+    {n:'形近字學習單', d:'Gemini Canvas', u:'https://gemini.google.com/share/18d8fe3f0ca0'},
+    {n:'生字書寫練習網', d:'強制回憶寫字', u:'https://character-writing-support.sesns365.chatgpt.site/'},
+    {n:'生字資源地圖', d:'找生字資源', u:'https://shengzi-resource-map.chiutzu.chatgpt.site/'},
+    {n:'自由書寫練習', d:'手寫練習', u:'https://sesns365.github.io/hanzi-free-practice/'},
+    {n:'特工365 識字網', d:'識字資源', u:'https://literacy.se365edu.com/'}],
+  make:{t:'安裝「圖解識字」Skill', how:'開一個 Gemini、ChatGPT 或 Claude 新對話，貼上下面兩行送出；裝好後輸入「圖解識字 休」（換成你想教的字），把成品截圖或連結分享到 Padlet。',
+    copy:HANZI_SKILL, link:{n:'圖解識字 Skill 說明', u:'https://github.com/sesns365/hanzi-visual-teaching'}},
   steps:[
-    {type:'sort', q:'這些工具主要支持哪一項學習表現？', buckets:['閱讀','識字與寫字','寫作'], items:[
-      ['課文朗讀檢核系統',0],['課文漫畫',0],['部件拆解與形近字學習單',1],['生字讀寫及手寫辨識系統',1],['語音寫作小幫手',2],['照樣造句與短語練習',2]]},
+    {type:'order', q:'依識字教學的順序點選：', items:['識其音','識其義','辨其形','書寫']},
+    {type:'order', q:'教形聲字的三步驟，依序點選：', items:['看部首：知道意思','找聲符：知道聲音','懂組合：合起來理解']},
+    {type:'mc', q:'下列哪一項「不是」識字的認知成分？', opts:['聲韻覺識','組字規則','詞素覺知','流暢性','背誦整篇課文'], a:4,
+      why:'識字的認知成分是聲韻覺識、組字規則、詞素覺知與流暢性。'},
+    {type:'sort', q:'這些形聲字，建議在哪個年級教？', buckets:['二年級','五年級','六年級'], items:[
+      ['泡、跑、抱（規則字）',0],['洪、拱、供（不規則字）',1],['遙、瑤、搖（聲旁不是常用字）',2]]},
+    {type:'mc', q:'學生學會「拆字形 → 找聲音 → 連意思」之後，最後一步應該做什麼？', opts:['抄寫二十遍','放進語境：在句子、文章裡使用','換下一課','背部首表'], a:1,
+      why:'識字要回到語境中使用，才能真正連結形、音、義。'}
+  ]},
+{ id:3, name:'寫作小屋', area:'國語・寫作', color:'#2A8C8C', pos:[4.8,-6.2],
+  intro:`<ul><li><b>小步驟教學</b>：照樣造句與短語練習，先仿寫再擴寫</li>
+  <li><b>口頭表達替代書寫</b>：先說再寫，語音輸入降低書寫負擔</li>
+  <li><b>融入個人興趣主題</b>：題目換成孩子喜歡的人事物</li>
+  <li><b>六何法分層寫作</b>：何人、何地、何事 → 何時、如何 → 為何，一層一層從一句話寫到一篇文章</li></ul>`,
+  tools:[
+    {n:'照樣造句與短語練習', d:'Google 協作平台', u:'https://sites.google.com/view/samesentence/%E9%A6%96%E9%A0%81'},
+    {n:'語詞造句及句型練習板', d:'Gemini Canvas', u:'https://gemini.google.com/share/dac1116b6e3d'},
+    {n:'六何法分層寫作小幫手', d:'安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'},
+    {n:'語音寫作小幫手', d:'先說再寫', u:'https://little-voice-writing.sesns365.chatgpt.site/'}],
+  make:{t:'安裝「六何法分層寫作」Skill', how:'打開「六何法分層寫作小幫手」安裝教學，依步驟裝進 Claude、ChatGPT 或 Gemini。接著給它一個作文題目（例如「我最喜歡的寵物」），做出互動網頁或學習單，分享到 Padlet。',
+    link:{n:'打開安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'}},
+  steps:[
+    {type:'mc', q:'六何法的第一層「三何起步」，要先找出哪三何？', opts:['何人、何地、何事','何時、如何、為何','何物、何價、何量','何人、何時、為何'], a:0,
+      why:'先用何人、何地、何事組成清楚的基本句，再一層一層加上去。'},
+    {type:'order', q:'六何法分層寫作，依層次點選：', items:['三何起步','五何擴寫：加入何時、如何','六何完整：加入為何','事件排序','情緒加料','三段成文']},
+    {type:'mc', q:'小傑說得出完整的故事，但一寫字就卡住。最適合的寫作策略是？', opts:['多罰寫幾遍','口頭表達替代書寫：先說再寫','直接給他範文抄','取消寫作'], a:1,
+      why:'用語音寫作小幫手先說再寫，把「想」和「寫」分開，降低書寫負擔。'},
+    {type:'mc', q:'小美很喜歡恐龍，但寫作文意願低。可以怎麼調整？', opts:['融入個人興趣主題：題目換成恐龍','換成更長的題目','先寫完才能玩','只寫標點符號'], a:0,
+      why:'融入個人興趣主題，提高動機，寫作目標不變。'},
+    {type:'mc', q:'「照樣造句與短語練習」主要對應哪一種寫作策略？', opts:['小步驟教學','評量調整','環境調整','加深加廣'], a:0,
+      why:'先仿照句型、從短語開始，是小步驟教學。'}
+  ]},
+{ id:4, name:'閱讀花園', area:'國語・閱讀理解', color:'#D46FA0', pos:[8,1.2],
+  intro:`<ul><li><b>課文漫畫</b>：用 Gemini／NotebookLM 把每一句課文畫成 Q 版漫畫格，語詞用便利貼簡化解釋</li>
+  <li><b>課文動畫＋PointerFocus</b>：聚焦重點，邊看邊理解</li>
+  <li><b>影片理解互動模式</b>：播放 1～2 句就暫停 → 引導看圖 → 參照便利貼詞解 → 理解檢核</li>
+  <li><b>閱讀策略學習單小幫手</b>：依需求產生閱讀策略學習單</li></ul>
+  <div class="note"><b>為什麼這麼設計？</b>不是策略先，而是分析先：分析學生需求 → 判斷學習歷程需求 → 選擇策略 → 通用設計學習 → AI 生成通用設計教材 → 教師修正後形成教材。</div>`,
+  tools:[
+    {n:'課文漫畫產生器', d:'四格漫畫', u:'https://spedmix.pages.dev/four-panel-comic'},
+    {n:'Gemini', d:'貼提示詞做漫畫', u:'https://gemini.google.com/'},
+    {n:'NotebookLM', d:'上傳課文當資料來源', u:'https://notebooklm.google.com/'},
+    {n:'PointerFocus', d:'聚焦游標工具', u:'https://www.pointerfocus.com/'}],
+  make:{t:'做一份課文漫畫', how:'複製下面的提示詞，在 Gemini 或 NotebookLM 貼上一課課文（和語詞清單），產生課文漫畫，分享到 Padlet。',
+    copy:COMIC_PROMPT},
+  steps:[
+    {type:'order', q:'影片理解互動模式，依步驟點選：', items:['播放 1～2 句後暫停','引導看圖','參照便利貼詞解','理解檢核']},
+    {type:'mc', q:'「播放一兩句就暫停、看圖、看詞解、再檢核」屬於哪一個向度的調整？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:1,
+      why:'改變的是學生「怎麼學」，屬於歷程調整。'},
+    {type:'order', q:'教材設計「分析先行」的六個步驟，依序點選：', items:['分析學生需求','判斷學習歷程需求','選擇策略','通用設計學習','AI 生成通用設計教材','教師修正後形成教材']},
+    {type:'mc', q:'依「閱讀簡單觀點」，閱讀理解由哪兩者相乘而來？', opts:['識字 × 語言理解','速度 × 正確率','注音 × 國字','背誦 × 抄寫'], a:0,
+      why:'只要識字或語言理解其中一項是 0，閱讀理解就難以發生，所以兩者都要支持。'},
     {type:'mc', q:'課文漫畫的提示詞要求「語詞用便利貼呈現簡化解釋」，主要是為了什麼？', opts:['讓畫面更熱鬧','幫助程度較弱的學生理解句子內容','減少 AI 輸出的字數','方便老師批改'], a:1,
-      why:'不直接用原始解釋，而是簡化後再呈現，降低理解門檻。'},
-    {type:'mc', q:'閱讀流暢度的「課文朗讀檢核系統」可以怎麼用？', opts:['只能用在國字','注音認讀、拼讀都可以，用來訓練閱讀流暢性','只能用來打分數','只適合高年級'], a:1,
-      why:'注音與國字都能用，重點是反覆朗讀、提升流暢度。'}
+      why:'不直接用原始解釋，而是簡化後再呈現，降低理解門檻。'}
   ]},
-{ id:3, name:'報讀小屋', area:'報讀工具・數位考卷', color:'#2A8C8C', pos:[4.8,-6.2],
-  intro:`<div class="note">試試看！點任一句，系統會<b>朗讀並以黃色標示</b>；朗讀中點別句，會<b>立刻改唸新的一句</b>。</div>
-  <p class="readable">一、選詞填寫：小明每天早上（　　）去學校。</p>
-  <p class="readable">選項一：走路。選項二：游泳。選項三：飛行。</p>
-  <div class="prompt"><span class="tag">提示詞重點（考卷報讀點讀工具）</span>單一 HTML 檔（Tailwind + JavaScript），可放在 Google 協作平台。
-  ・Web Speech API：點題目、選項或詞語就朗讀
-  ・朗讀中的區塊黃底加框，讀完自動恢復；點別句會打斷前一句
-  ・純報讀模式：不判斷對錯、不計分、不顯示答案
-  ・頂部控制面板：語音選擇、語速 0.5x–2.0x、字體大小
-  ・RWD，選項間留足點擊空間，避免誤觸</div>
-  <p class="small">設計原則：提供報讀與語音輔助、試卷格式與題量精簡。</p>`,
-  steps:[
-    {type:'mc', q:'「考卷報讀點讀工具」絕對不能加入哪一項功能？', opts:['語速調整','字體大小調整','計分與顯示正確答案','語音選擇'], a:2,
-      why:'它是純報讀的輔助閱讀工具，評量的公平性要保留給測驗本身。'},
-    {type:'mc', q:'學生正在聽第一題，突然點了第三題，系統應該怎麼做？', opts:['等第一題唸完再唸第三題','打斷前一句，立刻改唸第三題並標示','兩句同時唸','跳出錯誤訊息'], a:1,
-      why:'即時回應學生的點選，視覺標示也要跟著移動。'},
-    {type:'mc', q:'為什麼選項之間要留足夠的點擊空間？', opts:['比較好看','避免學生在手機、平板上誤觸','讓頁面變長','節省流量'], a:1,
-      why:'精細動作較弱的學生特別需要大一點的點擊目標。'}
-  ]},
-{ id:4, name:'識字花園', area:'識字與寫字', color:'#D46FA0', pos:[8,1.2],
-  intro:`<ul><li><b>圖詞識字</b>：語詞配圖片，把詞彙圖像化，建立心理詞彙</li>
-  <li><b>圖詞析字卡・分析字頻</b>：請 AI 依教育部字庫 5021 字，分析每課生字字頻，由小到大排列</li>
-  <li><b>圖像提示策略、圖解識字</b>：部件拆解與形近字教材、字族文學習單</li>
-  <li><b>強制回憶寫字教學法</b>、生字讀寫及手寫辨識系統</li>
-  <li><b>照樣造句、語詞造句及句型練習板</b>：小步驟教學、融入個人興趣</li></ul>
-  <div class="prompt"><span class="tag">提示詞（Gemini／NotebookLM）</span>請根據教育部字庫 5021 字，分析國語 3 上生字表每一課生字的字頻，每一課都依序從小到大排列。</div>`,
-  steps:[
-    {type:'mc', q:'分析生字字頻時，講者請 AI 依據哪一份資料？', opts:['網路熱門詞','教育部字庫 5021 字','課本目錄','學生作文'], a:1,
-      why:'有了字頻，就能先教常用字，安排教學順序。'},
-    {type:'mc', q:'把「語詞」配上「圖片」來教，是在幫學生建立什麼？', opts:['心理詞彙（詞彙圖像化）','寫字速度','標點符號','背誦能力'], a:0,
-      why:'圖像讓詞義有具體的連結，也有助斷詞與閱讀。'},
-    {type:'mc', q:'「形近字」教材最常搭配哪一種策略？', opts:['抄寫十遍','部件拆解','只看注音','跳過不教'], a:1,
-      why:'把字拆成部件比較異同，學生較容易分辨形近字。'}
-  ]},
-{ id:5, name:'CPA 數學山', area:'數學領域・概念理解', color:'#7A63C9', pos:[-0.6,-1.4],
+{ id:5, name:'CRA 數學山', area:'數學・概念理解', color:'#7A63C9', pos:[-0.6,-1.4],
   intro:`<div class="note">數學學習表現：<b>n 數與量、s 空間與形狀、r 關係、d 資料與不確定性</b>。</div>
-  <ul><li><b>C 具體操作</b>：動手做，用真實物品</li>
-  <li><b>P 圖像理解</b>：看圖像，用圖片、圖表、模型</li>
-  <li><b>A 抽象符號</b>：用符號，3 + 2 = 5</li></ul>
+  <ul><li><b>C 具體</b>：動手操作真實物品</li>
+  <li><b>R 半具體（圖像）</b>：用圖片、圖表、模型表徵</li>
+  <li><b>A 抽象</b>：用符號，3 + 2 = 5</li></ul>
   <p>皮亞傑認知發展：感覺動作期（0–2 歲）、前運思期（2–7 歲）、具體運思期（7–11 歲）、形式運思期（約 11 歲以上）。</p>
-  <p class="small">工具舉例：10 以內加減法、十十乘法、立體魔法空間（柱體挑戰）、速度合成演示 — 小步驟教學，減輕工作記憶負荷。</p>`,
+  <p class="small">「數學概念動態表徵互動網頁 Skill」能依 CRA 歷程，快速做出讓學生動手操作的 HTML 數學教材。</p>`,
+  tools:[
+    {n:'數學概念動態表徵 Skill', d:'完整說明', u:'https://github.com/sesns365/math-concept-visualizer'},
+    {n:'Skill 安裝文字', d:'全選複製', u:MATH_SKILL_SRC},
+    {n:'數學教室資源', d:'教學資源總覽', u:'https://linktr.ee/mathclassroom'}],
+  make:{t:'安裝「數學概念動態表徵」Skill', how:'① 打開「Skill 安裝文字」，全選複製全部文字。② 開一個 Gemini、ChatGPT 或 Claude 新對話：安裝這個 skill，貼上後送出。③ 說出你要的教材，例如下面這句。Gemini 沒出現可操作畫面，就在「工具」選 Canvas 再重做一次。做好按「共用」複製連結，分享到 Padlet。',
+    copy:'請幫我做一個二年級二位數進位加法的教材。', link:{n:'打開 Skill 安裝文字', u:MATH_SKILL_SRC}},
   steps:[
-    {type:'order', q:'依 CPA 教學法的順序點選：', items:['C 具體操作：拿出 3 顆蘋果和 2 顆蘋果','P 圖像理解：畫出蘋果圖','A 抽象符號：3 + 2 = 5']},
+    {type:'order', q:'依 CRA 教學的順序點選：', items:['C 具體：拿出 3 顆蘋果和 2 顆蘋果','R 半具體：畫出蘋果圖','A 抽象：3 + 2 = 5']},
     {type:'order', q:'依年齡由小到大，點出皮亞傑的四個認知發展期：', items:['感覺動作期','前運思期','具體運思期','形式運思期']},
     {type:'mc', q:'國小學生大多處於哪一期？教學上要注意什麼？', opts:['形式運思期，可以直接用公式','具體運思期，需要具體事物支持','感覺動作期，只能用感官','前運思期，不能學數學'], a:1,
-      why:'7–11 歲能邏輯思考，但需要具體事物支持，所以 CPA 從操作開始。'},
-    {type:'mc', q:'數學學習表現代碼「r」代表哪一個主題？', opts:['數與量','空間與形狀','關係','資料與不確定性'], a:2}
+      why:'7–11 歲能邏輯思考，但需要具體事物支持，所以 CRA 從操作開始。'},
+    {type:'mc', q:'數學學習表現代碼「r」代表哪一個主題？', opts:['數與量','空間與形狀','關係','資料與不確定性'], a:2},
+    {type:'mc', q:'用 Gemini 安裝數學 Skill 後，沒有出現可以操作的畫面，該怎麼辦？', opts:['換一個帳號','在輸入框的「工具」選 Canvas，再請它重做一次','放棄改用紙本','把題目改成英文'], a:1,
+      why:'Canvas 才能顯示可操作的互動網頁。'}
   ]},
-{ id:6, name:'應用題港口', area:'數學應用題・文本簡化', color:'#3B7FC4', pos:[3.6,9.2],
-  intro:`<ul><li><b>題目簡化</b>：在 NotebookLM 請 AI 將題目簡化成適合國小三年級學障生，情境要生活化</li>
+{ id:6, name:'應用題港口', area:'數學・應用題', color:'#3B7FC4', pos:[3.6,9.2],
+  intro:`<ul><li><b>文本簡化</b>：在 NotebookLM 請 AI 把題目簡化成適合學生的程度，情境要生活化</li>
   <li><b>數學情境圖</b>：讓 AI 畫出已知條件、變化過程與未知量</li>
-  <li><b>情境包裝</b>：融入孩子的個人興趣主題</li></ul>
-  <div class="prompt"><span class="tag">提示詞重點（數學情境示意圖）</span>1 張獨立圖片；不要把題目完整呈現在圖上；清楚呈現「已知條件、變化過程、未知量」；不要過多裝飾；版面簡潔、低認知負荷；教材圖卡風格；未知量用「？」不寫答案；透明背景 PNG；繁體中文。</div>`,
+  <li><b>HTML 互動式動態表徵教材</b>：10 以內加減法、十十乘法，小步驟教學，減輕工作記憶負荷</li></ul>`,
+  tools:[
+    {n:'10 以內加減法', d:'互動教材', u:'https://gemini.google.com/share/6431cbd0fae1'},
+    {n:'十十乘法', d:'挖礦小遊戲', u:'https://senst365.github.io/miningnew/'},
+    {n:'NotebookLM', d:'文本簡化', u:'https://notebooklm.google.com/'}],
+  make:{t:'做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖，分享到 Padlet。',
+    copy:SCENE_PROMPT},
   steps:[
     {type:'mc', q:'情境圖中的「未知量」要怎麼呈現？', opts:['直接寫出答案','用「？」表示','留白不畫','用英文字母'], a:1,
       why:'圖是幫助理解題意，不是給答案。'},
     {type:'sort', q:'這些做法，情境圖提示詞「要」還是「不要」？', buckets:['要','不要'], items:[
       ['呈現已知條件與變化過程',0],['版面簡潔、低認知負荷',0],['透明背景 PNG、繁體中文',0],
       ['把題目完整印在圖上',1],['加上很多裝飾插圖',1],['在圖上寫出答案',1]]},
-    {type:'mc', q:'孩子很喜歡恐龍，應用題可以怎麼調整？', opts:['換成更難的數字','情境包裝：把題目情境換成恐龍主題','取消應用題','只做計算題'], a:1,
-      why:'融入個人興趣，提高動機，數學概念不變。'}
+    {type:'mc', q:'學生看不懂應用題的長句子，在 NotebookLM 可以請 AI 做什麼？', opts:['把題目翻成英文','文本簡化：改寫成適合學生程度、生活化的句子','直接算出答案','把題目變更長'], a:1,
+      why:'文本簡化是內容調整，數學概念不變，降低閱讀負擔。'},
+    {type:'mc', q:'十十乘法、10 以內加減法這類互動教材，「小步驟」設計主要是為了？', opts:['減輕工作記憶負荷','讓學生玩久一點','增加題目數量','比較好計分'], a:0,
+      why:'一次處理一個步驟，學障生的工作記憶比較不會超載。'}
   ]},
-{ id:7, name:'資源寶箱', area:'資源分享・結語', color:'#C9902A', pos:[-3.2,7.2],
-  intro:`<div class="res">
-  <div><b>特工 365｜教學資源平台</b><span>特工365 社群平台、特工聲活 Podcast</span></div>
-  <div><b>米克師・Special Education 教師備課幫手</b><span>AI 備課工具</span></div>
-  <div><b>特教老師的融合練習簿</b><span>Facebook 粉絲專頁</span></div>
-  <div><b>特殊教育多媒體教材交流社團</b><span>Facebook 社團</span></div></div>
-  <p class="quote">科技本身沒有溫度，但當它被交到特教老師手中，就能成為點亮特殊需求孩子學習之路的溫暖微光。</p>`,
+{ id:7, name:'社交寶箱', area:'社會技巧・資源分享', color:'#C9902A', pos:[-3.2,7.2],
+  intro:`<ul><li><b>社會技巧課程發展</b>：課前準備（找需求者、分析能力、彙整、決定 4–6 人雙數小組、安排課程）→ 課程進行 → 評量與類化（○ 獨立完成、△ 協助完成、× 未做到）</li>
+  <li><b>教學九步驟</b>：準備（引起動機）→ 教（說明、示範）→ 練（演練、回饋、再演練、再回饋）→ 收（總結討論、課後作業）</li>
+  <li><b>促進類化</b>：生活實例、句型有彈性、練夠次數、換不同對象、提示卡隨身帶、做對立刻增強</li></ul>
+  <p class="quote">數位工具是橋，而我們的陪伴與專業，才是真正引導孩子勇敢過橋的力量。</p>`,
+  tools:[
+    {n:'社交小特工', d:'動畫＋互動網頁＋學習單', u:'https://sesns365.github.io/social-skills/'},
+    {n:'社會技巧互動遊戲', d:'Claude 互動網頁', u:'https://claude.ai/artifact/LvS6ZmNcFVruvjfZsL727B'},
+    {n:'特工365 教學資源平台', d:'資源分享', u:'https://www.se365edu.com/'}],
+  make:{t:'設計一個類化活動', how:'挑一集「社交小特工」，想一個讓孩子在教室外也用得上的類化活動（換不同對象、提示卡隨身帶…），分享到 Padlet。'},
   steps:[
+    {type:'order', q:'社會技巧課程發展的三個階段，依序點選：', items:['課前準備','課程進行','評量與類化']},
+    {type:'order', q:'社會技巧教學的四大段，依序點選：', items:['準備：引起動機','教：說明、示範','練：演練、回饋','收：總結討論、課後作業']},
+    {type:'mc', q:'社會技巧小組的人數，建議怎麼安排？', opts:['1 人一對一','4–6 人、雙數','全班 25 人','越多越好'], a:1,
+      why:'雙數方便兩兩演練，人數也不會多到練不到。'},
+    {type:'sort', q:'哪些做法能「促進類化」？', buckets:['能促進','不能'], items:[
+      ['用生活實例練習',0],['換不同對象練習',0],['提示卡隨身帶',0],['做對立刻增強',0],
+      ['只在資源班練一次',1],['句型一字不差背熟才算',1]]},
+    {type:'mc', q:'評量紀錄上的「△」代表什麼？', opts:['獨立完成','需協助完成','未做到','缺席'], a:1},
     {type:'mc', q:'「數位工具是橋，而＿＿＿＿才是真正引導孩子勇敢過橋的力量。」', opts:['更多的 App','我們的陪伴與專業','更快的網路','更多的考試'], a:1,
       why:'謝謝參與今天的研習！'}
   ]}
@@ -804,9 +919,9 @@ function gemSVG(i, cls){
 }
 const FRAGS = [
   {pos:[-2.5,-7.8], tip:'調整不是降低標準，而是打開學習的可能。'},
-  {pos:[7.2,-2.6],  tip:'善用 AI，建立屬於自己的教材格式生成系統。'},
-  {pos:[-7.6,-.4],  tip:'圖像提示策略：部件拆解，幫助孩子分辨形近字。'},
-  {pos:[4.6,4.2],   tip:'融入個人興趣主題，用情境包裝提高學習動機。'}
+  {pos:[7.2,-2.6],  tip:'不是策略先，而是分析先。'},
+  {pos:[-7.6,-.4],  tip:'形聲字三步驟：看部首、找聲符、懂組合。'},
+  {pos:[4.6,4.2],   tip:'促進類化：換不同對象、提示卡隨身帶、做對立刻增強。'}
 ];
 FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
 
@@ -814,26 +929,27 @@ FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
    The host can rewrite each card live from the control panel. */
 const ANIMALS = [
   {name:'貓頭鷹博士', kind:'owl',    color:'#8A6142', home:[2,-12.5],
-    card:{t:'今年學障鑑定基準修訂', b:'（請講師在主控台「動物新知」填入今年學習障礙鑑定基準修訂的重點。）'}},
+    card:{t:'學習障礙鑑定基準', b:'學習障礙是神經心理功能異常，顯現在聽、說、讀、寫或算等學習表現有顯著困難。鑑定基準：智力正常或以上、個人內在能力有顯著差異、學業表現顯著低於同年級、經一般教育介入仍難有效改善。'}},
   {name:'小兔跳跳',   kind:'rabbit', color:'#F4F1EA', home:[-8,2],
-    card:{t:'閱讀流暢度', b:'課文朗讀檢核可用注音或國字，重點是反覆朗讀、提升流暢度。參考：胡永崇（2007）學習障礙學生閱讀流暢度的評量與教學。'}},
+    card:{t:'閱讀簡單觀點', b:'閱讀理解 ＝ 識字 × 語言理解（Tunmer & Hoover）。低年級是「學習閱讀」，中年級以後轉向「從閱讀中學習」，識字卡關的孩子需要及早支持。'}},
   {name:'烏龜爺爺',   kind:'turtle', color:'#5FA651', home:[9,-4],
-    card:{t:'小步驟教學', b:'把學習任務拆成小步驟，一次只處理一個步驟，可以減輕工作記憶負荷，例如 10 以內加減法、十十乘法的分段練習。'}},
+    card:{t:'識字流暢性', b:'識字的認知成分包含聲韻覺識、組字規則、詞素覺知與流暢性；二年級以上的朗讀速度，參考值約每分鐘 113 字以上。'}},
   {name:'小狗旺旺',   kind:'dog',    color:'#D9A066', home:[-3,7],
-    card:{t:'報讀工具的設計原則', b:'點哪裡就唸哪裡、朗讀中的句子要高亮；純報讀，不判斷對錯也不顯示答案；選項之間留足點擊空間，避免誤觸。'}},
+    card:{t:'影片理解互動模式', b:'播放 1～2 句就暫停 → 引導看圖 → 參照便利貼詞解 → 理解檢核。這是歷程調整：改變學生「怎麼學」。'}},
   {name:'橘貓咪咪',   kind:'cat',    color:'#EE9A4D', home:[-15,-6],
-    card:{t:'心理詞彙與斷詞', b:'語詞配圖片能把詞彙圖像化，幫助建立心理詞彙，也有助斷詞與閱讀。參考：黃怡、廖晨惠（2010）斷詞能力在中文閱讀認知歷程之探究。'}}
+    card:{t:'各年級形聲字', b:'一年級先教部件、獨體字、象形字；二年級加入規則字（泡、跑、抱）；三、四年級形聲規則字；五年級不規則字（洪、拱、供）；六年級聲旁非常用字（遙、瑤、搖）。'}}
 ];
 const QUESTIONS = [
-  '分析個案需求時，你會先從哪一項學習表現著手？為什麼？',
+  '分析個案需求時，你最先注意到孩子哪一個需求？會調整哪個向度？',
+  '你會怎麼教一個形近字？說說你的口訣或圖像聯想。',
+  '圖解識字 Skill 做出來的成品，哪裡最適合你的學生？',
+  '如果學生說得出來卻寫不出來，你會怎麼幫他？',
   '課文漫畫的提示詞裡，有哪些小細節是為學生設計的？',
-  '考卷報讀工具為什麼不能顯示答案或計分？',
-  '圖詞識字為什麼能幫助孩子斷詞與閱讀？',
   '數學情境圖為什麼要用「？」表示未知量？',
-  '如果孩子喜歡恐龍，你會怎麼改寫一題應用題？',
-  '分享一個你想用 AI 製作的教材點子。',
+  '你想用數學 Skill 做哪一個單元的教材？',
+  '社會技巧要怎麼讓孩子在教室外也用得出來？',
   '「數位工具是橋」，你心中的陪伴與專業是什麼？'
-];
+]
 
 /* ---------------- characters ----------------
    Presets below; a learner can also make one with AI (Claude designs the
@@ -1028,7 +1144,7 @@ function isOpen(st){
 const oresDone = () => [1,2,3,4,5,6].filter(i => done.has(i)).length;
 function lockReason(st){
   if (st.id > openUpTo) return '講師還沒開放這一站，先專心聽講喔！';
-  return `資源寶箱需要 6 顆礦石＋${FRAGS.length} 片藏寶圖碎片（目前礦石 ${oresDone()}/6、碎片 ${frags.size}/${FRAGS.length}）`;
+  return `社交寶箱需要 6 顆礦石＋${FRAGS.length} 片藏寶圖碎片（目前礦石 ${oresDone()}/6、碎片 ${frags.size}/${FRAGS.length}）`;
 }
 
 /* ---------------- TTS ---------------- */
@@ -1106,6 +1222,26 @@ function taskBlock(){
     <button class="ghost" type="button" data-four>看四大向度圖</button></div>
     <button type="button" class="four-thumb" data-four><img src="${FOUR_IMG}" alt="特教課程調整的核心四大向度：內容、歷程、環境、評量"></button></div>`;
 }
+const PADLET_BTN = `<a class="primary padlet-btn" href="${PADLET}" target="_blank" rel="noopener">分享到 Padlet</a>`;
+function kitBlock(st){
+  const m = st.make; if (!m && !st.tools) return '';
+  const tools = st.tools ? `<div><div class="kit-h">體驗工具（點開試試看）</div><div class="tools">${st.tools.map(t =>
+    `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
+  const make = m ? `<div class="make"><div class="kit-h">實作任務</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
+    ${m.copy ? `<div class="prompt" id="mkCopy">${esc(m.copy)}</div>` : ''}
+    <p class="frame">分享時寫一句：孩子的需求是＿＿，我對照＿＿（向度／策略），用 AI 做了＿＿。</p>
+    <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
+    ${m.link ? `<a class="ghost" href="${esc(m.link.u)}" target="_blank" rel="noopener">${esc(m.link.n)}</a>` : ''}
+    ${PADLET_BTN}</div></div>` : '';
+  return `<div class="kit">${tools}${make}</div>`;
+}
+function copyText(t){
+  const done = () => toast('已複製，到 AI 對話框貼上吧');
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, () => fallback());
+  else fallback();
+  function fallback(){ const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('請長按文字複製'); } ta.remove(); }
+}
 function openFour(){ $('#fourOv').hidden = false; }
 function openStation(sid){
   const st = STATIONS.find(s => s.id === sid);
@@ -1119,11 +1255,12 @@ function openStation(sid){
   const body = $('#sheetBody');
   if (st.guard && !done.has(sid) && !store.get('guard.' + sid, false) && !isHost && nick){ startGuard(st); return; }
   const wait = st.task && !checkOpen() && !done.has(sid) && !isHost;
-  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + `<div class="row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開放檢核' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
+  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) + `<div class="row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開放檢核' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
     ${done.has(sid)?'<span class="small">已獲得徽章</span>':''}</div>`;
   body.scrollTop = 0;
   $('#startBtn').onclick = () => runStep(st, 0);
   body.querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
+  body.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(st.make.copy));
   $('#sheet').hidden = false;
 }
 function closeSheet(){ if (typeof closeChat === 'function' && chatAid >= 0) closeChat(); $('#sheet').hidden = true; currentSid = null; pushPresence(); nearSid = -1; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
@@ -1378,13 +1515,14 @@ const builders = {
     const r = l.clone(); r.position.x = .46; r.rotation.z = -.15; book.add(r);
     book.position.set(1.8, .25, 1.6); g.add(book); return 4.2;
   },
-  3(g){ // speaker house
+  3(g){ // writing house with a giant pencil
     const w = mesh(new THREE.BoxGeometry(2.6, 1.7, 2.2), 0xFDF6EC); w.position.y = .85; g.add(w);
     const roof = mesh(new THREE.ConeGeometry(2.1, 1.3, 4), 0x2A8C8C); roof.position.y = 2.35; roof.rotation.y = Math.PI/4; g.add(roof);
     const door = mesh(new THREE.BoxGeometry(.6, 1, .06), 0x8A5A3B); door.position.set(0, .5, 1.12); g.add(door);
     const win = mesh(new THREE.BoxGeometry(.5, .45, .06), 0xFFE08A, {emissive:0xFFC844, emissiveIntensity:.3}); win.position.set(.85, 1.05, 1.12); g.add(win); g.userData.win = win;
-    const horn = mesh(new THREE.CylinderGeometry(.42, .1, .7, 10, 1, true), 0xEE6F57, {side:THREE.DoubleSide}); horn.rotation.z = -Math.PI/2.6; horn.position.set(-.7, 3.05, 0); g.add(horn);
-    const mast = mesh(new THREE.CylinderGeometry(.05, .05, .7, 6), 0x555555); mast.position.set(-.9, 2.75, 0); g.add(mast);
+    const pen = mesh(new THREE.CylinderGeometry(.22, .22, 2.4, 6), 0xF4B740); pen.position.set(-1.75, 1.2, .6); pen.rotation.z = .18; g.add(pen);
+    const tip = mesh(new THREE.ConeGeometry(.22, .45, 6), 0xF6CDA8); tip.position.set(-1.53, -.12, .6); tip.rotation.z = .18 + Math.PI; g.add(tip);
+    const eraser = mesh(new THREE.CylinderGeometry(.22, .22, .3, 6), 0xF08DB8); eraser.position.set(-1.98, 2.52, .6); eraser.rotation.z = .18; g.add(eraser);
     return 4.2;
   },
   4(g){ // flower garden
@@ -1402,7 +1540,7 @@ const builders = {
     const post = mesh(new THREE.CylinderGeometry(.05, .05, .8, 6), 0x8A5A3B); post.position.set(0, .4, 0); g.add(post);
     return 2.6;
   },
-  5(g){ // CPA mountain
+  5(g){ // CRA mountain
     const m = mesh(new THREE.ConeGeometry(3.3, 5.2, 8), 0x7FA36B); m.position.y = 2.6; g.add(m);
     const cap = mesh(new THREE.ConeGeometry(1.25, 2, 8), 0xFFFFFF); cap.position.y = 4.25; g.add(cap);
     [0xD9513A, 0xD9513A, 0xD9513A, 0x5FA651, 0x5FA651].forEach((c, i) => {
@@ -1619,7 +1757,7 @@ function checkFrags(){
     if (frags.has(i) || Math.hypot(player.pos.x - f.pos[0], player.pos.z - f.pos[1]) > 1.3) return;
     frags.add(i); store.set('frags', [...frags]); renderHUD(); confetti();
     toast(`撿到藏寶圖碎片 ${frags.size}/${FRAGS.length}：${f.tip}`);
-    if (frags.size >= FRAGS.length && oresDone() === 6) setTimeout(() => banner('藏寶圖拼好了！快去資源寶箱拿黃金船票', 5000), 2800);
+    if (frags.size >= FRAGS.length && oresDone() === 6) setTimeout(() => banner('藏寶圖拼好了！快去社交寶箱拿黃金船票', 5000), 2800);
   });
 }
 
@@ -1771,13 +1909,14 @@ function updateNight(dt, t){
 }
 
 /* ---------------- explorers: the viewer walks the island, peers walk alongside ---------------- */
-function nameSprite(text){
+function nameSprite(text, me){
   const cv = document.createElement('canvas'); cv.width = 320; cv.height = 72;
   const c = cv.getContext('2d');
   c.font = '700 34px "Huninn","Chiron GoRound TC","Noto Sans TC",sans-serif';
   const w = Math.min(300, c.measureText(text).width + 36);
-  roundRect(c, (320 - w)/2, 8, w, 56, 28); c.fillStyle = 'rgba(255,255,255,.92)'; c.fill();
-  c.fillStyle = '#18323A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 160, 37, 280);
+  roundRect(c, (320 - w)/2, 8, w, 56, 28); c.fillStyle = me ? '#EE6F57' : 'rgba(255,255,255,.92)'; c.fill();
+  if (me){ c.lineWidth = 5; c.strokeStyle = '#fff'; c.stroke(); }
+  c.fillStyle = me ? '#fff' : '#18323A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 160, 37, 280);
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true}));
   sp.scale.set(2.2, .5, 1); sp.position.y = 2.35; sp.renderOrder = 9; return sp;
 }
@@ -1858,6 +1997,8 @@ function setPose(m, asleep, t){
   m.b.position.y = asleep ? .38 : 0;
   m.label.position.y = asleep ? 1.2 : 2.35;
   m.zzz.visible = asleep;
+  if (m.arrow){ m.arrow.position.y = (asleep ? 1.75 : 2.95) + Math.sin(t*4)*.12; m.arrow.rotation.y = t*2;
+    const k = 1 + (t*.9 % 1)*.7; m.ring.scale.set(k, k, 1); m.ring.material.opacity = .9*(1 - (t*.9 % 1)); }
   if (asleep && !reduced){ m.zzz.position.y = 1.5 + (t*.6 % 1)*.6; m.zzz.material.opacity = 1 - (t*.6 % 1)*.7; }
 }
 const SPAWN = PU.clone().multiplyScalar(12.5).setY(GROUND);
@@ -1882,6 +2023,12 @@ const keys = new Set();
 function spawnPlayer(){
   if (player){ scene.remove(player.g); }
   player = makeExplorer(specFor(charIdx), nick);
+  // make the viewer's own explorer unmistakable in a crowd: coral name tag, bouncing arrow, glowing ring
+  player.g.remove(player.label); player.label = nameSprite('我・' + nick, true); player.label.scale.set(2.6, .59, 1); player.label.renderOrder = 11; player.g.add(player.label);
+  const arrow = new THREE.Mesh(new THREE.ConeGeometry(.3, .55, 4), new THREE.MeshBasicMaterial({color:0xF4B740, depthTest:false, transparent:true}));
+  arrow.rotation.x = Math.PI; arrow.renderOrder = 10; player.g.add(arrow); player.arrow = arrow;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.62, .8, 32), new THREE.MeshBasicMaterial({color:0xF4B740, transparent:true, opacity:.9, side:THREE.DoubleSide, depthWrite:false}));
+  ring.rotation.x = -Math.PI/2; ring.position.y = .04; player.g.add(ring); player.ring = ring;
   player.pos = SPAWN.clone(); player.target = null; player.onArrive = null; player.heading = Math.PI;
   player.g.position.copy(player.pos); player.g.rotation.y = player.heading;
   player.g.visible = explorersOn && !boarded;
@@ -2392,6 +2539,66 @@ $('#tStart').onclick = () => {
 };
 $('#tStop').onclick = () => writeLive({timer:null});
 
+/* workshop agenda: 210 minutes, one tap per segment */
+const AGENDA = [
+  {t:'入港暖身：分享 AI 經驗', m:10, note:'開放入港前分享 → 投影分享牆 → 按「登島」'},
+  {t:'第 1 站 需求燈塔', m:20, open:1, note:'個案需求分析（下方任務一可計時）→ 開放檢核 → 討論',
+    poll:{q:'這個孩子最需要先調整哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量']}, dq:0},
+  {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 安裝圖解識字 Skill → Padlet',
+    poll:{q:'你最想帶回去用的識字工具？', opts:['圖詞析字卡','圖解識字 Skill','每日一字動畫','字族文・形近字學習單','生字書寫練習網']}, dq:1},
+  {t:'第 3 站 寫作小屋', m:20, open:3, note:'講解 → 體驗 → 六何法 Skill',
+    poll:{q:'學生寫作最常卡在哪裡？', opts:['不知道寫什麼','句子寫不長','會說不會寫','沒有動機']}, dq:3},
+  {t:'休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
+  {t:'第 4 站 閱讀花園', m:25, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
+    poll:{q:'課文漫畫你會用哪個工具做？', opts:['Gemini','NotebookLM','課文漫畫產生器','還在觀望']}, dq:4},
+  {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 安裝數學 Skill → 做一份教材 → Padlet',
+    poll:{q:'你想先做哪個數學單元的互動教材？', opts:['加減法','乘除法','分數','時間與錢幣','幾何圖形']}, dq:6},
+  {t:'第 6 站 應用題港口', m:20, open:6, note:'講解 → 複製提示詞生情境圖 → Padlet', dq:5},
+  {t:'第 7 站 社交寶箱', m:20, open:7, note:'社交小特工 → 類化活動 → 拿黃金船票',
+    poll:{q:'社會技巧教學最難的是哪一步？', opts:['引起動機','示範','演練與回饋','類化到生活']}, dq:7},
+  {t:'成果分享', m:15, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
+  {t:'Q&A 與離島', m:15, note:'回答提問 → 按「離島」，全員搭船',
+    poll:{q:'今天最有收穫的一站？', opts:['需求燈塔','識字森林','寫作小屋','閱讀花園','數學山與港口','社交寶箱']}}
+];
+let agNow = store.get('agNow', -1), agT0 = store.get('agT0', 0);
+const agHM = m => Math.floor(m/60) + ':' + String(m % 60).padStart(2, '0');
+function renderAgenda(){
+  let acc = 0;
+  $('#agenda').innerHTML = AGENDA.map((a, i) => { const from = acc; acc += a.m;
+    return `<div class="ag${i === agNow ? ' now' : i < agNow ? ' past' : ''}"><div class="ag-top"><b>${esc(a.t)}</b><span>${agHM(from)}–${agHM(acc)}・${a.m} 分</span></div>
+      <div class="small">${esc(a.note)}</div><div class="ag-btns"><button type="button" class="go" data-ag="${i}">${i === agNow ? '進行中' : '開始'}</button>
+      ${a.poll ? `<button type="button" data-agp="${i}">投票</button>` : ''}${a.dq != null ? `<button type="button" data-agd="${i}">抽人回答</button>` : ''}
+      ${a.padlet ? `<a class="ghost" href="${PADLET}" target="_blank" rel="noopener" style="text-decoration:none;font-size:13px;padding:4px 10px">打開 Padlet</a>` : ''}</div></div>`; }).join('');
+  agTick();
+}
+function agTick(){
+  if (!agT0 || agNow < 0) return;
+  const used = Math.round((Date.now() - agT0)/60000), plan = AGENDA.slice(0, agNow).reduce((n, a) => n + a.m, 0);
+  const d = used - plan;
+  $('#agClock').textContent = `已進行 ${agHM(Math.max(0, used))}／3:30。這一段預定從 ${agHM(plan)} 開始，` + (d > 3 ? `目前慢 ${d} 分鐘。` : d < -3 ? `目前快 ${-d} 分鐘。` : '進度剛好。');
+}
+setInterval(agTick, 20000);
+const jump = id => $(id).scrollIntoView({behavior:'smooth', block:'start'});
+$('#qkPoll').onclick = () => { jump('#secPoll'); $('#pQ').focus({preventScroll:true}); };
+$('#qkDraw').onclick = () => { jump('#secDraw'); $('#drawBtn').click(); };
+$('#qkBeast').onclick = () => jump('#secBeast');
+$('#qkTimer').onclick = () => jump('#secTimer');
+$('#agenda').onclick = e => {
+  const g = e.target.closest('[data-ag]'), pb = e.target.closest('[data-agp]'), db = e.target.closest('[data-agd]');
+  if (g){ const i = +g.dataset.ag, a = AGENDA[i];
+    if (!agT0 || i === 0){ agT0 = Date.now() - AGENDA.slice(0, i).reduce((n, x) => n + x.m, 0)*60000; store.set('agT0', agT0); }
+    agNow = i; store.set('agNow', i);
+    const patch = {};
+    if (a.open) patch.open = Math.max(a.open, openUpTo);
+    if (a.rest){ patch.attention = false; patch.rest = {until:Date.now() + a.rest*60000}; patch.timer = null; }
+    if (Object.keys(patch).length) writeLive(patch);
+    toast(a.open ? `${a.t}：已開放` : a.t);
+    renderAgenda();
+  }
+  if (pb){ const a = AGENDA[+pb.dataset.agp]; $('#pQ').value = a.poll.q; $('#pOpts').value = a.poll.opts.join('\n'); $('#pStart').click(); openPoll(true); }
+  if (db){ $('#qSel').value = String(AGENDA[+db.dataset.agd].dq); $('#qSel').onchange(); $('#drawBtn').click(); }
+};
+
 // sleep: at night every explorer walks to a spot by the campfire and lies down
 function fireSlot(){
   let h = 0; for (const ch of (nick || 'x')) h = (h*31 + ch.charCodeAt(0)) % 997;
@@ -2483,7 +2690,7 @@ $('#cEnd').onclick = () => {
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -2522,7 +2729,7 @@ function updateBoardBtn(){
   b.classList.toggle('boardBtn', done.has(7));
 }
 $('#boardBtn').onclick = () => {
-  if (!done.has(7)){ toast(done.size ? '集滿 6 顆礦石和藏寶圖碎片，打開資源寶箱拿黃金船票，才能登船' : '先去闖關挖礦石吧！'); return; }
+  if (!done.has(7)){ toast(done.size ? '集滿 6 顆礦石和藏寶圖碎片，打開社交寶箱拿黃金船票，才能登船' : '先去闖關挖礦石吧！'); return; }
   if (locked()) return;
   closeSheet();
   walkTo(PIER_A.clone(), () => walkTo(PIER_B.clone(), () => {
@@ -2616,7 +2823,7 @@ $('#rosterCsv').onclick = () => {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 $('#rosterClear').onclick = () => { if (!confirm('清空學員名單？目前在線的學員會再自動加回來。')) return; joined.clear(); store.set('joined.' + ROOM, {}); renderRoster(); };
-function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderHist(); renderRoster(); }
+function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderAgenda(); renderHist(); renderRoster(); }
 $('#hostBtn').onclick = openHost;
 $('#hostClose').onclick = () => $('#host').hidden = true;
 
@@ -2707,12 +2914,16 @@ const BEAST_QS = [
   {q:'段考時為閱讀困難的學生提供「報讀服務」，屬於哪一個課程調整向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:3},
   {q:'「生字量由 10 個減為 5 個」屬於哪一個課程調整向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:0},
   {q:'幫容易分心的學生安排靠前、遠離門窗的座位，屬於哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:2},
-  {q:'CPA 數學教學法的正確順序是？', opts:['具體 → 圖像 → 抽象','抽象 → 圖像 → 具體','圖像 → 具體 → 抽象','具體 → 抽象 → 圖像'], a:0},
+  {q:'CRA 數學教學的正確順序是？', opts:['具體 → 半具體 → 抽象','抽象 → 半具體 → 具體','半具體 → 具體 → 抽象','具體 → 抽象 → 半具體'], a:0},
   {q:'「工作分析法」的做法是？', opts:['把任務拆成小步驟','讓學生自己摸索','把題目改成選擇題','縮短上課時間'], a:0},
+  {q:'教形聲字的三步驟是？', opts:['看部首 → 找聲符 → 懂組合','抄寫 → 背誦 → 默寫','找聲符 → 抄十遍 → 考試','看注音 → 跳過 → 下一課'], a:0},
+  {q:'學生說得出來卻寫不出來，最適合哪個寫作策略？', opts:['口頭表達替代書寫','多罰寫','直接給範文','取消寫作'], a:0},
+  {q:'影片理解互動模式，播放幾句就要暫停？', opts:['1～2 句','整部看完','5 分鐘','完全不暫停'], a:0},
   {q:'做課程調整之前，第一步應該先？', opts:['挑最新的數位工具','分析個案的學習需求','直接降低難度','跟上全班進度'], a:1}
 ];
 const BEASTS = [{name:'迷思野豬', body:'#8A5A3B', belly:'#C99A6B'}, {name:'標籤灰狼', body:'#6E7B85', belly:'#B9C3CA'}, {name:'放棄巨熊', body:'#4A3426', belly:'#8A6A4E'}, {name:'森林守門獸', body:'#3F7A3A', belly:'#9CC77E'}];
 BEASTS.forEach((b, i) => { new Image().src = `beast-${i + 1}.png`; }); // warm the cache so the art pops in at once
+const GUARD_LABEL = (st => st ? st.name + st.guard.name : '守門獸')(STATIONS.find(x => x.guard));
 const RAIDERS = 3; // the host's raid picks from the first three; the rest guard stations
 $('#bSel').innerHTML = BEAST_QS.map((b, i) => `<option value="${i}">${esc(b.q)}</option>`).join('') + '<option value="c">自訂題目…</option>';
 $('#bSel').onchange = () => $('#bCustom').hidden = $('#bSel').value !== 'c';
@@ -2864,7 +3075,7 @@ function gotFight(id, v){
 function renderFights(){
   if (!isHost) return;
   let gw = 0, gf = 0; fights.forEach(f => { if (f.b === 'st2'){ if (f.st === 'win') gw++; else gf++; } });
-  $('#gSum').textContent = gw + gf ? `國語森林守門獸：擊退 ${gw} 人・戰鬥中 ${gf} 人` : '國語森林守門獸：還沒有人遇到';
+  $('#gSum').textContent = gw + gf ? `${GUARD_LABEL}：擊退 ${gw} 人・戰鬥中 ${gf} 人` : `${GUARD_LABEL}：還沒有人遇到`;
   if (!beast){ $('#bTable').innerHTML = ''; $('#bSum').textContent = '已登島的學員畫面會跳出野獸，答對題目才能擊退。'; return; }
   const rows = [], seen = new Set();
   fights.forEach(f => { if (f.b === beast.id){ rows.push(f); seen.add(f.n); } });
@@ -3088,9 +3299,18 @@ $('#pollOpts').onclick = e => {
 };
 $('#pollBtn').onclick = () => openPoll(isHost);
 $('#pollClose').onclick = () => $('#pollOv').hidden = true;
+// every finished poll is kept on the host's device, so the record download has all of them
+let pollLog = store.get('polls.' + ROOM, []);
+function archivePoll(){
+  if (!poll) return;
+  const c = tally(), who = []; votes.forEach(v => { if (v.p === poll.id) who.push([v.n, poll.opts[v.o] || '']); });
+  pollLog = pollLog.filter(x => x.id !== poll.id).concat({id:poll.id, q:poll.q, opts:poll.opts, c, who, t:Date.now()}).slice(-30);
+  store.set('polls.' + ROOM, pollLog);
+}
 $('#pStart').onclick = () => {
   const q = cleanText($('#pQ').value, 60), opts = $('#pOpts').value.split('\n').map(o => cleanText(o, 30)).filter(Boolean).slice(0, 6);
   if (!q || opts.length < 2) return toast('請輸入題目和至少 2 個選項');
+  archivePoll();
   writeLive({poll:{id:Date.now().toString(36), q, opts, open:true}});
   toast('投票已發布');
 };
@@ -3160,11 +3380,13 @@ $('#logCsv').onclick = () => {
   const rows = [['類型', '時間', '暱稱', '內容']];
   chatLog.forEach(r => rows.push(['聊天', t2s(r.t), r.n, r.x]));
   if (wall) ideas.list.forEach(i => rows.push(['想法牆：' + wall.q, t2s(i.t), i.n, i.x]));
-  if (poll){
-    const c = tally();
-    poll.opts.forEach((o, i) => rows.push(['投票結果：' + poll.q, '', '', `${o}：${c[i]} 票`]));
-    votes.forEach(v => { if (v.p === poll.id) rows.push(['投票：' + poll.q, '', v.n, poll.opts[v.o] || '']); });
-  }
+  archivePoll();
+  pollLog.forEach(x => {
+    x.opts.forEach((o, i) => rows.push(['投票結果：' + x.q, t2s(x.t), '', `${o}：${x.c[i]} 票`]));
+    x.who.forEach(w => rows.push(['投票：' + x.q, '', w[0], w[1]]));
+  });
+  fights.forEach(f => rows.push([f.b && String(f.b).startsWith('st') ? '守門獸戰鬥' : '野獸突襲', '', f.n, `${f.st === 'win' ? '已擊退' : '戰鬥中'}・答錯 ${f.w || 0} 次・${f.t || 0} 秒`]));
+  ((liveState && liveState.history) || []).forEach(n => rows.push(['抽籤抽中', '', n, '']));
   if (rows.length < 2) return toast('還沒有互動紀錄');
   const blob = new Blob(['﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n')], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
