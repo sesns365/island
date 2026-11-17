@@ -96,7 +96,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .tools a span{font-size:12px;color:var(--ink-soft)}
 .make{background:#EEF7F2;border:2px solid #9CC9B4;border-radius:14px;padding:12px 14px}
 .make b.t{display:block;font-size:16px;margin-bottom:4px}
-.make p{margin:4px 0 8px;font-size:14px}
+.make p{margin:4px 0 8px;font-size:14px;white-space:pre-line}
 .make p.frame{background:#fff;border-radius:10px;padding:8px 10px;font-size:13.5px;border-left:4px solid var(--sun)}
 .make .prompt{max-height:170px;overflow:auto;margin-bottom:8px}
 .make .row a{text-decoration:none}
@@ -847,7 +847,7 @@ const STATIONS = [
     {n:'數學概念動態表徵 Skill', d:'完整說明', u:'https://github.com/sesns365/math-concept-visualizer'},
     {n:'Skill 安裝文字', d:'全選複製', u:MATH_SKILL_SRC},
     {n:'數學教室資源', d:'教學資源總覽', u:'https://linktr.ee/mathclassroom'}],
-  make:{t:'安裝「數學概念動態表徵」Skill', how:'① 打開「Skill 安裝文字」，全選複製全部文字。② 開一個 Gemini、ChatGPT 或 Claude 新對話：安裝這個 skill，貼上後送出。③ 說出你要的教材，例如下面這句。Gemini 沒出現可操作畫面，就在「工具」選 Canvas 再重做一次。做好按「共用」複製連結，分享到 Padlet。',
+  make:{t:'安裝「數學概念動態表徵」Skill', how:'① 打開「Skill 安裝文字」，全選複製全部文字。\n② 開一個 Gemini、ChatGPT 或 Claude 新對話：安裝這個 skill，貼上後送出。\n③ 說出你要的教材，例如下面這句。\nGemini 沒出現可操作畫面，就在「工具」選 Canvas 再重做一次。做好按「共用」複製連結，分享到 Padlet。',
     copy:'請幫我做一個二年級二位數進位加法的教材。', link:{n:'打開 Skill 安裝文字', u:MATH_SKILL_SRC}},
   steps:[
     {type:'order', q:'依 CRA 教學的順序點選：', items:['C 具體：拿出 3 顆蘋果和 2 顆蘋果','R 半具體：畫出蘋果圖','A 抽象：3 + 2 = 5']},
@@ -1995,9 +1995,9 @@ function makeExplorer(ch, name){
 function setPose(m, asleep, t){
   m.b.rotation.x = asleep ? -Math.PI/2 : 0;
   m.b.position.y = asleep ? .38 : 0;
-  m.label.position.y = asleep ? 1.2 : 2.35;
+  m.label.position.y = asleep ? 1.2 : m.arrow ? 2.5 : 2.35;
   m.zzz.visible = asleep;
-  if (m.arrow){ m.arrow.position.y = (asleep ? 1.75 : 2.95) + Math.sin(t*4)*.12; m.arrow.rotation.y = t*2;
+  if (m.arrow){ m.arrow.position.y = (asleep ? 1.9 : 3.35) + Math.sin(t*4)*.14; m.arrow.rotation.y = t*2;
     const k = 1 + (t*.9 % 1)*.7; m.ring.scale.set(k, k, 1); m.ring.material.opacity = .9*(1 - (t*.9 % 1)); }
   if (asleep && !reduced){ m.zzz.position.y = 1.5 + (t*.6 % 1)*.6; m.zzz.material.opacity = 1 - (t*.6 % 1)*.7; }
 }
@@ -2024,8 +2024,8 @@ function spawnPlayer(){
   if (player){ scene.remove(player.g); }
   player = makeExplorer(specFor(charIdx), nick);
   // make the viewer's own explorer unmistakable in a crowd: coral name tag, bouncing arrow, glowing ring
-  player.g.remove(player.label); player.label = nameSprite('我・' + nick, true); player.label.scale.set(2.6, .59, 1); player.label.renderOrder = 11; player.g.add(player.label);
-  const arrow = new THREE.Mesh(new THREE.ConeGeometry(.3, .55, 4), new THREE.MeshBasicMaterial({color:0xF4B740, depthTest:false, transparent:true}));
+  player.g.remove(player.label); player.label = nameSprite('我・' + nick, true); player.label.scale.set(3.3, .74, 1); player.label.position.y = 2.5; player.label.renderOrder = 11; player.g.add(player.label);
+  const arrow = new THREE.Mesh(new THREE.ConeGeometry(.42, .75, 4), new THREE.MeshBasicMaterial({color:0xF4B740, depthTest:false, transparent:true}));
   arrow.rotation.x = Math.PI; arrow.renderOrder = 10; player.g.add(arrow); player.arrow = arrow;
   const ring = new THREE.Mesh(new THREE.RingGeometry(.62, .8, 32), new THREE.MeshBasicMaterial({color:0xF4B740, transparent:true, opacity:.9, side:THREE.DoubleSide, depthWrite:false}));
   ring.rotation.x = -Math.PI/2; ring.position.y = .04; player.g.add(ring); player.ring = ring;
@@ -2923,7 +2923,7 @@ const BEAST_QS = [
 ];
 const BEASTS = [{name:'迷思野豬', body:'#8A5A3B', belly:'#C99A6B'}, {name:'標籤灰狼', body:'#6E7B85', belly:'#B9C3CA'}, {name:'放棄巨熊', body:'#4A3426', belly:'#8A6A4E'}, {name:'森林守門獸', body:'#3F7A3A', belly:'#9CC77E'}];
 BEASTS.forEach((b, i) => { new Image().src = `beast-${i + 1}.png`; }); // warm the cache so the art pops in at once
-const GUARD_LABEL = (st => st ? st.name + st.guard.name : '守門獸')(STATIONS.find(x => x.guard));
+const GUARD_LABEL = (st => st ? st.name + '守門獸' : '守門獸')(STATIONS.find(x => x.guard));
 const RAIDERS = 3; // the host's raid picks from the first three; the rest guard stations
 $('#bSel').innerHTML = BEAST_QS.map((b, i) => `<option value="${i}">${esc(b.q)}</option>`).join('') + '<option value="c">自訂題目…</option>';
 $('#bSel').onchange = () => $('#bCustom').hidden = $('#bSel').value !== 'c';
