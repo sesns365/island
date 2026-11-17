@@ -414,7 +414,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <p class="small" id="classHint">按「注意！」時，學員畫面會暫停並提醒看講師；再按一次解除。休息時島上入夜，學員角色會走到營火旁睡覺。</p>
     </section>
     <section>
-      <h3>研習流程（3 小時 30 分鐘）</h3>
+      <h3>研習流程（8:00–12:00，兩次休息）</h3>
       <p class="small" id="agClock">流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。</p>
       <div class="agenda" id="agenda"></div>
     </section>
@@ -575,7 +575,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <div id="myCodeBox" hidden class="field">我的接續碼（換裝置時輸入）<div class="code" id="myCode"></div></div>
     <button class="primary" type="submit">完成，準備登島</button>
     </div>
-    <button class="ghost" id="hostSkip" type="button" style="font-size:13px;align-self:center;border:0;color:var(--ink-soft)">講師登入</button>
+    <button class="ghost" id="hostSkip" type="button" style="font-size:13px;align-self:center;border:0;color:var(--ink-soft);text-decoration:underline">講師登入（輸入密碼）</button>
   </form>
 </div>
 
@@ -628,6 +628,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <p class="small" id="wallMsg"></p>
     <div class="wall-grid" id="wallGrid"></div>
     <button class="ghost" id="wallClose" type="button">關閉</button>
+    <button class="ghost" id="wallHost" type="button" hidden style="font-size:13px;align-self:center;border:0;color:var(--ink-soft);text-decoration:underline">講師登入（輸入密碼）</button>
   </div>
 </div>
 
@@ -2377,7 +2378,7 @@ $('#joinForm').addEventListener('submit', e => {
   const v = $('#nickInput').value.trim().slice(0, 16); if (!v) return;
   const r = readCode($('#codeInput').value);
   if (r){ r.done.forEach(i => done.add(i)); store.set('done', [...done]); r.frags.forEach(i => frags.add(i)); store.set('frags', [...frags]); }
-  nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx);
+  nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx); nameOk = true;
   $('#join').hidden = true; renderHUD(); showFab(); checkWarm();
   const keepPos = player && player.pos.clone();
   spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
@@ -2385,16 +2386,19 @@ $('#joinForm').addEventListener('submit', e => {
   pushFace();
   toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '探險家準備好了！等講師按「登島」出發挖寶');
 });
-$('#hostSkip').onclick = () => {
+$('#hostSkip').onclick = hostLogin;
+function hostLogin(){
   if (isHost){ $('#join').hidden = true; openHost(); return; }
   const pin = prompt('請輸入講師密碼');
   if (pin == null) return;
   if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
-  becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true; openHost();
+  becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true;
+  warmGate = false; $('#wallOv').hidden = true; openHost();
   if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
-};
+}
 function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
+$('#wallHost').onclick = hostLogin;
 
 /* ---------------- live: room presence + shared state ---------------- */
 let lastPresence = '';
@@ -2542,26 +2546,28 @@ $('#tStop').onclick = () => writeLive({timer:null});
 /* workshop agenda: 210 minutes, one tap per segment */
 const AGENDA = [
   {t:'入港暖身：分享 AI 經驗', m:10, note:'開放入港前分享 → 投影分享牆 → 按「登島」'},
-  {t:'第 1 站 需求燈塔', m:20, open:1, note:'個案需求分析（下方任務一可計時）→ 開放檢核 → 討論',
+  {t:'第 1 站 需求燈塔', m:25, open:1, note:'個案需求分析（下方任務一可計時）→ 開放檢核 → 討論',
     poll:{q:'這個孩子最需要先調整哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量']}, dq:0},
   {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 安裝圖解識字 Skill → Padlet',
     poll:{q:'你最想帶回去用的識字工具？', opts:['圖詞析字卡','圖解識字 Skill','每日一字動畫','字族文・形近字學習單','生字書寫練習網']}, dq:1},
+  {t:'第一次休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
   {t:'第 3 站 寫作小屋', m:20, open:3, note:'講解 → 體驗 → 六何法 Skill',
     poll:{q:'學生寫作最常卡在哪裡？', opts:['不知道寫什麼','句子寫不長','會說不會寫','沒有動機']}, dq:3},
-  {t:'休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
-  {t:'第 4 站 閱讀花園', m:25, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
+  {t:'第 4 站 閱讀花園', m:30, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
     poll:{q:'課文漫畫你會用哪個工具做？', opts:['Gemini','NotebookLM','課文漫畫產生器','還在觀望']}, dq:4},
   {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 安裝數學 Skill → 做一份教材 → Padlet',
     poll:{q:'你想先做哪個數學單元的互動教材？', opts:['加減法','乘除法','分數','時間與錢幣','幾何圖形']}, dq:6},
+  {t:'第二次休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
   {t:'第 6 站 應用題港口', m:20, open:6, note:'講解 → 複製提示詞生情境圖 → Padlet', dq:5},
   {t:'第 7 站 社交寶箱', m:20, open:7, note:'社交小特工 → 類化活動 → 拿黃金船票',
     poll:{q:'社會技巧教學最難的是哪一步？', opts:['引起動機','示範','演練與回饋','類化到生活']}, dq:7},
-  {t:'成果分享', m:15, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
-  {t:'Q&A 與離島', m:15, note:'回答提問 → 按「離島」，全員搭船',
+  {t:'成果分享', m:20, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
+  {t:'Q&A 與離島', m:20, note:'回答提問 → 按「離島」，全員搭船',
     poll:{q:'今天最有收穫的一站？', opts:['需求燈塔','識字森林','寫作小屋','閱讀花園','數學山與港口','社交寶箱']}}
 ];
 let agNow = store.get('agNow', -1), agT0 = store.get('agT0', 0);
-const agHM = m => Math.floor(m/60) + ':' + String(m % 60).padStart(2, '0');
+const AG_START = 8*60; // the workshop runs 08:00–12:00
+const agHM = m => Math.floor((AG_START + m)/60) + ':' + String(m % 60).padStart(2, '0');
 function renderAgenda(){
   let acc = 0;
   $('#agenda').innerHTML = AGENDA.map((a, i) => { const from = acc; acc += a.m;
@@ -2572,10 +2578,10 @@ function renderAgenda(){
   agTick();
 }
 function agTick(){
-  if (!agT0 || agNow < 0) return;
-  const used = Math.round((Date.now() - agT0)/60000), plan = AGENDA.slice(0, agNow).reduce((n, a) => n + a.m, 0);
-  const d = used - plan;
-  $('#agClock').textContent = `已進行 ${agHM(Math.max(0, used))}／3:30。這一段預定從 ${agHM(plan)} 開始，` + (d > 3 ? `目前慢 ${d} 分鐘。` : d < -3 ? `目前快 ${-d} 分鐘。` : '進度剛好。');
+  if (agNow < 0) return;
+  const d0 = new Date(), now = d0.getHours()*60 + d0.getMinutes() - AG_START, plan = AGENDA.slice(0, agNow).reduce((n, a) => n + a.m, 0), d = now - plan;
+  const within = now >= -30 && now <= 270;
+  $('#agClock').textContent = `「${AGENDA[agNow].t}」預定 ${agHM(plan)} 開始、${agHM(plan + AGENDA[agNow].m)} 結束。` + (!within ? '' : d > 3 ? `現在比預定慢 ${d} 分鐘。` : d < -3 ? `現在比預定快 ${-d} 分鐘。` : '進度剛好。');
 }
 setInterval(agTick, 20000);
 const jump = id => $(id).scrollIntoView({behavior:'smooth', block:'start'});
@@ -2586,7 +2592,6 @@ $('#qkTimer').onclick = () => jump('#secTimer');
 $('#agenda').onclick = e => {
   const g = e.target.closest('[data-ag]'), pb = e.target.closest('[data-agp]'), db = e.target.closest('[data-agd]');
   if (g){ const i = +g.dataset.ag, a = AGENDA[i];
-    if (!agT0 || i === 0){ agT0 = Date.now() - AGENDA.slice(0, i).reduce((n, x) => n + x.m, 0)*60000; store.set('agT0', agT0); }
     agNow = i; store.set('agNow', i);
     const patch = {};
     if (a.open) patch.open = Math.max(a.open, openUpTo);
@@ -3259,7 +3264,10 @@ function applyInteract(d){
 const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
 let warmGate = false;
 const needWarm = () => !!(wall && wall.warm && wall.open && !isHost && nick && phase === 'before' && !store.get('posted.' + wall.id, false));
+// a returning visitor confirms their name first (and can reach 講師登入) before the sharing gate
+let nameOk = false;
 function checkWarm(){
+  if (needWarm() && !nameOk){ if ($('#join').hidden){ askNick(); joinStep(2); } return; }
   if (needWarm()){ if (!warmGate){ warmGate = true; openWall(); } }
   else if (warmGate){ warmGate = false; renderWall(); }
 }
@@ -3343,7 +3351,7 @@ function renderWall(){
   const proj = $('#wallBox').classList.contains('proj');
   $('#wallQ').textContent = wall ? wall.q : '講師還沒開放想法牆';
   $('#wallEyebrow').textContent = wall && wall.warm ? '入港前分享' : '想法牆';
-  $('#wallClose').hidden = warmGate && needWarm();
+  $('#wallClose').hidden = warmGate && needWarm(); $('#wallHost').hidden = !(warmGate && needWarm());
   $('#wallClose').textContent = wall && wall.warm && !isHost && phase === 'before' ? '進入島嶼，等待登島' : '關閉';
   $('#wallForm').hidden = !wall || !wall.open || proj || isHost && !nick;
   $('#wallMsg').textContent = !wall ? '等講師出題後，就可以在這裡貼上你的想法。' : warmGate && needWarm() ? `寫下一句分享就能進入島嶼・已經有 ${list.length} 位分享` : wall.open ? `已經有 ${list.length} 則分享` : `投稿已停止，共 ${list.length} 則分享`;
@@ -3408,6 +3416,7 @@ else if (store.get('host.' + ROOM, false)){
     setTimeout(() => { openHost(); $('#qrShow').click(); }, 300);
   } else openHost();
 }
+else if (params.has('host')){ if (nick) spawnPlayer(); else askNick(); setTimeout(hostLogin, 400); }
 else if (!nick) askNick(); else spawnPlayer();
 showFab();
 function pushFace(){
