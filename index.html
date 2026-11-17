@@ -232,6 +232,46 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   .badge{width:22px;height:22px;font-size:11px}
   .hint{display:none}
 }
+/* task one: needs analysis */
+.task-card{background:#FFF3CF;border:2px solid var(--sun);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.task-card ol{margin:0;padding-left:20px;line-height:1.7}
+.four-thumb{border:0;padding:0;background:none;border-radius:12px;overflow:hidden;cursor:zoom-in}
+.four-thumb img,.four-big{display:block;width:100%;height:auto;border-radius:12px}
+#startBtn[disabled]{background:#9AA9AA;box-shadow:none}
+.music-btn{pointer-events:auto;border:0;background:var(--teal);color:#fff;border-radius:999px;font-weight:700;font-size:12px;padding:2px 10px;margin-top:2px}
+/* beast raid */
+.beast-box{width:min(480px,100%);text-align:center;align-items:stretch}
+.beast-art{height:170px;display:grid;place-items:center}
+.beast-art svg{height:170px;width:auto;animation:beastIn .7s cubic-bezier(.3,1.6,.5,1)}
+.beast-art.hit svg{animation:beastHit .4s}
+.beast-art.win svg{animation:beastOut 1s forwards}
+.beast-box.ouch{animation:ouch .35s}
+@keyframes beastIn{0%{transform:translateY(120px) scale(.3);opacity:0}100%{transform:none;opacity:1}}
+@keyframes beastHit{25%{transform:translateX(-14px) rotate(-6deg)}75%{transform:translateX(14px) rotate(6deg)}}
+@keyframes beastOut{to{transform:translateY(40px) rotate(200deg) scale(.1);opacity:0}}
+@keyframes ouch{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.hp{height:12px;border-radius:999px;background:#F3D4CF;overflow:hidden}
+.hp i{display:block;height:100%;background:var(--coral);transition:width .4s}
+.hearts{font-size:22px;letter-spacing:4px;color:var(--coral)}
+.poll-opts.multi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.poll-opts.multi .poll-opt{justify-content:center;text-align:center;padding:10px 8px;font-size:15px}
+.fight-tbl td,.fight-tbl th{padding:4px 6px;font-size:14px;text-align:left}
+/* chat room: everyone sees ideas and questions */
+.feed{position:fixed;z-index:6;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 150px);width:300px;max-height:46vh;background:var(--paper);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.feed-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--teal);color:#fff;font-weight:700}
+.feed-head button{border:0;background:none;color:#fff;font-size:20px;line-height:1}
+.feed-list{overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5}
+.feed-list .m{padding:4px 8px;border-radius:10px;background:#F1F7F6;word-break:break-word}
+.feed-list .m.q{background:#FFF3CF;border-left:4px solid var(--sun)}
+.feed-list .m b{color:var(--teal-deep)}
+.feed-list .tag{display:inline-block;background:var(--sun);color:var(--ink);border-radius:6px;font-size:11px;font-weight:900;padding:0 5px;margin-right:4px}
+.badge-n{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--coral);color:#fff;font-size:11px;padding:0 4px}
+.say-kind{display:flex;gap:6px}
+.say-kind button{flex:1;border:2px solid var(--line);background:var(--paper);border-radius:10px;padding:6px;font-weight:700}
+.say-kind button[aria-pressed="true"]{border-color:var(--teal);background:#D6EEEE}
+.emojis{display:flex;gap:4px;justify-content:space-between}
+.emojis button{border:0;background:#F1F7F6;border-radius:12px;font-size:24px;padding:4px 0;flex:1}
+@media (max-width:700px){.feed{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);max-height:36vh}}
 /* interaction: chat bubbles, polls, idea wall */
 .fab{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:42%;z-index:6;display:flex;flex-direction:column;gap:8px}
 .fab .chip{justify-content:center;min-width:76px}
@@ -281,11 +321,18 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 </div>
 
 <div class="fab" id="fab" hidden>
-  <button class="chip" id="sayBtn" type="button">說話</button>
+  <button class="chip" id="sayBtn" type="button">說話・表情</button>
+  <button class="chip" id="feedBtn" type="button">聊天室 <span class="badge-n" id="feedN" hidden>0</span></button>
   <button class="chip" id="wallBtn" type="button">想法牆</button>
   <button class="chip" id="pollBtn" type="button" hidden>投票</button>
 </div>
+<aside class="feed" id="feed" hidden aria-label="聊天室">
+  <div class="feed-head"><span>聊天室・想法與提問</span><button type="button" id="feedClose" aria-label="收起">×</button></div>
+  <div class="feed-list" id="feedList"><span class="small">大家的發言會出現在這裡。</span></div>
+</aside>
 <form class="say-bar" id="sayBar" hidden>
+  <div class="emojis" id="emojis"></div>
+  <div class="say-kind" id="sayKind"><button type="button" data-k="i" aria-pressed="true">發表想法</button><button type="button" data-k="q" aria-pressed="false">我要提問</button></div>
   <div class="quick" id="quick"></div>
   <div class="row" style="flex-wrap:nowrap"><input id="sayInput" maxlength="40" autocomplete="off" placeholder="想說的話，會出現在你的角色頭上"><button class="primary" type="submit" style="padding:10px 14px">送出</button><button class="ghost" id="sayClose" type="button" aria-label="關閉">×</button></div>
 </form>
@@ -312,6 +359,12 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   </div>
   <div class="sheet-body">
     <section>
+      <h3>入港前分享</h3>
+      <label class="field">分享題目<input id="warmQ" maxlength="60"></label>
+      <div class="row"><button class="primary" id="warmStart" type="button">開放入港前分享</button><button class="ghost" id="warmShow" type="button">投影分享牆</button></div>
+      <p class="small">開放後，學員輸入名字、選好探險家，要先分享一句話才能進入島嶼。所有人的分享會即時出現在分享牆上。</p>
+    </section>
+    <section>
       <h3>課堂控制</h3>
       <div class="class-grid">
         <button type="button" class="start" id="cStart">登島<br><span class="small" style="color:inherit">渡輪開進島</span></button>
@@ -335,6 +388,24 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       </div>
       <div class="row"><button class="primary" id="tStart" type="button">開始計時</button><button class="ghost" id="tStop" type="button">停止</button></div>
       <p class="small">倒數會同步顯示在每位學員畫面下方。</p>
+    </section>
+    <section>
+      <h3>任務一：需求燈塔</h3>
+      <div class="row"><button class="primary" id="m1Timer" type="button">任務一計時 10 分鐘（含音樂）</button><button class="ghost" id="m1Four" type="button">投影四大向度圖</button></div>
+      <div class="row"><button class="ghost" id="m1Check" type="button">開放檢核闖關</button><span class="small" id="m1State"></span></div>
+      <p class="small">登島後學員會收到任務一，先打開個案資料做需求分析；你按「開放檢核闖關」後，學員才能在燈塔作答。</p>
+    </section>
+    <section>
+      <h3>野獸突襲</h3>
+      <label class="field">戰鬥題目<select id="bSel"></select></label>
+      <div id="bCustom" hidden>
+        <label class="field">自訂題目<input id="bQ" maxlength="60"></label>
+        <label class="field">選項（一行一個，正確答案前面加 *）<textarea id="bOpts" rows="4" placeholder="*報讀服務&#10;減少作業量&#10;換座位"></textarea></label>
+      </div>
+      <div class="row"><button class="primary" id="bStart" type="button" style="background:#8A2E22;box-shadow:0 4px 0 #5C1E16">發動野獸突襲</button><button class="ghost" id="bStop" type="button">結束戰鬥</button></div>
+      <p class="small" id="bSum">已登島的學員畫面會跳出野獸，答對題目才能擊退。</p>
+      <p class="small" id="gSum" style="font-weight:700"></p>
+      <div class="roster-wrap"><table class="fight-tbl"><thead><tr><th>學員</th><th>狀態</th><th>答錯</th><th>用時</th></tr></thead><tbody id="bTable"></tbody></table></div>
     </section>
     <section>
       <h3>即時投票</h3>
@@ -470,6 +541,37 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   </form>
 </div>
 
+<div class="overlay" id="fourOv" hidden style="z-index:45">
+  <div class="dialog" style="width:min(1100px,100%);padding:14px;gap:10px">
+    <img class="four-big" src="four-dimensions.jpg" alt="特教課程調整的核心四大向度：內容、歷程、環境、評量">
+    <button class="ghost" id="fourClose" type="button">關閉</button>
+  </div>
+</div>
+
+<div class="overlay" id="missionOv" hidden>
+  <div class="dialog">
+    <small style="font-weight:700;color:var(--coral);letter-spacing:.08em">獲得任務</small>
+    <h2>任務一：需求燈塔</h2>
+    <p>探險的第一步，是先看見孩子的需求。打開個案資料完成需求分析，再對照課程調整四大向度。講師開放檢核後，到燈塔闖關挖第一顆礦石。</p>
+    <div class="row"><a class="primary" href="https://docs.google.com/document/d/1GAMUQ0dgU1bO9PgiBZsBAoBIoyDxhdF_eQtBw7SdY6A/edit?usp=sharing" target="_blank" rel="noopener" style="text-decoration:none">打開個案需求分析</a><button class="ghost" id="missionFour" type="button">看四大向度圖</button></div>
+    <button class="primary" id="missionGo" type="button" style="background:var(--teal);box-shadow:0 4px 0 var(--teal-deep)">走去需求燈塔</button>
+  </div>
+</div>
+
+<div class="overlay" id="beastOv" hidden style="z-index:44;background:rgba(60,10,10,.6)">
+  <div class="dialog beast-box" id="beastBox">
+    <small style="font-weight:900;color:var(--coral);letter-spacing:.12em">野獸突襲！</small>
+    <div class="beast-art" id="beastArt"></div>
+    <b id="beastName"></b>
+    <div class="hp"><i id="beastHp" style="width:100%"></i></div>
+    <h2 id="beastQ" style="font-size:21px;text-align:left"></h2>
+    <div class="poll-opts" id="beastOpts"></div>
+    <div class="hearts" id="hearts"></div>
+    <p class="small" id="beastMsg"></p>
+    <button class="primary" id="beastClose" type="button" hidden>回到島上繼續探險</button>
+  </div>
+</div>
+
 <div class="overlay" id="pollOv" hidden>
   <div class="dialog" id="pollBox">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em" id="pollEyebrow">講師投票</small>
@@ -482,7 +584,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 
 <div class="overlay" id="wallOv" hidden>
   <div class="dialog wall-dialog" id="wallBox">
-    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">想法牆</small>
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em" id="wallEyebrow">想法牆</small>
     <h2 id="wallQ"></h2>
     <form class="row" id="wallForm" style="flex-wrap:nowrap"><input id="wallInput" maxlength="80" autocomplete="off" placeholder="寫下你的想法（80 字內）" style="flex:1;min-width:0;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit"><button class="primary" type="submit" style="padding:10px 14px">貼上</button></form>
     <p class="small" id="wallMsg"></p>
@@ -540,7 +642,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <button class="speak" id="chatSay" type="button">朗讀</button></div>
 </div>
 
-<div class="timer-box" id="timerBox" hidden aria-live="polite"><small id="timerLabel">計時</small><b id="timerClock">00:00</b></div>
+<div class="timer-box" id="timerBox" hidden aria-live="polite"><small id="timerLabel">計時</small><b id="timerClock">00:00</b><button class="music-btn" id="musicBtn" type="button" hidden>音樂：關</button></div>
 <div class="land-title" id="landTitle" hidden><div id="landText">登島！</div></div>
 
 <div class="overlay" id="qrOv" hidden>
@@ -548,7 +650,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">掃描登島</small>
     <h2>用手機相機掃描</h2>
     <div id="qrBig"></div>
-    <p>登入 claude.ai → 選擇角色 → 等講師按「登島」</p>
+    <p>不用帳號：選探險家、輸入名字 → 分享你的經驗 → 等講師按「登島」</p>
     <div class="qr-url" id="qrText"></div>
     <button class="ghost" id="qrClose" type="button">關閉</button>
   </div>
@@ -571,21 +673,28 @@ const store = {
 
 /* ---------------- content (from the workshop slides) ---------------- */
 const STATIONS = [
-{ id:1, name:'需求燈塔', area:'個案學習需求分析', color:'#EE6F57', pos:[-8.2,4.2],
-  intro:`<div class="note">先看見孩子的需求，再選工具。特教課程調整有<b>四大向度</b>：</div>
+{ id:1, name:'需求燈塔', area:'個案學習需求分析', color:'#EE6F57', pos:[-8.2,4.2], task:true,
+  intro:`<div class="note"><b>任務一</b>：先看見孩子的需求，再選工具。打開個案資料完成需求分析，再對照特教課程調整的<b>四大向度</b>：</div>
   <ul><li><b>內容</b>：調整「教什麼」— 簡化、減量、分解、替代、重整或加深加廣</li>
   <li><b>歷程</b>：調整「怎麼教」與「學生怎麼學」— 多感官、工作分析、思考架構</li>
-  <li><b>環境</b>：調整「在哪裡學」— 座位、角落、常規與氛圍</li>
+  <li><b>環境</b>：調整「在哪裡學」— 座位、安靜角落、常規與氛圍</li>
   <li><b>評量</b>：調整「怎麼評量成果」— 報讀、延長時間、口試或電腦作答</li></ul>
   <p class="quote">調整不是降低標準，而是打開學習的可能。</p>`,
   steps:[
+    {type:'mc', q:'做課程調整之前，第一步應該先做什麼？', opts:['挑選最新的數位工具','分析個案的能力、優弱勢與學習需求','直接降低作業難度','讓個案跟上全班進度'], a:1,
+      why:'先做個案需求分析，才知道要調整哪個向度、選哪一種工具。'},
     {type:'sort', q:'把每一個調整做法，放進正確的向度。', buckets:['內容','歷程','環境','評量'], items:[
-      ['生字量由 10 個減為 5 個',0],['長篇課文改為圖文摘錄',0],['工作分析法：拆成小步驟',1],['提供思考架構圖',1],
-      ['座位安排靠前、遠離門窗',2],['建立明確的班級常規',2],['報讀服務',3],['口試或電腦作答替代手寫',3]]},
+      ['生字量由 10 個減為 5 個',0],['提供核心概念替代繁複細節',0],['工作分析法：拆成小步驟',1],['放慢教學節奏、多給示範',1],
+      ['座位靠前、遠離門窗干擾',2],['設置安靜角落',2],['延長作答時間',3],['以實作作品取代紙筆測驗',3]]},
+    {type:'mc', q:'小安閱讀長篇文字有困難，但聽理解不錯。段考時提供「報讀服務」，屬於哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:3,
+      why:'報讀是改變「怎麼評量成果」，讓評量測到真正的能力，而不是閱讀障礙。'},
     {type:'mc', q:'「調整不是降低標準，而是＿＿＿＿。」', opts:['讓作業變少','打開學習的可能','統一全班進度','減少教學時間'], a:1,
       why:'調整的目的，是讓每個孩子都找到適合自己的學習方式。'}
   ]},
 { id:2, name:'國語森林', area:'國語領域・閱讀理解', color:'#5FA651', pos:[-6,-5.6],
+  guard:{name:'森林守門獸', k:3, q:'森林守門獸擋住去路！選出國語文的 6 項「學習表現」，每選對一項就攻擊牠一次。',
+    opts:['聆聽','口語表達','標音符號與運用','識字與寫字','閱讀','寫作','字詞','句段','篇章','文本表述','文化內涵','書法比賽'], right:[0,1,2,3,4,5],
+    miss:'這是國語文的「學習內容」，不是學習表現喔！'},
   intro:`<div class="note">國語文學習表現：<b>聆聽、口語表達、標音符號與運用、識字與寫字、閱讀、寫作</b>。</div>
   <ul><li><b>文本簡化與注音標註</b>：在 Gemini 點「試用 Canvas」，和 AI 協作建立自己的教材格式</li>
   <li><b>課文朗讀檢核系統</b>：注音認讀、拼讀皆可，訓練閱讀流暢性</li>
@@ -864,9 +973,11 @@ function onMsg(topic, buf){
   if (txt){ try { v = JSON.parse(txt); } catch(e){ return; } }
   if (sub === 'state'){ applyLive(v && typeof v === 'object' ? v : null); return; }
   if (sub === 'ideas'){ if (!isHost) gotIdeas(v); return; }
+  if (sub === 'chat'){ if (!isHost) gotFeed(v); return; }
   const [kind, id] = sub.split('/');
   if (!id || id === myId) return;
   if (kind === 'say' || kind === 'vote' || kind === 'idea'){ gotInteract(kind, id, v); return; }
+  if (kind === 'fight'){ gotFight(id, v); return; }
   if (kind === 'p'){
     if (v && typeof v === 'object' && typeof v.nick === 'string' && Date.now() - (+v.t || 0) < 3*3600e3){
       peerMap.set(id, {presence:v, t:Date.now()}); noteJoin(v);
@@ -981,6 +1092,17 @@ function goStation(sid){
 }
 
 /* ---------------- station sheet & challenge engine ---------------- */
+const NEEDS_DOC = 'https://docs.google.com/document/d/1GAMUQ0dgU1bO9PgiBZsBAoBIoyDxhdF_eQtBw7SdY6A/edit?usp=sharing';
+const FOUR_IMG = 'four-dimensions.jpg';
+const checkOpen = () => !!(liveState && liveState.check1);
+function taskBlock(){
+  return `<div class="task-card"><b>任務一・10 分鐘</b>
+    <ol><li>打開個案資料，完成個案需求分析</li><li>對照四大向度圖，想想這個孩子需要哪些調整</li><li>講師開放檢核後，回到燈塔闖關</li></ol>
+    <div class="row"><a class="primary" href="${NEEDS_DOC}" target="_blank" rel="noopener" style="text-decoration:none">打開個案需求分析</a>
+    <button class="ghost" type="button" data-four>看四大向度圖</button></div>
+    <button type="button" class="four-thumb" data-four><img src="${FOUR_IMG}" alt="特教課程調整的核心四大向度：內容、歷程、環境、評量"></button></div>`;
+}
+function openFour(){ $('#fourOv').hidden = false; }
 function openStation(sid){
   const st = STATIONS.find(s => s.id === sid);
   if (!player) focusStation(st);
@@ -991,10 +1113,13 @@ function openStation(sid){
   $('#sheetEyebrow').textContent = `第 ${st.id} 站・${st.area}`;
   $('#sheetTitle').textContent = st.name;
   const body = $('#sheetBody');
-  body.innerHTML = st.intro + `<div class="row"><button class="primary" id="startBtn" type="button">${done.has(sid)?'再挑戰一次':'開始挑戰'}（${st.steps.length} 關）</button>
+  if (st.guard && !done.has(sid) && !store.get('guard.' + sid, false) && !isHost && nick){ startGuard(st); return; }
+  const wait = st.task && !checkOpen() && !done.has(sid) && !isHost;
+  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + `<div class="row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開放檢核' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
     ${done.has(sid)?'<span class="small">已獲得徽章</span>':''}</div>`;
   body.scrollTop = 0;
   $('#startBtn').onclick = () => runStep(st, 0);
+  body.querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
   $('#sheet').hidden = false;
 }
 function closeSheet(){ if (typeof closeChat === 'function' && chatAid >= 0) closeChat(); $('#sheet').hidden = true; currentSid = null; pushPresence(); nearSid = -1; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
@@ -1113,10 +1238,11 @@ function showDone(st, first){
     ${!all && oresDone() === 6 && frags.size < FRAGS.length ? '<p class="small" style="margin:0">礦石集滿了！島上還藏著發光的藏寶圖碎片，走過去就能撿起來。</p>' : ''}
     <p class="small" style="margin:0">換裝置接續用的接續碼：<b class="code" style="font-size:18px;padding:2px 10px">${makeCode()}</b></p>
     ${all && st.id === 7 ? '<p class="quote" style="text-align:left">數位工具是橋，而我們的陪伴與專業，才是真正引導孩子勇敢過橋的力量。</p>' : ''}
-    <div class="row" style="justify-content:center">${nextOpen(st) ? `<button class="primary" id="goNext" type="button">前往第 ${nextOpen(st).id} 站</button>` : ''}
+    <div class="row" style="justify-content:center">${nextOpen(st) ? `<button class="primary" id="goNext" type="button">走去第 ${nextOpen(st).id} 站：${esc(nextOpen(st).name)}</button>` : ''}
     <button class="ghost" id="backMap" type="button">回到島上</button></div></div>`;
   const n = nextOpen(st);
-  if (n) $('#goNext').onclick = () => goStation(n.id);
+  if (n) $('#goNext').onclick = () => { goStation(n.id); if (player && player.g.visible) toast(`出發！走向「${n.name}」`); };
+  if (first && n) banner(`完成「${st.name}」！下一站：第 ${n.id} 站「${n.name}」`, 5000);
   $('#backMap').onclick = () => { closeSheet(); resetView(); };
 }
 function nextOpen(st){ return STATIONS.find(s => s.id > st.id && !done.has(s.id) && isOpen(s)) || STATIONS.find(s => !done.has(s.id) && isOpen(s)); }
@@ -2001,6 +2127,7 @@ function loop(){
           player.pos.copy(PIER_B); player.target = null; flyToPlayer(); lastPos = 0; pushPos();
           walkTo(SPAWN.clone(), null, true);
           toast('下船囉！點地面、地標或動物就會走過去');
+          if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class') $('#missionOv').hidden = false; }, 2200);
         }, 500);
       }
     }
@@ -2100,7 +2227,7 @@ $('#joinForm').addEventListener('submit', e => {
   const r = readCode($('#codeInput').value);
   if (r){ r.done.forEach(i => done.add(i)); store.set('done', [...done]); r.frags.forEach(i => frags.add(i)); store.set('frags', [...frags]); }
   nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx);
-  $('#join').hidden = true; renderHUD(); showFab();
+  $('#join').hidden = true; renderHUD(); showFab(); checkWarm();
   const keepPos = player && player.pos.clone();
   spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
   lastPos = 0; pushPos();
@@ -2113,7 +2240,7 @@ $('#hostSkip').onclick = () => {
   if (pin == null) return;
   if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
   becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true; openHost();
-  if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null});
+  if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
 };
 function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
@@ -2157,6 +2284,8 @@ function applyLive(d){
   renderHist();
   applyClass(d);
   applyInteract(d);
+  applyCheck();
+  applyBeast(d);
   const dr = d && d.draw;
   if (dr && dr.id && dr.id !== seenDraw){
     const fresh = Date.now() - (+dr.at || 0) < 90000;
@@ -2179,7 +2308,7 @@ function applyClass(d){
     if (ph === 'class'){
       boarded = false; $('#endOv').hidden = true;
       if (first && !fresh || prev === 'ended') sailFerry('arrive', true);
-      else { closeSheet(); sailFerry('arrive'); banner('登島囉！渡輪正開進研習島嶼', 6500); landTitle('登島！'); }
+      else { closeSheet(); if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; sailFerry('arrive'); banner('登島囉！渡輪正開進研習島嶼', 6500); landTitle('登島！'); }
     }
     if (ph === 'ended'){
       if (first && !fresh) sailFerry('dock', true);
@@ -2194,7 +2323,7 @@ function applyClass(d){
     updateBoardBtn(); pushPos(true);
   }
   waitBanner();
-  const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20)} : null;
+  const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:!!d.timer.music} : null;
   if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
   // attention pause
   const att = !!(d && d.attention) && ph !== 'ended';
@@ -2218,16 +2347,41 @@ function tickTimer(){
   clearInterval(timerT);
   const box = $('#timerBox');
   const draw = () => {
-    if (!timer){ box.hidden = true; clearInterval(timerT); return; }
+    if (!timer){ box.hidden = true; clearInterval(timerT); music(false); return; }
     const left = timer.until - Date.now();
-    if (left < -60000){ box.hidden = true; clearInterval(timerT); return; }
+    if (left < -60000){ box.hidden = true; clearInterval(timerT); music(false); return; }
     const sec = Math.max(0, Math.ceil(left/1000));
     box.hidden = false; box.classList.toggle('over', left <= 0);
     $('#timerLabel').textContent = left > 0 ? timer.label : timer.label + '・時間到';
     $('#timerClock').textContent = `${String(Math.floor(sec/60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
+    $('#musicBtn').hidden = !timer.music || left <= 0;
+    music(timer.music && left > 0 && musicOn());
   };
   draw(); timerT = setInterval(draw, 500);
 }
+// calm background music for focused work time: a soft pentatonic music-box loop made on the fly
+let musicPref = store.get('music', null); // null: on for the host's projector, off on learners' phones
+const musicOn = () => musicPref === null ? isHost : musicPref;
+let actx = null, musicT = null, musicStep = 0;
+const MUSIC_NOTES = [0, 4, 7, 12, 9, 7, 4, 2, 0, 4, 7, 9, 7, 4, 2, -3];
+function music(on){
+  $('#musicBtn').textContent = musicOn() ? '音樂：開' : '音樂：關';
+  if (!on){ clearInterval(musicT); musicT = null; return; }
+  if (musicT) return;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch(e){ return; }
+  const note = (semi, t, dur, vol) => {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sine'; o.frequency.value = 392*Math.pow(2, semi/12);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur + .05);
+  };
+  musicT = setInterval(() => {
+    const t = actx.currentTime + .05, k = musicStep++ % MUSIC_NOTES.length;
+    note(MUSIC_NOTES[k], t, 1.2, .07);
+    if (k % 4 === 0) note(MUSIC_NOTES[k] - 12, t, 2.4, .05);
+  }, 520);
+}
+$('#musicBtn').onclick = () => { musicPref = !musicOn(); store.set('music', musicPref); tickTimer(); };
 $('#tStart').onclick = () => {
   const m = Math.max(1, Math.min(120, +$('#tMin').value || 5));
   writeLive({timer:{until:Date.now() + m*60000, label:$('#tLabel').value.trim().slice(0, 20) || '計時'}});
@@ -2325,7 +2479,7 @@ $('#cEnd').onclick = () => {
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[]}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -2524,6 +2678,198 @@ $('#sCopy').onclick = async () => {
 $('#sJoin').onclick = () => { const c = cleanRoom($('#sJoinCode').value); if (c) location.href = roomUrl(c); else toast('請輸入講師給的代碼'); };
 $('#sJoinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sJoin').click(); });
 
+/* ---------------- task one: needs lighthouse ---------------- */
+$('#fourClose').onclick = () => $('#fourOv').hidden = true;
+$('#missionFour').onclick = openFour;
+$('#missionGo').onclick = () => { $('#missionOv').hidden = true; goStation(1); };
+$('#m1Four').onclick = openFour;
+$('#m1Timer').onclick = () => writeLive({timer:{until:Date.now() + 10*60000, label:'任務一：個案需求分析', music:true}});
+$('#m1Check').onclick = () => writeLive({check1:!checkOpen()});
+let seenCheck;
+function applyCheck(){
+  const on = checkOpen();
+  $('#m1Check').textContent = on ? '關閉檢核闖關' : '開放檢核闖關';
+  $('#m1State').textContent = on ? '檢核已開放' : '檢核尚未開放';
+  if (seenCheck !== undefined && on && !seenCheck && !isHost){
+    banner('講師開放需求燈塔的檢核了！到燈塔作答，挖第一顆礦石', 7000);
+    if (currentSid === 1) openStation(1);
+  }
+  seenCheck = on;
+}
+
+/* ---------------- beast raid: the host sends a beast, every explorer answers to drive it off ----------------
+   fight/<id> retained {b:beast id, st:'fight'|'win', w:wrong answers, n:nick, t:seconds} */
+const BEAST_QS = [
+  {q:'段考時為閱讀困難的學生提供「報讀服務」，屬於哪一個課程調整向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:3},
+  {q:'「生字量由 10 個減為 5 個」屬於哪一個課程調整向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:0},
+  {q:'幫容易分心的學生安排靠前、遠離門窗的座位，屬於哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:2},
+  {q:'CPA 數學教學法的正確順序是？', opts:['具體 → 圖像 → 抽象','抽象 → 圖像 → 具體','圖像 → 具體 → 抽象','具體 → 抽象 → 圖像'], a:0},
+  {q:'「工作分析法」的做法是？', opts:['把任務拆成小步驟','讓學生自己摸索','把題目改成選擇題','縮短上課時間'], a:0},
+  {q:'做課程調整之前，第一步應該先？', opts:['挑最新的數位工具','分析個案的學習需求','直接降低難度','跟上全班進度'], a:1}
+];
+const BEASTS = [{name:'迷思野豬', body:'#8A5A3B', belly:'#C99A6B'}, {name:'標籤灰狼', body:'#6E7B85', belly:'#B9C3CA'}, {name:'放棄巨熊', body:'#4A3426', belly:'#8A6A4E'}, {name:'森林守門獸', body:'#3F7A3A', belly:'#9CC77E'}];
+const RAIDERS = 3; // the host's raid picks from the first three; the rest guard stations
+$('#bSel').innerHTML = BEAST_QS.map((b, i) => `<option value="${i}">${esc(b.q)}</option>`).join('') + '<option value="c">自訂題目…</option>';
+$('#bSel').onchange = () => $('#bCustom').hidden = $('#bSel').value !== 'c';
+const fights = new Map();
+let beast = null, seenBeast, beastWrong = 0, beastT0 = 0, beastWon = '';
+function beastSVG(k){
+  const c = BEASTS[k % BEASTS.length];
+  return `<svg viewBox="0 0 200 170" aria-hidden="true">
+    <ellipse cx="100" cy="160" rx="70" ry="8" fill="rgba(0,0,0,.18)"/>
+    <path d="M40 150c-6-50 18-92 60-92s66 42 60 92z" fill="${c.body}"/>
+    <path d="M70 150c0-30 12-50 30-50s30 20 30 50z" fill="${c.belly}"/>
+    <path d="M52 66 38 26 74 52zM148 66l14-40-36 26z" fill="${c.body}"/><path d="M54 58 46 36 66 52zM146 58l8-22-20 16z" fill="#F29C8F"/>
+    <circle cx="80" cy="84" r="11" fill="#fff"/><circle cx="120" cy="84" r="11" fill="#fff"/>
+    <circle cx="82" cy="86" r="6" fill="#C0392B"/><circle cx="118" cy="86" r="6" fill="#C0392B"/>
+    <path d="M66 70l24 8M134 70l-24 8" stroke="#2B1A12" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="100" cy="108" rx="20" ry="13" fill="${c.belly}"/><ellipse cx="100" cy="103" rx="7" ry="5" fill="#2B1A12"/>
+    <path d="M86 116l5 10 5-9 4 9 5-9 4 9 5-10" fill="#fff" stroke="#2B1A12" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M44 150h24M132 150h24" stroke="#2B1A12" stroke-width="6" stroke-linecap="round"/></svg>`;
+}
+// a beast also leaps out on the island, right in front of my explorer
+const beastMesh = (() => {
+  const g = new THREE.Group();
+  const body = mesh(new THREE.SphereGeometry(.9, 10, 8), 0x6B4A34); body.scale.set(1, .8, 1.2); body.position.y = .9; g.add(body);
+  const head = mesh(new THREE.SphereGeometry(.55, 10, 8), 0x6B4A34); head.position.set(0, 1.4, .9); g.add(head);
+  [-.3, .3].forEach(x => {
+    const horn = mesh(new THREE.ConeGeometry(.13, .5, 6), 0xF1E3C8); horn.position.set(x, 1.95, .85); horn.rotation.z = -x; g.add(horn);
+    const eye = mesh(new THREE.SphereGeometry(.09, 6, 5), 0xFF3B2F, {emissive:0xFF2010, emissiveIntensity:.8}); eye.position.set(x*.6, 1.5, 1.38); g.add(eye);
+    const leg = mesh(new THREE.CylinderGeometry(.14, .14, .5, 6), 0x4A3426); leg.position.set(x*1.6, .25, .3); g.add(leg);
+    const leg2 = leg.clone(); leg2.position.z = -.5; g.add(leg2);
+  });
+  g.visible = false; scene.add(g); return g;
+})();
+let beastAnimT = 0;
+function beastTick(){
+  if (!beastMesh.visible) return;
+  const t = performance.now()/1000;
+  beastMesh.position.y = GROUND + Math.abs(Math.sin(t*5))*.5;
+  if (player) beastMesh.lookAt(player.pos.x, beastMesh.position.y, player.pos.z);
+  requestAnimationFrame(beastTick);
+}
+function showBeastMesh(on){
+  if (on && player && player.g.visible){
+    const d = new THREE.Vector3(Math.sin(player.heading), 0, Math.cos(player.heading));
+    beastMesh.position.copy(player.pos).addScaledVector(d, 3.2); beastMesh.position.y = GROUND;
+    beastMesh.visible = true; requestAnimationFrame(beastTick);
+    flyTo(player.pos.clone().addScaledVector(d, -5).setY(GROUND + 5), player.pos.clone().addScaledVector(d, 1.6).setY(GROUND + 1));
+  } else beastMesh.visible = false;
+}
+function reportFight(st){
+  if (!beast || isHost) return;
+  mqPub('fight/' + myId, {b:beast.id, st, w:beastWrong, n:nick, t:Math.round((Date.now() - beastT0)/1000)}, true);
+}
+function applyBeast(d){
+  const b = d && d.beast && typeof d.beast.id === 'string' && Array.isArray(d.beast.opts) ? {id:d.beast.id, q:cleanText(d.beast.q, 60), opts:d.beast.opts.slice(0, 5).map(o => cleanText(o, 30)), a:+d.beast.a || 0, k:+d.beast.k || 0, open:!!d.beast.open} : null;
+  const isNew = b && b.open && (!beast || beast.id !== b.id);
+  const first = seenBeast === undefined; seenBeast = b ? b.id : '';
+  beast = b;
+  if (isHost){ renderFights(); return; }
+  if (!b || !b.open){ if (!$('#beastOv').hidden && bt && !bt.multi && !bt.won) closeBeast(); if (!bt) showBeastMesh(false); return; }
+  if (isNew && !first && nick && explorersOn && !boarded && !sleeping && phase === 'class') startFight();
+}
+// one battle at a time: the host's raid (single answer) or a station guard (pick every right answer)
+let bt = null;
+function openBattle(cfg){
+  bt = Object.assign({hits:0, wrong:0, lost:0, won:false, t0:Date.now()}, cfg);
+  beastWrong = 0; beastT0 = bt.t0;
+  closeSheet(); $('#missionOv').hidden = true; $('#wallOv').hidden = true; $('#pollOv').hidden = true;
+  $('#beastArt').className = 'beast-art'; $('#beastArt').innerHTML = beastSVG(cfg.k);
+  // a teacher-made image (beast-1.png …) replaces the drawn beast when it exists
+  const im = new Image(); im.onload = () => { if (bt === cfg || bt && bt.id === cfg.id){ im.alt = cfg.name; im.style.height = '170px'; $('#beastArt').innerHTML = ''; $('#beastArt').appendChild(im); } };
+  im.src = `beast-${cfg.k % BEASTS.length + 1}.png`;
+  $('#beastName').textContent = cfg.title;
+  $('#beastHp').style.width = '100%';
+  $('#beastQ').textContent = cfg.q;
+  $('#beastOpts').className = cfg.multi ? 'poll-opts multi' : 'poll-opts';
+  $('#beastOpts').innerHTML = cfg.opts.map((o, i) => `<button type="button" class="poll-opt" data-o="${i}"><span>${esc(o)}</span></button>`).join('');
+  $('#hearts').textContent = '♥♥♥'; $('#beastMsg').textContent = cfg.multi ? `還要選對 ${cfg.right.length} 項` : '';
+  $('#beastClose').hidden = true; $('#beastOv').hidden = false;
+  showBeastMesh(true); if (cfg.report) cfg.report('fight');
+  if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+}
+function startFight(){
+  const c = BEASTS[beast.k % BEASTS.length];
+  beastWon = '';
+  openBattle({id:beast.id, k:beast.k, name:c.name, title:`${c.name}跳出來了！答對題目把牠趕走`, q:beast.q, opts:beast.opts, right:[beast.a], multi:false,
+    report:st => reportFight(st), onWin:() => { beastWon = beast.id; store.set('beasts', store.get('beasts', 0) + 1); }});
+}
+function startGuard(st){
+  const g = st.guard, id = 'st' + st.id;
+  openBattle({id, k:g.k, name:g.name, title:`${g.name}擋住了「${st.name}」！`, q:g.q, opts:g.opts, right:g.right, multi:true, miss:g.miss,
+    report:s2 => mqPub('fight/' + myId, {b:id, st:s2, w:bt ? bt.wrong : 0, n:nick, t:Math.round((Date.now() - (bt ? bt.t0 : Date.now()))/1000)}, true),
+    onWin:() => { store.set('guard.' + st.id, true); },
+    after:() => openStation(st.id)});
+}
+$('#beastOpts').onclick = e => {
+  const btn = e.target.closest('[data-o]'); if (!btn || !bt || bt.won || btn.disabled) return;
+  const o = +btn.dataset.o;
+  if (bt.right.includes(o)){
+    bt.hits++; btn.disabled = true; btn.classList.add('picked');
+    $('#beastHp').style.width = Math.round((1 - bt.hits/bt.right.length)*100) + '%';
+    $('#beastArt').classList.remove('hit'); void $('#beastArt').offsetWidth; $('#beastArt').classList.add('hit');
+    if (bt.hits < bt.right.length){ $('#beastMsg').textContent = `命中！還要選對 ${bt.right.length - bt.hits} 項`; return; }
+    bt.won = true;
+    $('#beastHp').style.width = '0%'; $('#beastArt').className = 'beast-art win';
+    $('#beastName').textContent = '擊退成功！';
+    $('#beastMsg').textContent = bt.wrong ? `答錯 ${bt.wrong} 次後擊退，越挫越勇！` : '一次都沒失誤，完美擊退！';
+    $('#beastClose').textContent = bt.after ? '進入關卡' : '回到島上繼續探險';
+    $('#beastClose').hidden = false; confetti(); showBeastMesh(false);
+    if (bt.onWin) bt.onWin();
+    if (bt.report) bt.report('win');
+  } else {
+    bt.wrong++; beastWrong = bt.wrong; btn.disabled = true; btn.style.opacity = .5;
+    if (!bt.multi) $('#beastHp').style.width = '100%';
+    $('#beastBox').classList.remove('ouch'); void $('#beastBox').offsetWidth; $('#beastBox').classList.add('ouch');
+    bt.lost++;
+    const h = Math.max(0, 3 - bt.lost); $('#hearts').textContent = '♥'.repeat(h) + '♡'.repeat(3 - h);
+    $('#beastMsg').textContent = (bt.miss || (h ? '野獸反擊！換個答案再試一次' : '血量見底了！別放棄，想清楚再答一次'));
+    if (!h){ const cur = bt; setTimeout(() => { if (bt === cur && !cur.won){ cur.lost = 0; $('#hearts').textContent = '♥♥♥'; } }, 1500); }
+    if (bt.report) bt.report('fight');
+  }
+};
+function closeBeast(){
+  const after = bt && bt.won && bt.after; bt = null;
+  $('#beastOv').hidden = true; showBeastMesh(false);
+  if (after) return after();
+  if (player && player.g.visible) flyToPlayer();
+}
+$('#beastClose').onclick = closeBeast;
+$('#bStart').onclick = () => {
+  let q, opts, a = 0;
+  if ($('#bSel').value === 'c'){
+    q = cleanText($('#bQ').value, 60);
+    const lines = $('#bOpts').value.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 5);
+    a = Math.max(0, lines.findIndex(l => l.startsWith('*')));
+    opts = lines.map(l => cleanText(l.replace(/^\*/, ''), 30));
+    if (!q || opts.length < 2) return toast('請輸入題目和至少 2 個選項，正確答案前加 *');
+  } else { const p = BEAST_QS[+$('#bSel').value]; q = p.q; opts = p.opts; a = p.a; }
+  // shuffle options so the right answer isn't always in the same place
+  const order = shuffle(opts.map((o, i) => i));
+  writeLive({beast:{id:Date.now().toString(36), q, opts:order.map(i => opts[i]), a:order.indexOf(a), k:Math.floor(Math.random()*RAIDERS), open:true}});
+  toast('野獸出動！');
+};
+$('#bStop').onclick = () => { if (beast) writeLive({beast:Object.assign({}, liveState.beast, {open:false})}); };
+function gotFight(id, v){
+  if (v && typeof v === 'object' && typeof v.b === 'string') fights.set(id, {b:v.b, st:v.st === 'win' ? 'win' : 'fight', w:Math.max(0, +v.w || 0), n:cleanText(v.n, 16), t:Math.max(0, +v.t || 0)});
+  else fights.delete(id);
+  renderFights();
+}
+function renderFights(){
+  if (!isHost) return;
+  let gw = 0, gf = 0; fights.forEach(f => { if (f.b === 'st2'){ if (f.st === 'win') gw++; else gf++; } });
+  $('#gSum').textContent = gw + gf ? `國語森林守門獸：擊退 ${gw} 人・戰鬥中 ${gf} 人` : '國語森林守門獸：還沒有人遇到';
+  if (!beast){ $('#bTable').innerHTML = ''; $('#bSum').textContent = '已登島的學員畫面會跳出野獸，答對題目才能擊退。'; return; }
+  const rows = [], seen = new Set();
+  fights.forEach(f => { if (f.b === beast.id){ rows.push(f); seen.add(f.n); } });
+  rosterRows().forEach(r => { if (!seen.has(r.n)) rows.push({n:r.n, st:'none', w:0, t:0}); });
+  rows.sort((x, y) => ({fight:0, none:1, win:2}[x.st] - {fight:0, none:1, win:2}[y.st]) || y.w - x.w);
+  const win = rows.filter(r => r.st === 'win').length, fighting = rows.filter(r => r.st === 'fight').length;
+  $('#bSum').textContent = `「${beast.q}」${beast.open ? '戰鬥中' : '已結束'}・擊退 ${win} 人・戰鬥中 ${fighting} 人・未回應 ${rows.length - win - fighting} 人`;
+  $('#bTable').innerHTML = rows.map(r => `<tr><td>${esc(r.n)}</td><td>${r.st === 'win' ? '<b style="color:var(--leaf)">已擊退</b>' : r.st === 'fight' ? '<b style="color:var(--coral)">戰鬥中</b>' : '未回應'}</td><td class="num">${r.w}</td><td class="num">${r.st === 'win' ? r.t + ' 秒' : ''}</td></tr>`).join('');
+}
+
 /* ---------------- interaction: chat bubbles, live polls, idea wall ----------------
    say/<id>  one line of chat (not kept), shown as a bubble over that explorer
    vote/<id> retained ballot {p:poll id, o:option}, tallied by everyone
@@ -2533,7 +2879,10 @@ const chatLog = store.get('chat.' + ROOM, []);
 let ideas = store.get('ideas.' + ROOM, {w:'', list:[]});
 const votes = new Map();          // peer id → {p, o, n}
 let poll = null, wall = null, muted = false, seenPoll = null, seenWall = null, lastSay = 0;
-function showFab(){ $('#fab').hidden = !(nick || isHost) || !HAS_ROOM; }
+function showFab(){
+  $('#fab').hidden = !(nick || isHost) || !HAS_ROOM;
+  if (!$('#fab').hidden && showFab.first !== false){ showFab.first = false; openFeed(store.get('feedOpen', innerWidth > 900)); }
+}
 function bubbleSprite(text){
   const cv = document.createElement('canvas'); cv.width = 512; cv.height = 200;
   const c = cv.getContext('2d'); c.font = '700 38px "Noto Sans TC",sans-serif';
@@ -2554,24 +2903,75 @@ function showBubble(m, text){
   m.bubble = bubbleSprite(text); m.g.add(m.bubble);
   m.bubbleT = setTimeout(() => { if (m.bubble){ m.g.remove(m.bubble); m.bubble = null; } }, 7000);
 }
-function logChat(n, x){
+function emojiSprite(e){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 160;
+  const c = cv.getContext('2d'); c.font = '120px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(e, 80, 88);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true}));
+  sp.scale.set(1.5, 1.5, 1); sp.position.y = 3.2; sp.renderOrder = 11; return sp;
+}
+function showEmoji(m, e){
+  if (!m || !m.g) return;
+  const sp = emojiSprite(e); m.g.add(sp);
+  const t0 = performance.now();
+  const step = () => {
+    const k = (performance.now() - t0)/1800;
+    if (k >= 1){ m.g.remove(sp); return; }
+    sp.position.y = 3 + k*1.4; sp.material.opacity = k < .7 ? 1 : 1 - (k - .7)/.3;
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+// chat room: every client keeps the feed; the host republishes the latest lines so late joiners catch up
+let feed = isHost ? chatLog.slice(-40) : [], feedUnread = 0;
+function addFeed(r){
+  if (r.k && feed.some(f => f.k === r.k)) return;
+  feed.push(r); if (feed.length > 80) feed.shift();
+  if ($('#feed').hidden && r.n !== (nick || '講師')){
+    feedUnread++;
+    // collapsed: a short peek at the new line, tap the chat button to open
+    toast(`${r.q ? '新提問' : '新訊息'}・${r.n}：${r.x.slice(0, 18)}${r.x.length > 18 ? '…' : ''}`);
+    $('#feedBtn').classList.remove('hot'); void $('#feedBtn').offsetWidth; $('#feedBtn').classList.add('hot');
+  }
+  renderFeed();
+}
+function renderFeed(){
+  $('#feedN').hidden = !feedUnread; $('#feedN').textContent = feedUnread;
+  if ($('#feed').hidden) return;
+  const el = $('#feedList'); if (!feed.length) return;
+  const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  el.innerHTML = feed.map(r => `<div class="m${r.q ? ' q' : ''}">${r.q ? '<span class="tag">提問</span>' : ''}<b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('');
+  if (atEnd || true) el.scrollTop = el.scrollHeight;
+}
+function openFeed(on){ $('#feed').hidden = !on; if (on){ feedUnread = 0; $('#feedBtn').classList.remove('hot'); } store.set('feedOpen', on); renderFeed(); }
+$('#feedBtn').onclick = () => openFeed($('#feed').hidden);
+$('#feedClose').onclick = () => openFeed(false);
+function gotFeed(v){
+  if (!v || !Array.isArray(v.list)) return;
+  v.list.slice(-40).forEach(r => { const x = cleanText(r.x, 40), n = cleanText(r.n, 16); if (x && n && !feed.some(f => f.k && f.k === r.k)) feed.push({n, x, q:!!r.q, k:cleanText(r.k, 24), t:+r.t || 0}); });
+  feed.sort((a, b) => (a.t || 0) - (b.t || 0)); renderFeed();
+}
+function logChat(n, x, q, k){
+  addFeed({n, x, q:!!q, k:k || '', t:Date.now()});
   if (!isHost) return;
-  chatLog.push({t:Date.now(), n, x}); if (chatLog.length > 500) chatLog.splice(0, chatLog.length - 500);
+  chatLog.push({t:Date.now(), n, x, q:!!q, k:k || ''}); if (chatLog.length > 500) chatLog.splice(0, chatLog.length - 500);
   store.set('chat.' + ROOM, chatLog); renderChatLog();
+  clearTimeout(logChat.t); logChat.t = setTimeout(() => mqPub('chat', {list:chatLog.slice(-40)}, true), 500);
 }
 function renderChatLog(){
   if (!isHost) return;
   const el = $('#chatLog'); if (!chatLog.length) return;
   const hm = t => new Date(t).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false});
-  el.innerHTML = chatLog.slice(-60).map(r => `<div><span class="small">${hm(r.t)}</span> <b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('');
+  el.innerHTML = chatLog.slice(-60).map(r => `<div><span class="small">${hm(r.t)}</span> ${r.q ? '<span class="tag" style="background:var(--sun);border-radius:6px;padding:0 5px;font-size:11px;font-weight:900">提問</span> ' : ''}<b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('');
   el.scrollTop = el.scrollHeight;
 }
 const cleanText = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
 function gotInteract(kind, id, v){
   if (kind === 'say'){
     if (!v || muted) return;
+    if (typeof v.e === 'string' && EMOJIS.includes(v.e)){ showEmoji(peerMeshes.get(id), v.e); return; }
     const x = cleanText(v.x, 40), n = cleanText(v.n, 16); if (!x || !n) return;
-    showBubble(peerMeshes.get(id), x); logChat(n, x);
+    showBubble(peerMeshes.get(id), (v.q ? '提問：' : '') + x); logChat(n, x, !!v.q, cleanText(v.k, 24));
   } else if (kind === 'vote'){
     if (v && typeof v === 'object' && typeof v.p === 'string') votes.set(id, {p:v.p, o:+v.o, n:cleanText(v.n, 16)}); else votes.delete(id);
     renderPoll();
@@ -2580,6 +2980,23 @@ function gotInteract(kind, id, v){
   }
 }
 // --- chat ---
+const EMOJIS = ['👍', '😂', '😮', '❤️', '🙋', '👏'];
+let sayQ = false, lastEmoji = 0;
+$('#emojis').innerHTML = EMOJIS.map(e => `<button type="button" data-e="${e}" aria-label="送出 ${e}">${e}</button>`).join('');
+$('#emojis').onclick = e => {
+  const b = e.target.closest('[data-e]'); if (!b) return;
+  if (muted && !isHost) return toast('講師暫停了聊天');
+  if (Date.now() - lastEmoji < 1200) return;
+  lastEmoji = Date.now();
+  mqPub('say/' + myId, {n:nick || '講師', e:b.dataset.e});
+  if (player) showEmoji(player, b.dataset.e);
+};
+$('#sayKind').onclick = e => {
+  const b = e.target.closest('[data-k]'); if (!b) return;
+  sayQ = b.dataset.k === 'q';
+  $('#sayKind').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  $('#sayInput').placeholder = sayQ ? '寫下你的問題，講師和全班都看得到' : '想說的話，會出現在你的角色頭上';
+};
 $('#quick').innerHTML = QUICK.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('');
 $('#quick').onclick = e => { const b = e.target.closest('[data-q]'); if (b) say(b.dataset.q); };
 $('#sayBtn').onclick = () => {
@@ -2595,10 +3012,11 @@ function say(text){
   if (phasePaused() && !isHost) return toast('請先看講師');
   if (Date.now() - lastSay < 2500) return toast('說慢一點，2 秒後再送');
   lastSay = Date.now();
-  const n = nick || '講師';
-  mqPub('say/' + myId, {n, x, at:Date.now()});
-  if (player) showBubble(player, x);
-  logChat(n, x);
+  const n = nick || '講師', k = myId + Date.now().toString(36);
+  mqPub('say/' + myId, {n, x, q:sayQ ? 1 : 0, k, at:Date.now()});
+  if (player) showBubble(player, (sayQ ? '提問：' : '') + x);
+  logChat(n, x, sayQ, k);
+  if ($('#feed').hidden && sayQ) openFeed(true);
   $('#sayInput').value = ''; $('#sayBar').hidden = true;
 }
 $('#chatMute').onclick = () => writeLive({mute:!muted});
@@ -2612,14 +3030,28 @@ function applyInteract(d){
   if (newPoll && seenPoll !== null && p.open && !isHost && nick && !myVote()) openPoll();
   if (seenPoll === null || newPoll) seenPoll = p ? p.id : '';
   renderPoll();
-  const w = d && d.wall && typeof d.wall.id === 'string' ? {id:d.wall.id, q:cleanText(d.wall.q, 60), open:!!d.wall.open} : null;
+  const w = d && d.wall && typeof d.wall.id === 'string' ? {id:d.wall.id, q:cleanText(d.wall.q, 60), open:!!d.wall.open, warm:!!d.wall.warm} : null;
   const newWall = w && w.id !== (wall && wall.id);
   wall = w; $('#wallBtn').classList.toggle('hot', !!wall && wall.open && !isHost);
-  if (newWall && seenWall !== null && w.open && !isHost && nick){ banner('講師開放想法牆：' + w.q, 6000); openWall(); }
+  if (newWall && seenWall !== null && w.open && !w.warm && !isHost && nick){ banner('講師開放想法牆：' + w.q, 6000); openWall(); }
   if (seenWall === null || newWall) seenWall = w ? w.id : '';
   if (isHost && w && ideas.w !== w.id){ ideas = {w:w.id, list:[]}; saveIdeas(); }
   renderWall();
+  checkWarm();
 }
+// warm-up share before landing: a learner posts one line before stepping onto the island
+const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
+let warmGate = false;
+const needWarm = () => !!(wall && wall.warm && wall.open && !isHost && nick && phase === 'before' && !store.get('posted.' + wall.id, false));
+function checkWarm(){
+  if (needWarm()){ if (!warmGate){ warmGate = true; openWall(); } }
+  else if (warmGate){ warmGate = false; renderWall(); }
+}
+const warmWall = () => ({id:'warm' + Date.now().toString(36), q:cleanText($('#warmQ').value, 60) || WARM_Q, open:true, warm:true});
+$('#warmQ').value = store.get('warmQ', '') || WARM_Q;
+$('#warmQ').addEventListener('input', () => store.set('warmQ', $('#warmQ').value.trim()));
+$('#warmStart').onclick = () => { writeLive({wall:warmWall()}); toast('入港前分享已開放'); };
+$('#warmShow').onclick = () => openWall(true);
 const myVote = () => poll && votes.has(myId) && votes.get(myId).p === poll.id ? votes.get(myId) : null;
 function tally(){
   const c = poll ? poll.opts.map(() => 0) : [];
@@ -2685,8 +3117,11 @@ function renderWall(){
   if ($('#wallOv').hidden) return;
   const proj = $('#wallBox').classList.contains('proj');
   $('#wallQ').textContent = wall ? wall.q : '講師還沒開放想法牆';
+  $('#wallEyebrow').textContent = wall && wall.warm ? '入港前分享' : '想法牆';
+  $('#wallClose').hidden = warmGate && needWarm();
+  $('#wallClose').textContent = wall && wall.warm && !isHost && phase === 'before' ? '進入島嶼，等待登島' : '關閉';
   $('#wallForm').hidden = !wall || !wall.open || proj || isHost && !nick;
-  $('#wallMsg').textContent = !wall ? '等講師出題後，就可以在這裡貼上你的想法。' : wall.open ? `已經有 ${list.length} 則想法` : `投稿已停止，共 ${list.length} 則想法`;
+  $('#wallMsg').textContent = !wall ? '等講師出題後，就可以在這裡貼上你的想法。' : warmGate && needWarm() ? `寫下一句分享就能進入島嶼・已經有 ${list.length} 位分享` : wall.open ? `已經有 ${list.length} 則分享` : `投稿已停止，共 ${list.length} 則分享`;
   $('#wallGrid').innerHTML = list.slice().reverse().map(i => `<div class="note-card">${esc(i.x)}<small>${esc(i.n)}</small></div>`).join('');
 }
 $('#wallForm').addEventListener('submit', e => {
@@ -2700,7 +3135,8 @@ $('#wallForm').addEventListener('submit', e => {
     if (!ideas.list.some(i => i.k === k) && ideas.w === wall.id) ideas.list.push({n, x, k});
     if (ideas.w !== wall.id) ideas = {w:wall.id, list:[{n, x, k}]};
   }
-  $('#wallInput').value = ''; renderWall(); toast('已貼上想法牆'); confetti();
+  store.set('posted.' + wall.id, true);
+  $('#wallInput').value = ''; checkWarm(); renderWall(); toast(wall.warm ? '分享成功！大家都看得到' : '已貼上想法牆'); confetti();
 });
 $('#wallBtn').onclick = () => openWall(isHost && !!wall);
 $('#wallClose').onclick = () => $('#wallOv').hidden = true;
@@ -2741,7 +3177,7 @@ else if (store.get('host.' + ROOM, false)){
   const init = store.get('init.' + ROOM, null);
   if (init){
     store.set('init.' + ROOM, null);
-    pendingInit = () => writeLive({phase:'before', phaseAt:Date.now(), title:init.title, attention:false, rest:null, timer:null, draw:null, history:[]});
+    pendingInit = () => writeLive({phase:'before', phaseAt:Date.now(), title:init.title, attention:false, rest:null, timer:null, draw:null, history:[], wall:warmWall()});
     setTimeout(() => { openHost(); $('#qrShow').click(); }, 300);
   } else openHost();
 }
