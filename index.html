@@ -10,7 +10,8 @@
   --teal:#2A8C8C; --teal-deep:#1D6B6B; --coral:#EE6F57; --sun:#F4B740; --leaf:#5FA651; --sky:#A9DDE6;
   --good:#2F9E5B; --warn:#D9513A;
   --display:"Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-  --body:"Huninn","Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --round:"Huninn","Chiron GoRound TC","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --r:18px; --shadow:0 10px 30px rgba(24,50,58,.18);
   color-scheme:light;
 }
@@ -18,7 +19,10 @@
 html,body{height:100%}
 body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;overflow:hidden;-webkit-tap-highlight-color:transparent}
 #scene{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;font-family:var(--round);color:inherit;cursor:pointer}
+/* short UI text stays round and playful; questions, answers and explanations use the clearer body face */
+.brand small,.chip,.eyebrow,.dialog small,.feed-head,.tag,.badge-n,.timer-box small,.land-title,.banner,.toast,.st-btn,.hint,.field{font-family:var(--round)}
+.opt,.poll-opt,.card,.bucket,.slot,.note-card,.feed-list,.chat-log,.field input,.field textarea,.field select{font-family:var(--body)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .hud{position:fixed;pointer-events:none;z-index:5}
 .hud > *{pointer-events:auto}
