@@ -246,9 +246,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 /* beast raid */
 .beast-box{width:min(480px,100%);text-align:center;align-items:stretch}
 .beast-art{height:170px;display:grid;place-items:center}
-.beast-art svg{height:170px;width:auto;animation:beastIn .7s cubic-bezier(.3,1.6,.5,1)}
-.beast-art.hit svg{animation:beastHit .4s}
-.beast-art.win svg{animation:beastOut 1s forwards}
+.beast-art svg,.beast-art img{height:170px;width:auto;animation:beastIn .7s cubic-bezier(.3,1.6,.5,1)}
+.beast-art.hit svg,.beast-art.hit img{animation:beastHit .4s}
+.beast-art.win svg,.beast-art.win img{animation:beastOut 1s forwards}
 .beast-box.ouch{animation:ouch .35s}
 @keyframes beastIn{0%{transform:translateY(120px) scale(.3);opacity:0}100%{transform:none;opacity:1}}
 @keyframes beastHit{25%{transform:translateX(-14px) rotate(-6deg)}75%{transform:translateX(14px) rotate(6deg)}}
@@ -2712,6 +2712,7 @@ const BEAST_QS = [
   {q:'做課程調整之前，第一步應該先？', opts:['挑最新的數位工具','分析個案的學習需求','直接降低難度','跟上全班進度'], a:1}
 ];
 const BEASTS = [{name:'迷思野豬', body:'#8A5A3B', belly:'#C99A6B'}, {name:'標籤灰狼', body:'#6E7B85', belly:'#B9C3CA'}, {name:'放棄巨熊', body:'#4A3426', belly:'#8A6A4E'}, {name:'森林守門獸', body:'#3F7A3A', belly:'#9CC77E'}];
+BEASTS.forEach((b, i) => { new Image().src = `beast-${i + 1}.png`; }); // warm the cache so the art pops in at once
 const RAIDERS = 3; // the host's raid picks from the first three; the rest guard stations
 $('#bSel').innerHTML = BEAST_QS.map((b, i) => `<option value="${i}">${esc(b.q)}</option>`).join('') + '<option value="c">自訂題目…</option>';
 $('#bSel').onchange = () => $('#bCustom').hidden = $('#bSel').value !== 'c';
