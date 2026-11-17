@@ -485,7 +485,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <h3>學員背包</h3>
       <label class="field">本日講義連結（貼上 Google Drive 分享連結）<input id="packUrl" maxlength="300" autocomplete="off" placeholder="https://drive.google.com/…"></label>
       <div class="row"><button class="primary" id="packSave" type="button">更新講義連結</button><span class="small" id="packState"></span></div>
-      <p class="small">學員按左側「我的背包」就能打開本日講義、參考檔案、相關文獻和 Padlet。還沒貼講義連結時，講義會先連到參考檔案資料夾。</p>
+      <p class="small">學員按左側「我的背包」就能打開本日講義、參考檔案、相關文獻和 Padlet。講義連結已內建，要換檔案時再貼新的連結。</p>
     </section>
     <section>
       <h3>關卡開放進度</h3>
@@ -2419,7 +2419,8 @@ $('#meChip').onclick = askNick;
 /* backpack: today's handout and reference folders, one tap away */
 const PACK_REF = 'https://drive.google.com/drive/folders/1iz7FVaATFl4hKBha3iY3mTYjc72e7FVH?usp=sharing';
 const PACK_LIT = 'https://drive.google.com/drive/folders/1AIEKzVvpxBXqNlU-hjd7XYfeJoArCHHs?usp=sharing';
-let packLink = '';
+const PACK_HANDOUT = 'https://drive.google.com/file/d/1Vk-KiMsLiNK1cKyJfm6cmRTRcZmfXTSx/view?usp=sharing';
+let packLink = PACK_HANDOUT;
 function renderPack(){
   const okUrl = /^https:\/\//.test(packLink);
   const items = [['本日講義', okUrl ? '打開講義' : '在參考檔案資料夾裡', okUrl ? packLink : PACK_REF], ['參考檔案', 'Google Drive 資料夾', PACK_REF],
@@ -2431,7 +2432,7 @@ function renderPack(){
 }
 $('#packBtn').onclick = () => { renderPack(); $('#packOv').hidden = false; };
 $('#packClose').onclick = () => $('#packOv').hidden = true;
-$('#packSave').onclick = () => { const u = $('#packUrl').value.trim(); if (u && !/^https:\/\//.test(u)) return toast('請貼上 https:// 開頭的連結'); writeLive({handout:u}); toast(u ? '講義連結已更新' : '已清除講義連結'); };
+$('#packSave').onclick = () => { const u = $('#packUrl').value.trim(); if (u && !/^https:\/\//.test(u)) return toast('請貼上 https:// 開頭的連結'); writeLive({handout:u}); toast(u ? '講義連結已更新' : '已改回內建的講義連結'); };
 $('#wallHost').onclick = hostLogin;
 
 /* ---------------- live: room presence + shared state ---------------- */
@@ -2469,7 +2470,7 @@ function applyLive(d){
   $('#brandSub').textContent = d && typeof d.title === 'string' && d.title.trim() ? d.title.trim().slice(0, 40) : DEFAULT_TITLE;
   const o = d && Number.isFinite(+d.open) ? Math.max(0, Math.min(7, +d.open)) : 0;
   if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost) toast(o === 0 ? '講師還沒開放關卡' : o < 7 ? `講師已開放到第 ${o} 站` : '講師已開放全部關卡'); }
-  packLink = d && typeof d.handout === 'string' ? d.handout : ''; renderPack();
+  packLink = d && typeof d.handout === 'string' && d.handout ? d.handout : PACK_HANDOUT; renderPack();
   renderOpenGrid();
   renderHist();
   applyClass(d);
