@@ -103,6 +103,14 @@ button.del{border:0;background:#F3D9D4;color:#A33;border-radius:8px;font-weight:
 .tools a b{display:block;font-size:14px}
 .tools a span{font-size:12px;color:var(--ink-soft)}
 .make{background:#EEF7F2;border:2px solid #9CC9B4;border-radius:14px;padding:12px 14px}
+.sv-cols{display:grid;gap:12px}
+.sv-cols p{margin:0 0 6px;font-weight:700}
+.sv-cols .poll-opt{padding:6px 12px;border-radius:10px;font-size:15px}
+.sv-cols .poll-opts{gap:5px}
+#svBig{overflow:auto;min-height:0}
+#svBig .sv-cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 24px}
+@media (max-width:700px){#svBig .sv-cols{grid-template-columns:1fr}}
+.opt-tag{margin-left:8px;background:var(--sun);color:var(--ink);border-radius:999px;padding:1px 9px;font-size:11px;letter-spacing:0}
 .make b.t{display:block;font-size:16px;margin-bottom:4px}
 .make p{margin:4px 0 8px;font-size:14px;white-space:pre-line}
 .make p.frame{background:#fff;border-radius:10px;padding:8px 10px;font-size:13.5px;border-left:4px solid var(--sun)}
@@ -410,6 +418,12 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button><button type="button" id="qkChat">聊天：開</button></div>
   <div class="sheet-body">
     <section>
+      <h3>登島前小調查（AI 使用經驗）</h3>
+      <p class="small" id="svSum">學員輸入名字後會先回答 2 題選擇題，結果即時顯示在這裡。</p>
+      <div id="svRes"></div>
+      <div class="row"><button class="primary" id="svProj" type="button">投影調查結果</button><button class="ghost" id="svClear" type="button">清空調查</button></div>
+    </section>
+    <section>
       <h3>入港前分享</h3>
       <label class="field">分享題目<input id="warmQ" maxlength="60"></label>
       <div class="row"><button class="primary" id="warmStart" type="button">開放入港前分享</button><button class="ghost" id="warmShow" type="button">投影分享牆</button></div>
@@ -665,6 +679,25 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   </div>
 </div>
 
+<div class="overlay" id="svOv" hidden style="z-index:41">
+  <form class="dialog" id="svForm" style="gap:12px">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">登島前小調查・2 題</small>
+    <h2 style="font-size:20px" id="svQ1"></h2>
+    <div class="poll-opts" id="svA"></div>
+    <h2 style="font-size:20px" id="svQ2"></h2>
+    <div class="poll-opts multi" id="svB"></div>
+    <button class="primary" type="submit">送出，繼續登島</button>
+    <p class="small" id="svMsg">不記分，只是讓講師了解大家的起點。</p>
+  </form>
+</div>
+<div class="overlay" id="svShow" hidden>
+  <div class="dialog wall-dialog" style="gap:12px">
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">登島前小調查結果</small>
+    <div id="svBig"></div>
+    <button class="ghost" id="svShowClose" type="button">關閉</button>
+  </div>
+</div>
+
 <div class="overlay" id="packOv" hidden>
   <div class="dialog" style="gap:12px">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">探險家的背包</small>
@@ -843,7 +876,7 @@ const STATIONS = [
     {n:'語詞造句及句型練習板', d:'Gemini Canvas', u:'https://gemini.google.com/share/dac1116b6e3d'},
     {n:'六何法分層寫作小幫手', d:'安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'},
     {n:'語音寫作小幫手', d:'先說再寫', u:'https://little-voice-writing.sesns365.chatgpt.site/'}],
-  make:{t:'安裝「六何法分層寫作」Skill', how:'打開「六何法分層寫作小幫手」安裝教學，依步驟裝進 Claude、ChatGPT 或 Gemini。接著給它一個作文題目（例如「我最喜歡的寵物」），做出互動網頁或學習單，分享到 Padlet。',
+  make:{opt:true, t:'安裝「六何法分層寫作」Skill', how:'打開「六何法分層寫作小幫手」安裝教學，依步驟裝進 Claude、ChatGPT 或 Gemini。接著給它一個作文題目（例如「我最喜歡的寵物」），做出互動網頁或學習單，分享到 Padlet。',
     link:{n:'打開安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'}},
   steps:[
     {type:'mc', q:'六何法的第一層「三何起步」，要先找出哪三何？', opts:['何人、何地、何事','何時、如何、為何','何物、何價、何量','何人、何時、為何'], a:0,
@@ -909,7 +942,7 @@ const STATIONS = [
     {n:'10 以內加減法', d:'互動教材', u:'https://gemini.google.com/share/6431cbd0fae1'},
     {n:'十十乘法', d:'挖礦小遊戲', u:'https://senst365.github.io/miningnew/'},
     {n:'NotebookLM', d:'文本簡化', u:'https://notebooklm.google.com/'}],
-  make:{t:'做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖，分享到 Padlet。',
+  make:{opt:true, t:'做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖，分享到 Padlet。',
     copy:SCENE_PROMPT},
   steps:[
     {type:'mc', q:'情境圖中的「未知量」要怎麼呈現？', opts:['直接寫出答案','用「？」表示','留白不畫','用英文字母'], a:1,
@@ -931,7 +964,7 @@ const STATIONS = [
     {n:'社交小特工', d:'動畫＋互動網頁＋學習單', u:'https://sesns365.github.io/social-skills/'},
     {n:'社會技巧互動遊戲', d:'Claude 互動網頁', u:'https://claude.ai/artifact/LvS6ZmNcFVruvjfZsL727B'},
     {n:'特工365 教學資源平台', d:'資源分享', u:'https://www.se365edu.com/'}],
-  make:{t:'設計一個類化活動', how:'挑一集「社交小特工」，想一個讓孩子在教室外也用得上的類化活動（換不同對象、提示卡隨身帶…），分享到 Padlet。'},
+  make:{opt:true, t:'設計一個類化活動', how:'挑一集「社交小特工」，想一個讓孩子在教室外也用得上的類化活動（換不同對象、提示卡隨身帶…），分享到 Padlet。'},
   steps:[
     {type:'order', q:'社會技巧課程發展的三個階段，依序點選：', items:['課前準備','課程進行','評量與類化']},
     {type:'order', q:'社會技巧教學的四大段，依序點選：', items:['準備：引起動機','教：說明、示範','練：演練、回饋','收：總結討論、課後作業']},
@@ -976,15 +1009,15 @@ FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
    The host can rewrite each card live from the control panel. */
 const ANIMALS = [
   {name:'貓頭鷹博士', kind:'owl',    color:'#8A6142', home:[2,-12.5],
-    card:{t:'學習障礙鑑定基準', b:'學習障礙是神經心理功能異常，顯現在聽、說、讀、寫或算等學習表現有顯著困難。鑑定基準：智力正常或以上、個人內在能力有顯著差異、學業表現顯著低於同年級、經一般教育介入仍難有效改善。'}},
+    card:{t:'用 AI 前先保護個資', b:'不要把學生的姓名、照片、診斷證明、IEP 原文直接貼給 AI。先去識別化：用「小安、三年級、識字困難」這樣的描述就夠了。'}},
   {name:'小兔跳跳',   kind:'rabbit', color:'#F4F1EA', home:[-8,2],
-    card:{t:'閱讀簡單觀點', b:'閱讀理解 ＝ 識字 × 語言理解（Tunmer & Hoover）。低年級是「學習閱讀」，中年級以後轉向「從閱讀中學習」，識字卡關的孩子需要及早支持。'}},
+    card:{t:'AI 會出錯，老師要把關', b:'AI 生成的教材常有錯字、注音錯誤、筆順或計算錯誤，生圖也可能把字畫錯。給學生之前一定要自己檢查一遍，你才是教材的最後一道關卡。'}},
   {name:'烏龜爺爺',   kind:'turtle', color:'#5FA651', home:[9,-4],
-    card:{t:'識字流暢性', b:'識字的認知成分包含聲韻覺識、組字規則、詞素覺知與流暢性；二年級以上的朗讀速度，參考值約每分鐘 113 字以上。'}},
+    card:{t:'通用設計學習 UDL 三原則', b:'多元參與（為什麼學）、多元表徵（學什麼）、多元行動與表達（怎麼學、怎麼表現）。請 AI 做教材時，可以直接要求它符合這三項原則。'}},
   {name:'小狗旺旺',   kind:'dog',    color:'#D9A066', home:[-3,7],
-    card:{t:'影片理解互動模式', b:'播放 1～2 句就暫停 → 引導看圖 → 參照便利貼詞解 → 理解檢核。這是歷程調整：改變學生「怎麼學」。'}},
+    card:{t:'好提示詞的四個要素', b:'角色（你是資源班老師）、對象（三年級識字困難的學生）、任務（做一份形近字學習單）、格式（A4、字大、留書寫格）。說得越具體，成品越合用。'}},
   {name:'橘貓咪咪',   kind:'cat',    color:'#EE9A4D', home:[-15,-6],
-    card:{t:'各年級形聲字', b:'一年級先教部件、獨體字、象形字；二年級加入規則字（泡、跑、抱）；三、四年級形聲規則字；五年級不規則字（洪、拱、供）；六年級聲旁非常用字（遙、瑤、搖）。'}}
+    card:{t:'尊重創作，標示來源', b:'使用別人分享的提示詞、Skill 或教材時，保留原作者與來源；自己改編後再分享，也寫上「改編自誰」。今天的工具很多都來自第一線老師的無私分享。'}}
 ];
 const QUESTIONS = [
   '分析個案需求時，你最先注意到孩子哪一個需求？會調整哪個向度？',
@@ -1146,6 +1179,7 @@ function onMsg(topic, buf){
   if (kind === 'say' || kind === 'vote' || kind === 'idea'){ gotInteract(kind, id, v); return; }
   if (kind === 'fight'){ gotFight(id, v); return; }
   if (kind === 'ack'){ gotAck(v); return; }
+  if (kind === 'sv'){ gotSurvey(id, v); return; }
   if (kind === 'p'){
     if (v && typeof v === 'object' && typeof v.nick === 'string' && Date.now() - (+v.t || 0) < 3*3600e3){
       peerMap.set(id, {presence:v, t:Date.now()}); noteJoin(v);
@@ -1279,7 +1313,7 @@ function kitBlock(st){
   const m = st.make; if (!m && !st.tools) return '';
   const tools = st.tools ? `<div><div class="kit-h">體驗工具（點開試試看）</div><div class="tools">${st.tools.map(t =>
     `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
-  const make = m ? `<div class="make"><div class="kit-h">實作任務</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
+  const make = m ? `<div class="make"><div class="kit-h">實作任務${m.opt ? '<span class="opt-tag">選做</span>' : ''}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
     ${m.copy ? `<div class="prompt" id="mkCopy">${esc(m.copy)}</div>` : ''}
     <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
     ${m.link ? `<a class="ghost" href="${esc(m.link.u)}" target="_blank" rel="noopener">${esc(m.link.n)}</a>` : ''}
@@ -3456,10 +3490,63 @@ function applyInteract(d){
 const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
 let warmGate = false;
 const needWarm = () => !!(wall && wall.warm && wall.open && !isHost && nick && phase === 'before' && !store.get('posted.' + wall.id, false));
+/* entry survey: two taps after the name, before the sharing wall; sv/<id> retained {n, a, b:[…]} */
+const SURVEY = {
+  q1:'你平常使用生成式 AI（ChatGPT、Gemini、Claude…）的程度？', a:['幾乎沒用過','偶爾用（一個月幾次）','每週都會用','幾乎每天用'],
+  q2:'你用 AI 做過哪些事？（可複選）', b:['查資料、問問題','寫報告或作業','做簡報或圖片','設計教案或教材','做學習單或評量','寫程式或做網頁','還沒用過']
+};
+const surveys = new Map();
+let svA = -1; const svB = new Set();
+const needSurvey = () => !isHost && !!nick && HAS_ROOM && !store.get('sv.' + ROOM, false);
+$('#svQ1').textContent = '1. ' + SURVEY.q1; $('#svQ2').textContent = '2. ' + SURVEY.q2;
+function drawSurveyForm(){
+  $('#svA').innerHTML = SURVEY.a.map((o, i) => `<button type="button" class="poll-opt${svA === i ? ' picked' : ''}" data-a="${i}"><span>${esc(o)}</span></button>`).join('');
+  $('#svB').innerHTML = SURVEY.b.map((o, i) => `<button type="button" class="poll-opt${svB.has(i) ? ' picked' : ''}" data-b="${i}"><span>${esc(o)}</span></button>`).join('');
+}
+$('#svForm').onclick = e => {
+  const a = e.target.closest('[data-a]'), b = e.target.closest('[data-b]');
+  if (a){ svA = +a.dataset.a; drawSurveyForm(); }
+  if (b){ const i = +b.dataset.b, none = SURVEY.b.length - 1;
+    if (svB.has(i)) svB.delete(i); else { if (i === none) svB.clear(); else svB.delete(none); svB.add(i); }
+    drawSurveyForm(); }
+};
+$('#svForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if (svA < 0 || !svB.size){ $('#svMsg').textContent = '兩題都選一下再送出喔'; return; }
+  const v = {n:nick, a:svA, b:[...svB].sort()};
+  mqPub('sv/' + myId, v, true); store.set('sv.' + ROOM, v);
+  $('#svOv').hidden = true; toast('謝謝！'); checkWarm();
+});
+function checkSurvey(){
+  if (!needSurvey() || !$('#join').hidden) return false;
+  if ($('#svOv').hidden){ drawSurveyForm(); $('#svOv').hidden = false; }
+  return true;
+}
+function gotSurvey(id, v){
+  if (v && typeof v === 'object' && Number.isFinite(+v.a) && Array.isArray(v.b)) surveys.set(id, {n:cleanText(v.n, 16), a:+v.a, b:v.b.map(Number).filter(i => i >= 0 && i < SURVEY.b.length)});
+  else surveys.delete(id);
+  renderSurvey();
+}
+function surveyHTML(){
+  const n = surveys.size, ca = SURVEY.a.map(() => 0), cb = SURVEY.b.map(() => 0);
+  surveys.forEach(v => { if (ca[v.a] != null) ca[v.a]++; v.b.forEach(i => cb[i]++); });
+  const rows = (opts, c) => `<div class="poll-opts">${opts.map((o, i) => `<div class="poll-opt"><i class="bar" style="width:${n ? Math.round(c[i]/n*100) : 0}%"></i><span>${esc(o)}</span><span><b>${c[i]}</b> 人</span></div>`).join('')}</div>`;
+  return `<div class="sv-cols"><div><p>${esc(SURVEY.q1)}</p>${rows(SURVEY.a, ca)}</div><div><p>${esc(SURVEY.q2)}</p>${rows(SURVEY.b, cb)}</div></div>`;
+}
+function renderSurvey(){
+  if (!isHost) return;
+  $('#svSum').textContent = `已有 ${surveys.size} 位學員回答。結果即時更新，也會收進「下載互動紀錄」。`;
+  $('#svRes').innerHTML = surveys.size ? surveyHTML() : '';
+  if (!$('#svShow').hidden) $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML();
+}
+$('#svProj').onclick = () => { $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML(); $('#svShow').hidden = false; $('#host').hidden = true; hostTab(); };
+$('#svShowClose').onclick = () => $('#svShow').hidden = true;
+$('#svClear').onclick = () => { if (!confirm('清空所有調查結果？（演練後、正式開始前使用）')) return; [...surveys.keys()].forEach(id => mqPub('sv/' + id, null, true)); surveys.clear(); renderSurvey(); };
 // a returning visitor confirms their name first (and can reach 講師登入) before the sharing gate
 let nameOk = false;
 function checkWarm(){
   if (needWarm() && !nameOk){ if ($('#join').hidden){ askNick(); joinStep(2); } return; }
+  if (checkSurvey()) return;
   if (needWarm()){ if (!warmGate){ warmGate = true; openWall(); } }
   else if (warmGate){ warmGate = false; renderWall(); }
 }
@@ -3585,6 +3672,7 @@ $('#logCsv').onclick = () => {
     x.opts.forEach((o, i) => rows.push(['投票結果：' + x.q, t2s(x.t), '', `${o}：${x.c[i]} 票`]));
     x.who.forEach(w => rows.push(['投票：' + x.q, '', w[0], w[1]]));
   });
+  surveys.forEach(v => { rows.push(['調查：' + SURVEY.q1, '', v.n, SURVEY.a[v.a] || '']); rows.push(['調查：' + SURVEY.q2, '', v.n, v.b.map(i => SURVEY.b[i]).join('、')]); });
   fights.forEach(f => rows.push([f.b && String(f.b).startsWith('st') ? '守門獸戰鬥' : '野獸突襲', '', f.n, `${f.st === 'win' ? '已擊退' : '戰鬥中'}・答錯 ${f.w || 0} 次・${f.t || 0} 秒`]));
   ((liveState && liveState.history) || []).forEach(n => rows.push(['抽籤抽中', '', n, '']));
   if (rows.length < 2) return toast('還沒有互動紀錄');
