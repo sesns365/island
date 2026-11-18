@@ -87,6 +87,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .ag-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .ag-btns button{border:2px solid var(--line);border-radius:10px;padding:4px 10px;background:#fff;font-weight:700;font-size:13px}
 .ag-btns button.go{background:var(--coral);border-color:var(--coral);color:#fff}
+.start-row{position:sticky;bottom:-22px;background:linear-gradient(to top,var(--paper) 78%,rgba(255,255,255,0));padding:14px 0 16px;margin-bottom:-22px;z-index:2}
 .kit{display:grid;gap:12px;margin:14px 0 4px}
 .kit-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--teal-deep);margin-bottom:6px}
 .tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
@@ -218,7 +219,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .badge.gem.on svg{opacity:1;filter:none}
 .frag{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--ink-soft);background:var(--mist);border-radius:999px;padding:2px 10px;margin-left:4px}
 .frag.full{background:#FFF0C2;color:#7A5300}
-.timer-box{position:fixed;z-index:8;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 66px);background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:6px 20px 8px;text-align:center;pointer-events:none;border:3px solid var(--teal)}
+.timer-box{position:fixed;z-index:21;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 66px);background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:6px 20px 8px;text-align:center;pointer-events:none;border:3px solid var(--teal)}
 .timer-box small{display:block;font-size:12px;font-weight:700;color:var(--teal-deep);letter-spacing:.06em}
 .timer-box b{font:900 34px/1.1 var(--display);font-variant-numeric:tabular-nums}
 .timer-box.over{border-color:var(--warn)}
@@ -259,7 +260,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 @media (max-width:640px){
   .timer-box{top:calc(env(safe-area-inset-top,0px) + 132px);padding:4px 14px 6px}
   .timer-box b{font-size:26px}
-  .sheet{top:auto;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));width:auto;height:min(78%,640px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+  .sheet{top:auto;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));width:auto;height:min(72%,640px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
   .sheet[hidden]{transform:translateY(calc(100% + 40px))}
   .brand{padding:8px 12px 10px}
   .badge{width:22px;height:22px;font-size:11px}
@@ -402,7 +403,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <section>
       <h3>課堂控制</h3>
       <div class="class-grid">
-        <button type="button" class="start" id="cStart">登島<br><span class="small" style="color:inherit">渡輪開進島</span></button>
+        <button type="button" class="start" id="cStart">登島<br><span class="small" style="color:inherit">渡輪開進島，開放第 1 站</span></button>
         <button type="button" class="pause" id="cAttn">注意！<br><span class="small" style="color:inherit" id="cAttnSub">暫停全班畫面</span></button>
         <button type="button" class="rest" id="cRest">休息<br><span class="small" style="color:inherit" id="cRestSub">島上入夜，角色睡覺</span></button>
         <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，全員登船開走</span></button>
@@ -417,7 +418,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </section>
     <section>
       <h3>研習流程（8:00–12:00，兩次休息）</h3>
-      <p class="small" id="agClock">流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。</p>
+      <p class="small" id="agClock">流程參考表。按「開始」會開放那一站。抽人、投票用上方「隨時可用」那一列。</p>
       <div class="agenda" id="agenda"></div>
     </section>
     <section>
@@ -449,6 +450,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </section>
     <section>
       <h3 id="secPoll">即時投票</h3>
+      <label class="field">備好的題目（選了會自動填入，可再修改）<select id="pPre"></select></label>
       <label class="field">題目<input id="pQ" maxlength="60" placeholder="例如：你最想先在課堂試哪個工具？"></label>
       <label class="field">選項（一行一個，2 到 6 個）<textarea id="pOpts" rows="4" placeholder="Canva&#10;Padlet&#10;Kahoot&#10;還沒想好"></textarea></label>
       <div class="row"><button class="primary" id="pStart" type="button">發布投票</button><button class="ghost" id="pStop" type="button">結束投票</button><button class="ghost" id="pShow" type="button">投影結果</button></div>
@@ -553,7 +555,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <form class="dialog" id="joinForm">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">歡迎登島</small>
     <h2>特教研習島嶼</h2>
-    <p>你是登島尋寶的探險家！跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。集滿礦石、找到藏寶圖碎片，打開社交寶箱拿到黃金船票！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
+    <p>你是登島尋寶的探險家！跟著研習進度一站一站闖關，每站通關可以挖到一顆礦石。最後一站社交寶箱可以拿到黃金船票，島上還藏著藏寶圖碎片等你找！講師按「離島」時，大家會一起搭大船回家。講師也會隨機抽人回答問題喔！</p>
     <div id="joinStep1" class="field" style="gap:12px">
     <div class="field">第 1 步：選一位探險家
       <div class="chars" id="chars" role="radiogroup" aria-label="選擇探險家"></div>
@@ -1157,7 +1159,6 @@ function connectNet(){
 
 function isOpen(st){
   if (st.id > openUpTo) return false;
-  if (st.id === 7) return oresDone() === 6 && frags.size >= FRAGS.length || openUpTo >= 7 && isHost;
   return true;
 }
 const oresDone = () => [1,2,3,4,5,6].filter(i => done.has(i)).length;
@@ -1274,7 +1275,7 @@ function openStation(sid){
   const body = $('#sheetBody');
   if (st.guard && !done.has(sid) && !store.get('guard.' + sid, false) && !isHost && nick){ startGuard(st); return; }
   const wait = st.task && !checkOpen() && !done.has(sid) && !isHost;
-  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) + `<div class="row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開放檢核' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
+  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) + `<div class="row start-row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開放檢核' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
     ${done.has(sid)?'<span class="small">已獲得徽章</span>':''}</div>`;
   body.scrollTop = 0;
   $('#startBtn').onclick = () => runStep(st, 0);
@@ -2503,7 +2504,7 @@ function applyClass(d){
     }
     if (ph === 'ended'){
       if (first && !fresh) sailFerry('dock', true);
-      else { sailFerry('dock'); banner('離島時間！大船靠岸了，集滿寶藏就能登船', 7000); }
+      else { sailFerry('dock'); banner('離島時間！大船靠岸了，拿到黃金船票就能登船', 7000); }
       if (prev === 'before' || prev === undefined && !explorersOn) showExplorers(true);
     }
     if (ph === 'gone'){
@@ -2609,7 +2610,6 @@ function renderAgenda(){
   $('#agenda').innerHTML = AGENDA.map((a, i) => { const from = acc; acc += a.m;
     return `<div class="ag${i === agNow ? ' now' : i < agNow ? ' past' : ''}"><div class="ag-top"><b>${esc(a.t)}</b><span>${agHM(from)}–${agHM(acc)}・${a.m} 分</span></div>
       <div class="small">${esc(a.note)}</div><div class="ag-btns"><button type="button" class="go" data-ag="${i}">${i === agNow ? '進行中' : '開始'}</button>
-      ${a.poll ? `<button type="button" data-agp="${i}">投票</button>` : ''}${a.dq != null ? `<button type="button" data-agd="${i}">抽人回答</button>` : ''}
       ${a.padlet ? `<a class="ghost" href="${PADLET}" target="_blank" rel="noopener" style="text-decoration:none;font-size:13px;padding:4px 10px">打開 Padlet</a>` : ''}</div></div>`; }).join('');
   agTick();
 }
@@ -2621,12 +2621,15 @@ function agTick(){
 }
 setInterval(agTick, 20000);
 const jump = id => $(id).scrollIntoView({behavior:'smooth', block:'start'});
+const POLL_PRE = AGENDA.filter(a => a.poll).map(a => a.poll);
+$('#pPre').innerHTML = '<option value="">自己出題</option>' + POLL_PRE.map((x, i) => `<option value="${i}">${esc(x.q)}</option>`).join('');
+$('#pPre').onchange = () => { const x = POLL_PRE[+$('#pPre').value]; if ($('#pPre').value !== '' && x){ $('#pQ').value = x.q; $('#pOpts').value = x.opts.join('\n'); } };
 $('#qkPoll').onclick = () => { jump('#secPoll'); $('#pQ').focus({preventScroll:true}); };
 $('#qkDraw').onclick = () => { jump('#secDraw'); $('#drawBtn').click(); };
 $('#qkBeast').onclick = () => jump('#secBeast');
 $('#qkTimer').onclick = () => jump('#secTimer');
 $('#agenda').onclick = e => {
-  const g = e.target.closest('[data-ag]'), pb = e.target.closest('[data-agp]'), db = e.target.closest('[data-agd]');
+  const g = e.target.closest('[data-ag]');
   if (g){ const i = +g.dataset.ag, a = AGENDA[i];
     agNow = i; store.set('agNow', i);
     const patch = {};
@@ -2636,8 +2639,6 @@ $('#agenda').onclick = e => {
     toast(a.open ? `${a.t}：已開放` : a.t);
     renderAgenda();
   }
-  if (pb){ const a = AGENDA[+pb.dataset.agp]; $('#pQ').value = a.poll.q; $('#pOpts').value = a.poll.opts.join('\n'); $('#pStart').click(); openPoll(true); }
-  if (db){ $('#qSel').value = String(AGENDA[+db.dataset.agd].dq); $('#qSel').onchange(); $('#drawBtn').click(); }
 };
 
 // sleep: at night every explorer walks to a spot by the campfire and lies down
@@ -2724,14 +2725,14 @@ function showEnd(onBoard){
   $('#endOv').hidden = false;
 }
 $('#endClose').onclick = () => $('#endOv').hidden = true;
-$('#cStart').onclick = () => writeLive({phase:'class', phaseAt:Date.now(), attention:false, rest:null});
+$('#cStart').onclick = () => writeLive({phase:'class', phaseAt:Date.now(), attention:false, rest:null, open:Math.max(1, openUpTo)});
 $('#cEnd').onclick = () => {
   if (phase === 'gone') return toast('大家已經離島了；要重來請按「重設島嶼」');
   const farewell = $('#farewell').value.trim().slice(0, 160);
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。按「開始」會開放那一站；每一段都備好一題投票和抽人題目，要不要用由你決定。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), open:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。按「開始」會開放那一站。抽人、投票用上方「隨時可用」那一列。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), open:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -2770,7 +2771,7 @@ function updateBoardBtn(){
   b.classList.toggle('boardBtn', done.has(7));
 }
 $('#boardBtn').onclick = () => {
-  if (!done.has(7)){ toast(done.size ? '集滿 6 顆礦石和藏寶圖碎片，打開社交寶箱拿黃金船票，才能登船' : '先去闖關挖礦石吧！'); return; }
+  if (!done.has(7)){ toast(done.size ? '到第 7 站社交寶箱闖關，拿到黃金船票才能登船' : '先去闖關挖礦石吧！'); return; }
   if (locked()) return;
   closeSheet();
   walkTo(PIER_A.clone(), () => walkTo(PIER_B.clone(), () => {
