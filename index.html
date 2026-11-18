@@ -2579,12 +2579,13 @@ $('#joinForm').addEventListener('submit', e => {
   toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '探險家準備好了！先在島上逛逛，等講師按「開始研習」');
 });
 $('#hostSkip').onclick = hostLogin;
+function keepHostUrl(){ try { const u = new URL(location.href); if (!u.searchParams.has('host')){ u.searchParams.set('host', ''); history.replaceState(null, '', u.pathname + u.search.replace(/host=(&|$)/, 'host$1') + u.hash); } } catch(e){} }
 function hostLogin(){
   if (isHost){ $('#join').hidden = true; openHost(); return; }
   const pin = prompt('請輸入講師密碼');
   if (pin == null) return;
   if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
-  becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true;
+  becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true; keepHostUrl();
   warmGate = false; $('#wallOv').hidden = true; openHost();
   if (!liveState || !liveState.phase) writeLive({phase:'class', started:false, open:0, quiz:0, phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
 }
@@ -3832,8 +3833,8 @@ renderChatLog();
 /* ---------------- boot ---------------- */
 renderHUD();
 if (!HAS_ROOM){ showSetup(); }
-else if (store.get('host.' + ROOM, false)){
-  becomeHost(); $('#join').hidden = true;
+else if (store.get('host.' + ROOM, false) && (params.has('host') || store.get('init.' + ROOM, null))){   // the plain link is always the learner view
+  becomeHost(); keepHostUrl(); $('#join').hidden = true;
   if (nick) spawnPlayer();
   const init = store.get('init.' + ROOM, null);
   if (init){
