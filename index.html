@@ -77,6 +77,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .quick{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--line);background:var(--mist)}
 .quick span{font-size:12px;font-weight:700;color:var(--teal-deep)}
 .host .quick button{border:0;border-radius:10px;padding:6px 12px;background:var(--teal-deep);color:#fff;font-weight:700;font-size:13.5px}
+.host .quick button.hot{background:var(--coral);animation:pulse 1.4s ease-in-out infinite}
+.hand-list{display:grid;gap:6px}
+.hand-row{display:flex;gap:10px;align-items:center;border:2px solid var(--line);border-radius:12px;padding:6px 10px}
+.hand-ic{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;line-height:1;color:#fff;flex:0 0 32px}
+.hand-ic.h{background:var(--sun)}.hand-ic.q{background:var(--coral)}
 .agenda{display:grid;gap:6px}
 .ag{border:2px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--paper)}
 .ag.now{border-color:var(--coral);background:#FFF4EF}
@@ -356,7 +361,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 
 <div class="fab" id="fab" hidden>
   <button class="chip" id="packBtn" type="button">我的背包</button>
+  <button class="chip" id="handBtn" type="button">舉手</button>
   <button class="chip" id="sayBtn" type="button">說話・表情</button>
+  <button class="chip" id="askDone" type="button" hidden>問題解決了</button>
   <button class="chip" id="feedBtn" type="button">聊天室 <span class="badge-n" id="feedN" hidden>0</span></button>
   <button class="chip" id="wallBtn" type="button">想法牆</button>
   <button class="chip" id="pollBtn" type="button" hidden>投票</button>
@@ -392,7 +399,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </div>
     <button class="close" id="hostClose" type="button" aria-label="關閉">×</button>
   </div>
-  <div class="quick"><span>隨時可用</span><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button></div>
+  <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button></div>
   <div class="sheet-body">
     <section>
       <h3>入港前分享</h3>
@@ -415,6 +422,11 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
         <select id="restMin" aria-label="休息分鐘數"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select> 分鐘
       </label>
       <p class="small" id="classHint">按「注意！」時，學員畫面會暫停並提醒看講師；再按一次解除。休息時島上入夜，學員角色會走到營火旁睡覺。</p>
+    </section>
+    <section>
+      <h3 id="secHands">舉手與提問</h3>
+      <div id="handList" class="hand-list"></div>
+      <div class="row"><button class="ghost" id="handClear" type="button">全部標示已回應</button></div>
     </section>
     <section>
       <h3>研習流程（8:00–12:00，兩次休息）</h3>
@@ -1119,6 +1131,7 @@ function onMsg(topic, buf){
   if (!id || id === myId) return;
   if (kind === 'say' || kind === 'vote' || kind === 'idea'){ gotInteract(kind, id, v); return; }
   if (kind === 'fight'){ gotFight(id, v); return; }
+  if (kind === 'ack'){ gotAck(v); return; }
   if (kind === 'p'){
     if (v && typeof v === 'object' && typeof v.nick === 'string' && Date.now() - (+v.t || 0) < 3*3600e3){
       peerMap.set(id, {presence:v, t:Date.now()}); noteJoin(v);
@@ -1145,7 +1158,7 @@ function connectNet(){
   mq.on('message', onMsg);
   room.onPeers(() => {
     if (connected) $('#liveText').textContent = isHost ? `線上 ${rosterRows().length} 人` : '已連線';
-    renderRoster(); syncPeers();
+    renderRoster(); renderHands(); syncPeers();
   });
   // keep my retained profile fresh, drop learners who went silent
   setInterval(() => {
@@ -2012,11 +2025,28 @@ function makeExplorer(ch, name){
   const zzz = zzzSprite(); g.add(zzz);
   return {g, b, legs, label, zzz, name};
 }
+// a lasting sign over an explorer: raised hand, or a question waiting for the teacher
+function markSprite(kind){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 160; const c = cv.getContext('2d');
+  c.beginPath(); c.arc(80, 80, 70, 0, 6.2832); c.fillStyle = kind === 'h' ? '#F4B740' : '#EE6F57'; c.fill(); c.lineWidth = 8; c.strokeStyle = '#fff'; c.stroke();
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (kind === 'h'){ c.font = '92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; c.fillText('✋', 80, 86); }
+  else { c.font = '900 110px "Noto Sans TC",sans-serif'; c.fillStyle = '#fff'; c.fillText('?', 80, 88); }
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true, sizeAttenuation:false}));
+  sp.scale.set(.075, .075, 1); sp.renderOrder = 12; return sp; // constant size on screen, so the host spots it from the bird's-eye view
+}
+function setMark(m, kind){
+  if (!m || m.markKind === kind) return;
+  if (m.mark){ m.g.remove(m.mark); m.mark = null; }
+  m.markKind = kind;
+  if (kind){ m.mark = markSprite(kind); m.g.add(m.mark); }
+}
 function setPose(m, asleep, t){
   m.b.rotation.x = asleep ? -Math.PI/2 : 0;
   m.b.position.y = asleep ? .38 : 0;
   m.label.position.y = asleep ? 1.2 : m.arrow ? 2.5 : 2.35;
   m.zzz.visible = asleep;
+  if (m.mark){ m.mark.position.y = (m.arrow ? 4.3 : 3.35) + Math.sin(t*3)*.1; m.mark.visible = !asleep; }
   if (m.arrow){ m.arrow.position.y = (asleep ? 1.9 : 3.35) + Math.sin(t*4)*.14; m.arrow.rotation.y = t*2;
     const k = 1 + (t*.9 % 1)*.7; m.ring.scale.set(k, k, 1); m.ring.material.opacity = .9*(1 - (t*.9 % 1)); }
   if (asleep && !reduced){ m.zzz.position.y = 1.5 + (t*.6 % 1)*.6; m.zzz.material.opacity = 1 - (t*.6 % 1)*.7; }
@@ -2053,6 +2083,7 @@ function spawnPlayer(){
   player.g.position.copy(player.pos); player.g.rotation.y = player.heading;
   player.g.visible = explorersOn && !boarded;
   scene.add(player.g);
+  setMark(player, myHand ? 'h' : myAsk ? 'q' : '');
   $('#viewBtn').hidden = false;
   flyToPlayer();
 }
@@ -2164,6 +2195,7 @@ function syncPeers(){
     }
     m.goal = clampWalk(new THREE.Vector3(p.x, GROUND, p.z)); m.goalH = +p.h || 0;
     m.sleep = !!p.s; m.g.visible = explorersOn && !p.b;
+    setMark(m, p.hd ? 'h' : p.qq ? 'q' : '');
   });
   updatePassengers();
   [...peerMeshes.keys()].forEach(k => { if (!alive.has(k)){ scene.remove(peerMeshes.get(k).g); peerMeshes.delete(k); } });
@@ -2415,7 +2447,7 @@ function hostLogin(){
   warmGate = false; $('#wallOv').hidden = true; openHost();
   if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
 }
-function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; renderHUD(); renderOpenGrid(); showFab(); }
+function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; $('#handBtn').hidden = true; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
 /* backpack: today's handout and reference folders, one tap away */
 const PACK_REF = 'https://drive.google.com/drive/folders/1iz7FVaATFl4hKBha3iY3mTYjc72e7FVH?usp=sharing';
@@ -2437,10 +2469,10 @@ $('#packSave').onclick = () => { const u = $('#packUrl').value.trim(); if (u && 
 $('#wallHost').onclick = hostLogin;
 
 /* ---------------- live: room presence + shared state ---------------- */
-let lastPresence = '';
+let lastPresence = '', myHand = false, myAsk = false;
 function pushPresence(){
   if (!room || !nick) return;
-  const p = {nick, c:charIdx, av:charIdx === CUSTOM && custom ? packSpec(custom) : null, done:[...done].sort().join(','), fr:frags.size, at:currentSid || 0};
+  const p = {nick, c:charIdx, av:charIdx === CUSTOM && custom ? packSpec(custom) : null, done:[...done].sort().join(','), fr:frags.size, at:currentSid || 0, hd:myHand ? 1 : 0, qq:myAsk ? 1 : 0};
   const k = JSON.stringify(p); if (k === lastPresence) return; lastPresence = k;
   room.presence(p).catch(() => {});
 }
@@ -2455,7 +2487,7 @@ function rosterRows(withOffline){
     const at = +pr.presence.at || 0;
     const c = peerSpec(pr.peer, pr.presence);
     const prev = seen.get(n);
-    if (!prev || prev.off || d > prev.d) seen.set(n, {n, d, at, c, s:!!pr.presence.s, b:!!pr.presence.b});
+    if (!prev || prev.off || d > prev.d) seen.set(n, {n, d, at, c, s:!!pr.presence.s, b:!!pr.presence.b, hd:!!pr.presence.hd, qq:!!pr.presence.qq});
   });
   return [...seen.values()].sort((a, b) => b.d - a.d || a.n.localeCompare(b.n, 'zh-Hant'));
 }
@@ -2865,7 +2897,7 @@ $('#rosterCsv').onclick = () => {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 $('#rosterClear').onclick = () => { if (!confirm('清空學員名單？目前在線的學員會再自動加回來。')) return; joined.clear(); store.set('joined.' + ROOM, {}); renderRoster(); };
-function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderAgenda(); renderHist(); renderRoster(); }
+function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderAgenda(); renderHist(); renderRoster(); renderHands(); }
 $('#hostBtn').onclick = openHost;
 $('#hostClose').onclick = () => $('#host').hidden = true;
 
@@ -3203,6 +3235,38 @@ function renderFeed(){
 }
 function openFeed(on){ $('#feed').hidden = !on; if (on){ feedUnread = 0; $('#feedBtn').classList.remove('hot'); } store.set('feedOpen', on); renderFeed(); }
 $('#feedBtn').onclick = () => openFeed($('#feed').hidden);
+// --- raise hand / pending question ---
+function syncMine(){
+  $('#handBtn').textContent = myHand ? '放下手' : '舉手'; $('#handBtn').classList.toggle('hot', myHand);
+  $('#handBtn').hidden = isHost; $('#askDone').hidden = !myAsk || isHost;
+  if (player) setMark(player, myHand ? 'h' : myAsk ? 'q' : '');
+  pushPresence();
+}
+$('#handBtn').onclick = () => { if (!nick) return; myHand = !myHand; syncMine(); toast(myHand ? '已舉手，講師看得到你頭上的舉手圖示' : '已放下手'); };
+$('#askDone').onclick = () => { myAsk = false; syncMine(); };
+function gotAck(v){
+  if (!v || isHost || !(v.n === '*' || v.n === nick)) return;
+  const had = myHand || myAsk;
+  if (v.w !== 'q') myHand = false; if (v.w !== 'h') myAsk = false;
+  syncMine(); if (had && v.n === nick) toast('講師回應你了');
+}
+let handSeen = new Set();
+function renderHands(){
+  if (!isHost) return;
+  const rows = rosterRows().filter(r => r.hd || r.qq);
+  rows.forEach(r => { const k = r.n + (r.hd ? 'h' : '') + (r.qq ? 'q' : ''); if (!handSeen.has(k)){ handSeen.add(k); toast(r.hd ? `${r.n} 舉手了` : `${r.n} 有提問`); } });
+  handSeen = new Set([...handSeen].filter(k => rows.some(r => k === r.n + (r.hd ? 'h' : '') + (r.qq ? 'q' : ''))));
+  const hc = rows.filter(r => r.hd).length, qc = rows.filter(r => r.qq).length;
+  $('#qkHands').textContent = hc + qc ? `舉手 ${hc}・提問 ${qc}` : '舉手・提問';
+  $('#qkHands').classList.toggle('hot', hc + qc > 0);
+  $('#hostBtn').textContent = hc + qc ? `講師主控台（舉手 ${hc}・提問 ${qc}）` : '講師主控台';
+  const lastQ = n => { for (let i = chatLog.length - 1; i >= 0; i--) if (chatLog[i].q && chatLog[i].n === n) return chatLog[i].x; return ''; };
+  $('#handList').innerHTML = rows.length ? rows.map(r => `<div class="hand-row"><span class="hand-ic ${r.hd ? 'h' : 'q'}">${r.hd ? '✋' : '?'}</span><span style="flex:1;min-width:0"><b>${esc(r.n)}</b>${r.hd && r.qq ? '（也有提問）' : ''}${r.qq && lastQ(r.n) ? `<br><span class="small">${esc(lastQ(r.n))}</span>` : ''}</span><button type="button" class="ghost" data-ack="${esc(r.n)}">已回應</button></div>`).join('')
+    : '<span class="small">目前沒有人舉手或提問。學員舉手或提問時，人物頭上會出現圖示，這裡也會列出來。</span>';
+}
+$('#handList').onclick = e => { const b = e.target.closest('[data-ack]'); if (b) mqPub('ack/' + myId, {n:b.dataset.ack, w:'a', t:Date.now()}); };
+$('#handClear').onclick = () => mqPub('ack/' + myId, {n:'*', w:'a', t:Date.now()});
+$('#qkHands').onclick = () => $('#secHands').scrollIntoView({behavior:'smooth', block:'start'});
 $('#feedClose').onclick = () => openFeed(false);
 function gotFeed(v){
   if (!v || !Array.isArray(v.list)) return;
@@ -3273,6 +3337,7 @@ function say(text){
   const n = nick || '講師', k = myId + Date.now().toString(36);
   mqPub('say/' + myId, {n, x, q:sayQ ? 1 : 0, k, at:Date.now()});
   if (player) showBubble(player, (sayQ ? '提問：' : '') + x);
+  if (sayQ && !isHost){ myAsk = true; syncMine(); }
   logChat(n, x, sayQ, k);
   if ($('#feed').hidden && sayQ) openFeed(true);
   $('#sayInput').value = ''; $('#sayBar').hidden = true;
