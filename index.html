@@ -2263,7 +2263,7 @@ function pushPos(force){
 const _f = new THREE.Vector3(), _r = new THREE.Vector3(), _d = new THREE.Vector3();
 // explorers are solid: you bump into each other instead of standing inside one another
 const BODY = .78;
-const solid = () => !sleeping && !boarded && phase === 'class' && !onPier(player.pos);
+const solid = () => !sleeping && !sleepApplied && !boarded && phase === 'class' && !onPier(player.pos);   // walking to bed: pass through, so nobody gets stuck in the crowd
 function bump(pos){
   let hit = false;
   peerMeshes.forEach(m => {
@@ -2282,6 +2282,7 @@ function spawnSpot(){
 }
 function updatePlayer(dt, t){
   if (!player) return;
+  const gt = player.gt = (player.gt || 0) + dt;   // game time: on a slow phone frames are long, so stuck checks must count simulated time, not the wall clock
   _d.set(0, 0, 0);
   let bumped = false;
   if (solid() && !player.target && !keys.size){ const b0 = player.pos.clone(); if (bump(player.pos)){ clampWalk(player.pos); player.pos.lerpVectors(b0, player.pos, Math.min(1, dt*6)); player.g.position.copy(player.pos); pushPos(); } }
@@ -2307,7 +2308,7 @@ function updatePlayer(dt, t){
       // head-on into a landmark: sidestep along whichever side ends closer to the goal
       const tries = [new THREE.Vector3(-_d.z, 0, _d.x), new THREE.Vector3(_d.z, 0, -_d.x)].map(s => clampWalk(before.clone().addScaledVector(s.add(_d.clone().multiplyScalar(.3)).normalize(), step)));
       // keep going round the same side for a moment, otherwise the two sides alternate and the explorer shakes in place
-      if (!(player.sideT > t)){ player.side = tries[0].distanceTo(player.target) <= tries[1].distanceTo(player.target) ? 0 : 1; player.sideT = t + 1.2; }
+      if (!(player.sideT > gt)){ player.side = tries[0].distanceTo(player.target) <= tries[1].distanceTo(player.target) ? 0 : 1; player.sideT = gt + 1.2; }
       player.pos.copy(tries[player.side]);
       _d.copy(player.pos).sub(before); if (_d.lengthSq()) _d.normalize();
     }
@@ -2319,11 +2320,11 @@ function updatePlayer(dt, t){
       // someone is already standing on the spot: close enough counts as arriving
       player.target = null; const cb = player.onArrive; player.onArrive = null; if (cb) cb();
     }
-    if (player.target && player.pos.distanceTo(before) < step*.1){ player.target = null; player.onArrive = null; } // truly stuck
+    if (player.target && player.pos.distanceTo(before) < step*.1){ const cb = sleepApplied ? player.onArrive : null; player.target = null; player.onArrive = null; if (cb) cb(); } // truly stuck (on the way to bed: sleep right here)
     if (player.target){   // no real progress toward the goal for a while: stop instead of jittering against the obstacle
       const dT = player.pos.distanceTo(player.target);
-      if (player.progTarget !== player.target || dT < player.progD - .35){ player.progTarget = player.target; player.progD = dT; player.progT = t; }
-      else if (t - player.progT > 1.1){ const cb = dT < 4.5 ? player.onArrive : null; player.target = null; player.onArrive = null; if (cb) cb(); }
+      if (player.progTarget !== player.target || dT < player.progD - .35){ player.progTarget = player.target; player.progD = dT; player.progT = gt; }
+      else if (gt - player.progT > 1.1){ const cb = dT < 4.5 || sleepApplied ? player.onArrive : null; player.target = null; player.onArrive = null; if (cb) cb(); }
     }
     pushPos();
   }
@@ -2955,8 +2956,12 @@ $('#agenda').onclick = e => {
 
 // sleep: at night every explorer walks to a spot by the campfire and lies down
 function fireSlot(){
-  let h = 0; for (const ch of (nick || 'x')) h = (h*31 + ch.charCodeAt(0)) % 997;
-  const a = h/997*Math.PI*2, r = 1.8 + (h % 3)*.55;
+  // one sleeping place per explorer: everyone sorts the same list of ids, so 25 people lie in rings round the fire without piling up
+  const ids = room ? room.peers().filter(p => p.presence && p.presence.nick).map(p => String(p.peer)).sort() : [];
+  let k = ids.indexOf(String(myId)); if (k < 0){ k = 0; for (const ch of String(myId)) k = (k*31 + ch.charCodeAt(0)) % 33; }
+  const RINGS = [[2.1, 8], [3.2, 11], [4.3, 14], [5.4, 17]];
+  let ring = 0; while (ring < RINGS.length - 1 && k >= RINGS[ring][1]){ k -= RINGS[ring][1]; ring++; }
+  const [r, n] = RINGS[ring], a = (k % n)/n*Math.PI*2 + ring*.4;
   return new THREE.Vector3(fire.position.x + Math.cos(a)*r, GROUND, fire.position.z + Math.sin(a)*r);
 }
 let wantSleep = false, sleepApplied = false;
