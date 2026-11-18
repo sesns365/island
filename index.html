@@ -353,6 +353,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .pack-help{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:10px 14px;text-align:left;font-size:14px}
 .pack-help summary{cursor:pointer;font-weight:700;color:var(--teal-deep)}
 .pack-help ul{margin:8px 0 2px;padding-left:18px;display:grid;gap:5px;line-height:1.5}
+.tools.preview>div{display:flex;flex-direction:column;gap:2px;border:2px dashed var(--line);border-radius:14px;padding:10px 12px;opacity:.85}
+.tools.preview span{font-size:13px;color:var(--ink-soft)}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -1248,7 +1250,7 @@ function isOpen(st){
 }
 const oresDone = () => [1,2,3,4,5,6].filter(i => done.has(i)).length;
 function lockReason(st){
-  if (st.id > openUpTo) return '講師還沒開放這一站，先專心聽講喔！';
+  if (st.id > openUpTo) return (started ? '講師還沒開放這一站，先專心聽講喔！' : '講師按「開始研習」後就會開放');
   return `社交寶箱需要 6 顆礦石＋${FRAGS.length} 片藏寶圖碎片（目前礦石 ${oresDone()}/6、碎片 ${frags.size}/${FRAGS.length}）`;
 }
 
@@ -1353,12 +1355,20 @@ function openStation(sid){
   const st = STATIONS.find(s => s.id === sid);
   if (!player) focusStation(st);
   $('#nearBtn').hidden = true;
-  if (!isOpen(st)) { toast(lockReason(st)); return; }
-  currentSid = sid; pushPresence();
+  const locked = !isOpen(st);
+  currentSid = locked ? null : sid; pushPresence();
   $('#sheetNum').textContent = st.id; $('#sheetNum').style.background = st.color;
   $('#sheetEyebrow').textContent = `第 ${st.id} 站・${st.area}`;
   $('#sheetTitle').textContent = st.name;
   const body = $('#sheetBody');
+  if (locked){
+    const why = lockReason(st);
+    body.innerHTML = `<div class="note"><b>搶先看</b>：這一站還沒開放，先看看等一下會做什麼。</div>` + (st.guard ? st.intro.replace(/^<div class="note">[\s\S]*?<\/div>/, '') : st.intro) +
+      (st.tools ? `<div class="kit"><div><div class="kit-h">這一站會體驗的工具</div><div class="tools preview">${st.tools.map(t => `<div><b>${esc(t.n)}</b><span>${esc(t.d)}</span></div>`).join('')}</div></div></div>` : '') +
+      `<div class="row start-row"><button class="primary" type="button" disabled>${st.id > openUpTo ? '等講師開放這一站' : '尚未解鎖'}</button><span class="small">${esc(why)}</span></div>`;
+    body.scrollTop = 0; body.querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
+    $('#sheet').hidden = false; return;
+  }
   if (st.guard && !done.has(sid) && !store.get('guard.' + sid, false) && !isHost && nick){ startGuard(st); return; }
   const wait = !quizOpen(st) && !done.has(sid) && !isHost;
   body.innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) + `<div class="row start-row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開啟挑戰' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
