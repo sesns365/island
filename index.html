@@ -93,6 +93,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .ag-btns button{border:2px solid var(--line);border-radius:10px;padding:4px 10px;background:#fff;font-weight:700;font-size:13px}
 .ag-btns button.go{background:var(--coral);border-color:var(--coral);color:#fff}
 .start-row{position:sticky;bottom:-22px;background:linear-gradient(to top,var(--paper) 78%,rgba(255,255,255,0));padding:14px 0 16px;margin-bottom:-22px;z-index:2}
+button.del{border:0;background:#F3D9D4;color:#A33;border-radius:8px;font-weight:900;padding:0 7px;margin-left:6px;line-height:1.5}
 .kit{display:grid;gap:12px;margin:14px 0 4px}
 .kit-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--teal-deep);margin-bottom:6px}
 .tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
@@ -177,6 +178,10 @@ details.resume input{width:7em;text-transform:uppercase;letter-spacing:.15em}
 /* host panel */
 .host{position:fixed;z-index:30;top:calc(env(safe-area-inset-top,0px) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));width:min(420px,calc(100% - 24px));background:var(--paper);border-radius:22px;box-shadow:0 20px 60px rgba(24,50,58,.35);display:flex;flex-direction:column;overflow:hidden}
 .host .sheet-head{background:var(--ink);color:var(--paper);border:0}
+.host-tab{position:fixed;z-index:29;left:0;top:calc(env(safe-area-inset-top,0px) + 176px);border:0;border-radius:0 999px 999px 0;background:var(--ink);color:#fff;padding:10px 16px 10px 12px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;box-shadow:var(--shadow)}
+.host-tab b{color:var(--sun);font-size:12px}
+.host-tab.hot{background:var(--coral);animation:pulse 1.4s ease-in-out infinite}
+.host-tab.hot b{color:#fff}
 .host .sheet-head .eyebrow{color:var(--sun)}
 .host section{display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line);padding-bottom:14px}
 .host section:last-child{border:0}
@@ -291,7 +296,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 @keyframes ouch{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
 .hp{height:12px;border-radius:999px;background:#F3D4CF;overflow:hidden}
 .hp i{display:block;height:100%;background:var(--coral);transition:width .4s}
-.hearts{font-size:22px;letter-spacing:4px;color:var(--coral)}
+.hearts{font-size:20px;letter-spacing:2px;color:var(--coral);font-weight:700}
 .poll-opts.multi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .poll-opts.multi .poll-opt{justify-content:center;text-align:center;padding:10px 8px;font-size:15px}
 .fight-tbl td,.fight-tbl th{padding:4px 6px;font-size:14px;text-align:left}
@@ -314,7 +319,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 @media (max-width:700px){.feed{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);max-height:36vh}}
 /* interaction: chat bubbles, polls, idea wall */
 .fab{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:42%;z-index:6;display:flex;flex-direction:column;gap:8px}
-.fab .chip{justify-content:center;min-width:76px}
+.fab .chip{justify-content:flex-start;min-width:76px}
+.chip .ic{width:18px;height:18px;flex:none;color:var(--teal-deep)}
 .fab .chip.hot{background:var(--sun);animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{50%{transform:scale(1.07)}}
 .say-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:30;background:var(--paper);border-radius:18px;box-shadow:var(--shadow);padding:10px;width:min(460px,calc(100% - 32px));display:flex;flex-direction:column;gap:8px}
@@ -361,13 +367,13 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 </div>
 
 <div class="fab" id="fab" hidden>
-  <button class="chip" id="packBtn" type="button">我的背包</button>
-  <button class="chip" id="handBtn" type="button">舉手</button>
-  <button class="chip" id="sayBtn" type="button">說話・表情</button>
+  <button class="chip" id="packBtn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path d="M9 5V4a3 3 0 0 1 6 0v1"/><path d="M9 14h6v4H9z"/></svg>我的背包</button>
+  <button class="chip" id="handBtn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11m0-1V4.5a1.5 1.5 0 0 1 3 0V11m0-4.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7c-2.5 0-4-1-5.500-3.500L3 14.500a1.500 1.500 0 0 1 2.500-1.500L8 15"/></svg><span id="handTxt">舉手</span></button>
+  <button class="chip" id="sayBtn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.500 14.500a4.500 4.500 0 0 0 7 0"/><path d="M9 9.500h.01M15 9.500h.01"/></svg>說話・表情</button>
   <button class="chip" id="askDone" type="button" hidden>問題解決了</button>
-  <button class="chip" id="feedBtn" type="button">聊天室 <span class="badge-n" id="feedN" hidden>0</span></button>
-  <button class="chip" id="wallBtn" type="button">想法牆</button>
-  <button class="chip" id="pollBtn" type="button" hidden>投票</button>
+  <button class="chip" id="feedBtn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>聊天室 <span class="badge-n" id="feedN" hidden>0</span></button>
+  <button class="chip" id="wallBtn" type="button"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4"/></svg>想法牆</button>
+  <button class="chip" id="pollBtn" type="button" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>投票</button>
 </div>
 <aside class="feed" id="feed" hidden aria-label="聊天室">
   <div class="feed-head"><span>聊天室・想法與提問</span><button type="button" id="feedClose" aria-label="收起">×</button></div>
@@ -392,15 +398,16 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <div class="sheet-body" id="sheetBody"></div>
 </aside>
 
+<button type="button" class="host-tab" id="hostTab" hidden aria-label="打開講師主控台"><span>主控台</span><b>▶</b></button>
 <aside class="host" id="host" hidden>
   <div class="sheet-head">
     <div style="min-width:0">
       <div class="eyebrow">講師主控台</div>
       <h2 style="font-size:22px">帶領控制台</h2>
     </div>
-    <button class="close" id="hostClose" type="button" aria-label="關閉">×</button>
+    <button class="close" id="hostClose" type="button" aria-label="收起主控台" title="收起（Esc）" style="font-size:16px">◀</button>
   </div>
-  <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button></div>
+  <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button><button type="button" id="qkChat">聊天：開</button></div>
   <div class="sheet-body">
     <section>
       <h3>入港前分享</h3>
@@ -431,7 +438,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </section>
     <section>
       <h3>研習流程（8:00–12:00，兩次休息）</h3>
-      <p class="small" id="agClock">流程參考表。按「開始」會開放那一站。抽人、投票用上方「隨時可用」那一列。</p>
+      <p class="small" id="agClock">流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。</p>
       <div class="agenda" id="agenda"></div>
     </section>
     <section>
@@ -447,7 +454,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <h3>任務一：需求燈塔</h3>
       <div class="row"><button class="primary" id="m1Timer" type="button">任務一計時 10 分鐘（含音樂）</button><button class="ghost" id="m1Four" type="button">投影四大向度圖</button></div>
       <div class="row"><button class="ghost" id="m1Check" type="button">開放檢核闖關</button><span class="small" id="m1State"></span></div>
-      <p class="small">登島後學員會收到任務一，先打開個案資料做需求分析；你按「開放檢核闖關」後，學員才能在燈塔作答。</p>
+      <p class="small">登島後學員會收到任務一，先打開個案資料做需求分析；你按「開放檢核闖關」後，學員才能在燈塔作答（等同開啟第 1 站的挑戰）。</p>
     </section>
     <section>
       <h3 id="secBeast">野獸突襲</h3>
@@ -506,6 +513,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <h3>關卡開放進度</h3>
       <p class="small" id="openHint">各站預設都是鎖住的。跟著講到哪一段，就開放到哪一站（流程表的「開始」也會開放）。學員畫面會同步上鎖或解鎖。</p>
       <div class="open-grid" id="openGrid"></div>
+      <h3 style="margin-top:8px">開啟挑戰（闖關作答）</h3>
+      <p class="small">站開放後學員可以先看內容、體驗工具、做實作；你開啟挑戰後，「開始挑戰」才能按。</p>
+      <div class="open-grid" id="quizGrid"></div>
     </section>
     <section>
       <h3 id="secDraw">隨機抽籤</h3>
@@ -777,7 +787,6 @@ const STATIONS = [
   <li><b>環境</b>：調整「在哪裡學」— 座位、安靜角落、常規與氛圍</li>
   <li><b>評量</b>：調整「怎麼評量成果」— 報讀、延長時間、口試或電腦作答</li></ul>
   <p class="quote">調整不是降低標準，而是打開學習的可能。</p>`,
-  make:{t:'分享你的需求分析', how:'用一句話寫下：這個孩子最需要的調整是哪個向度？你打算怎麼調整？貼到 Padlet 和大家交流。'},
   steps:[
     {type:'mc', q:'做課程調整之前，第一步應該先做什麼？', opts:['挑選最新的數位工具','分析個案的能力、優弱勢與學習需求','直接降低作業難度','讓個案跟上全班進度'], a:1,
       why:'不是策略先，而是分析先。先做需求分析，才知道要調整哪個向度、選哪一種工具。'},
@@ -793,8 +802,8 @@ const STATIONS = [
   ]},
 { id:2, name:'識字森林', area:'國語・識字與寫字', color:'#5FA651', pos:[-6,-5.6],
   guard:{name:'森林守門獸', k:3, q:'森林守門獸擋住去路！選出國語文的 6 項「學習表現」，每選對一項就攻擊牠一次。',
-    opts:['聆聽','口語表達','標音符號與運用','識字與寫字','閱讀','寫作','字詞','句段','篇章','文本表述','文化內涵','書法比賽'], right:[0,1,2,3,4,5],
-    miss:'這是國語文的「學習內容」，不是學習表現喔！'},
+    opts:['聆聽','口語表達','標音符號與運用','識字與寫字','閱讀','寫作','字詞','句段','篇章','文本表述','文化內涵','說話','注音符號','作文'], right:[0,1,2,3,4,5],
+    miss:'選錯了！這不是國語文的 6 項學習表現，你的血量減少了'},
   intro:`<div class="note">國語文學習表現：<b>聆聽、口語表達、標音符號與運用、識字與寫字、閱讀、寫作</b>。</div>
   <ul><li><b>識字的認知成分</b>：聲韻覺識、組字規則、詞素覺知、流暢性</li>
   <li><b>識字教學順序</b>：識其音 → 識其義 → 辨其形 → 書寫</li>
@@ -936,6 +945,10 @@ const STATIONS = [
       why:'謝謝參與今天的研習！'}
   ]}
 ];
+
+/* three questions per station is plenty for a 4-hour morning; the rest stay in the bank above (indexes into steps) */
+const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[0,1,2], 5:[0,2,4], 6:[0,1,2], 7:[1,3,5]};
+STATIONS.forEach(s => { s.steps = QUIZ_PICK[s.id].map(i => s.steps[i]).filter(Boolean); });
 
 /* bigger island: every map position is scaled by S */
 const S = 1.8;
@@ -1251,7 +1264,9 @@ function goStation(sid){
 /* ---------------- station sheet & challenge engine ---------------- */
 const NEEDS_DOC = 'https://docs.google.com/document/d/1GAMUQ0dgU1bO9PgiBZsBAoBIoyDxhdF_eQtBw7SdY6A/edit?usp=sharing';
 const FOUR_IMG = 'four-dimensions.jpg';
-const checkOpen = () => !!(liveState && liveState.check1);
+let quizUpTo = 0; // the host opens each station's quiz; until then learners read, try the tools and do the task
+const checkOpen = () => quizUpTo >= 1;
+const quizOpen = st => st.id <= quizUpTo;
 function taskBlock(){
   return `<div class="task-card"><b>任務一・10 分鐘</b>
     <ol><li>打開個案資料，完成個案需求分析</li><li>對照四大向度圖，想想這個孩子需要哪些調整</li><li>講師開放檢核後，回到燈塔闖關</li></ol>
@@ -1266,7 +1281,6 @@ function kitBlock(st){
     `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
   const make = m ? `<div class="make"><div class="kit-h">實作任務</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
     ${m.copy ? `<div class="prompt" id="mkCopy">${esc(m.copy)}</div>` : ''}
-    <p class="frame">分享時寫一句：孩子的需求是＿＿，我對照＿＿（向度／策略），用 AI 做了＿＿。</p>
     <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
     ${m.link ? `<a class="ghost" href="${esc(m.link.u)}" target="_blank" rel="noopener">${esc(m.link.n)}</a>` : ''}
     ${PADLET_BTN}</div></div>` : '';
@@ -1291,8 +1305,8 @@ function openStation(sid){
   $('#sheetTitle').textContent = st.name;
   const body = $('#sheetBody');
   if (st.guard && !done.has(sid) && !store.get('guard.' + sid, false) && !isHost && nick){ startGuard(st); return; }
-  const wait = st.task && !checkOpen() && !done.has(sid) && !isHost;
-  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) + `<div class="row start-row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開放檢核' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
+  const wait = !quizOpen(st) && !done.has(sid) && !isHost;
+  body.innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) + `<div class="row start-row"><button class="primary" id="startBtn" type="button"${wait ? ' disabled' : ''}>${wait ? '等講師開啟挑戰' : done.has(sid) ? '再挑戰一次' : st.task ? '開始檢核闖關' : '開始挑戰'}（${st.steps.length} 關）</button>
     ${done.has(sid)?'<span class="small">已獲得徽章</span>':''}</div>`;
   body.scrollTop = 0;
   $('#startBtn').onclick = () => runStep(st, 0);
@@ -2477,7 +2491,7 @@ function hostLogin(){
   warmGate = false; $('#wallOv').hidden = true; openHost();
   if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
 }
-function becomeHost(){ isHost = true; $('#hostBtn').hidden = false; $('#handBtn').hidden = true; renderHUD(); renderOpenGrid(); showFab(); }
+function becomeHost(){ isHost = true; document.body.classList.add('is-host'); setTimeout(hostTab, 0); $('#hostBtn').hidden = false; $('#handBtn').hidden = true; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
 /* backpack: today's handout and reference folders, one tap away */
 const PACK_REF = 'https://drive.google.com/drive/folders/1iz7FVaATFl4hKBha3iY3mTYjc72e7FVH?usp=sharing';
@@ -2671,7 +2685,7 @@ function renderAgenda(){
   let acc = 0;
   $('#agenda').innerHTML = AGENDA.map((a, i) => { const from = acc; acc += a.m;
     return `<div class="ag${i === agNow ? ' now' : i < agNow ? ' past' : ''}"><div class="ag-top"><b>${esc(a.t)}</b><span>${agHM(from)}–${agHM(acc)}・${a.m} 分</span></div>
-      <div class="small">${esc(a.note)}</div><div class="ag-btns"><button type="button" class="go" data-ag="${i}">${i === agNow ? '進行中' : '開始'}</button>
+      <div class="small">${esc(a.note)}</div><div class="ag-btns"><button type="button" class="go" data-ag="${i}">${i === agNow ? '進行中' : '開始'}</button>${a.open ? `<button type="button" data-agq="${a.open}">${a.open <= quizUpTo ? '挑戰已開啟' : '開啟挑戰'}</button>` : ''}
       ${a.padlet ? `<a class="ghost" href="${PADLET}" target="_blank" rel="noopener" style="text-decoration:none;font-size:13px;padding:4px 10px">打開 Padlet</a>` : ''}</div></div>`; }).join('');
   agTick();
 }
@@ -2691,7 +2705,8 @@ $('#qkDraw').onclick = () => { jump('#secDraw'); $('#drawBtn').click(); };
 $('#qkBeast').onclick = () => jump('#secBeast');
 $('#qkTimer').onclick = () => jump('#secTimer');
 $('#agenda').onclick = e => {
-  const g = e.target.closest('[data-ag]');
+  const g = e.target.closest('[data-ag]'), qb = e.target.closest('[data-agq]');
+  if (qb){ const n = +qb.dataset.agq; writeLive({quiz:Math.max(quizUpTo, n), open:Math.max(openUpTo, n)}); toast(`第 ${n} 站的挑戰已開啟`); setTimeout(renderAgenda, 50); }
   if (g){ const i = +g.dataset.ag, a = AGENDA[i];
     agNow = i; store.set('agNow', i);
     const patch = {};
@@ -2794,7 +2809,7 @@ $('#cEnd').onclick = () => {
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。按「開始」會開放那一站。抽人、投票用上方「隨時可用」那一列。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), open:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -2927,9 +2942,14 @@ $('#rosterCsv').onclick = () => {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 };
 $('#rosterClear').onclick = () => { if (!confirm('清空學員名單？目前在線的學員會再自動加回來。')) return; joined.clear(); store.set('joined.' + ROOM, {}); renderRoster(); };
-function openHost(){ $('#host').hidden = false; fillKnow(); renderOpenGrid(); renderAgenda(); renderHist(); renderRoster(); renderHands(); }
+function openHost(){ $('#host').hidden = false; hostTab(); fillKnow(); renderOpenGrid(); renderAgenda(); renderHist(); renderRoster(); renderHands(); }
 $('#hostBtn').onclick = openHost;
-$('#hostClose').onclick = () => $('#host').hidden = true;
+const hostTab = () => { $('#hostTab').hidden = !isHost || !$('#host').hidden; };
+$('#hostClose').onclick = () => { $('#host').hidden = true; hostTab(); };
+$('#hostTab').onclick = openHost;
+addEventListener('keydown', e => { if (!isHost || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (e.key === 'Escape' && !$('#host').hidden) $('#hostClose').click();
+  else if (e.key === 'm' || e.key === 'M'){ if ($('#host').hidden) openHost(); else $('#hostClose').click(); } });
 
 /* ---------------- draw overlay ---------------- */
 let drawTimer;
@@ -2999,18 +3019,26 @@ $('#missionFour').onclick = openFour;
 $('#missionGo').onclick = () => { $('#missionOv').hidden = true; goStation(1); };
 $('#m1Four').onclick = openFour;
 $('#m1Timer').onclick = () => writeLive({timer:{until:Date.now() + 10*60000, label:'任務一：個案需求分析', music:true}});
-$('#m1Check').onclick = () => writeLive({check1:!checkOpen()});
-let seenCheck;
+$('#m1Check').onclick = () => writeLive({quiz:checkOpen() ? 0 : 1});
+let seenQuiz;
 function applyCheck(){
+  const d = liveState, q = d && Number.isFinite(+d.quiz) ? Math.max(0, Math.min(7, +d.quiz)) : (d && d.check1 ? 1 : 0);
+  quizUpTo = q;
   const on = checkOpen();
   $('#m1Check').textContent = on ? '關閉檢核闖關' : '開放檢核闖關';
   $('#m1State').textContent = on ? '檢核已開放' : '檢核尚未開放';
-  if (seenCheck !== undefined && on && !seenCheck && !isHost){
-    banner('講師開放需求燈塔的檢核了！到燈塔作答，挖第一顆礦石', 7000);
-    if (currentSid === 1) openStation(1);
+  renderQuizGrid(); if (isHost) renderAgenda();
+  if (seenQuiz !== undefined && q > seenQuiz && !isHost){
+    const st = STATIONS[q - 1];
+    banner(`講師開啟「${st.name}」的挑戰了！到第 ${q} 站作答挖礦石`, 7000);
+    if (currentSid && currentSid <= q && $('#startBtn') && $('#startBtn').disabled) openStation(currentSid);
   }
-  seenCheck = on;
+  seenQuiz = q;
 }
+function renderQuizGrid(){
+  $('#quizGrid').innerHTML = [0,1,2,3,4,5,6,7].map(n => `<button type="button" data-quiz="${n}" class="${n === 0 ? (quizUpTo === 0 ? 'on' : '') : n <= quizUpTo ? 'on' : ''}">${n === 0 ? '全部關閉' : n === 7 ? '全部' : '到 ' + n}</button>`).join('');
+}
+$('#quizGrid').onclick = e => { const b = e.target.closest('[data-quiz]'); if (b) writeLive({quiz:+b.dataset.quiz, open:Math.max(openUpTo, +b.dataset.quiz)}); };
 
 /* ---------------- beast raid: the host sends a beast, every explorer answers to drive it off ----------------
    fight/<id> retained {b:beast id, st:'fight'|'win', w:wrong answers, n:nick, t:seconds} */
@@ -3104,7 +3132,7 @@ function openBattle(cfg){
   $('#beastQ').textContent = cfg.q;
   $('#beastOpts').className = cfg.multi ? 'poll-opts multi' : 'poll-opts';
   $('#beastOpts').innerHTML = cfg.opts.map((o, i) => `<button type="button" class="poll-opt" data-o="${i}"><span>${esc(o)}</span></button>`).join('');
-  $('#hearts').textContent = '♥♥♥'; $('#beastMsg').textContent = cfg.multi ? `還要選對 ${cfg.right.length} 項` : '';
+  $('#hearts').textContent = '我的血量 ♥♥♥'; $('#beastMsg').textContent = cfg.multi ? `還要選對 ${cfg.right.length} 項` : '';
   $('#beastClose').hidden = true; $('#beastOv').hidden = false;
   showBeastMesh(true); if (cfg.report) cfg.report('fight');
   if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
@@ -3117,7 +3145,9 @@ function startFight(){
 }
 function startGuard(st){
   const g = st.guard, id = 'st' + st.id;
-  openBattle({id, k:g.k, name:g.name, title:`${g.name}擋住了「${st.name}」！`, q:g.q, opts:g.opts, right:g.right, multi:true, miss:g.miss,
+  const order = shuffle(g.opts.map((_, i) => i)); // the six right answers must not sit together
+  openBattle({id, k:g.k, name:g.name, title:`${g.name}擋住了「${st.name}」！`, q:g.q, opts:order.map(i => g.opts[i]), right:order.map((v, i) => g.right.includes(v) ? i : -1).filter(i => i >= 0), multi:true, miss:g.miss,
+    retry:() => startGuard(st),
     report:s2 => mqPub('fight/' + myId, {b:id, st:s2, w:bt ? bt.wrong : 0, n:nick, t:Math.round((Date.now() - (bt ? bt.t0 : Date.now()))/1000)}, true),
     onWin:() => { store.set('guard.' + st.id, true); },
     after:() => openStation(st.id)});
@@ -3143,9 +3173,13 @@ $('#beastOpts').onclick = e => {
     if (!bt.multi) $('#beastHp').style.width = '100%';
     $('#beastBox').classList.remove('ouch'); void $('#beastBox').offsetWidth; $('#beastBox').classList.add('ouch');
     bt.lost++;
-    const h = Math.max(0, 3 - bt.lost); $('#hearts').textContent = '♥'.repeat(h) + '♡'.repeat(3 - h);
+    const h = Math.max(0, 3 - bt.lost); $('#hearts').textContent = '我的血量 ' + '♥'.repeat(h) + '♡'.repeat(3 - h);
     $('#beastMsg').textContent = (bt.miss || (h ? '野獸反擊！換個答案再試一次' : '血量見底了！別放棄，想清楚再答一次'));
-    if (!h){ const cur = bt; setTimeout(() => { if (bt === cur && !cur.won){ cur.lost = 0; $('#hearts').textContent = '♥♥♥'; } }, 1500); }
+    if (!h && bt.retry){ // out of health: the guard recovers and the fight starts over
+      $('#beastMsg').textContent = '你的血量歸零了！守門獸恢復體力，重新挑戰一次';
+      [...$('#beastOpts').children].forEach(x => x.disabled = true);
+      const cur = bt; setTimeout(() => { if (bt === cur && !cur.won) cur.retry(); }, 2200);
+    } else if (!h){ const cur = bt; setTimeout(() => { if (bt === cur && !cur.won){ cur.lost = 0; $('#hearts').textContent = '我的血量 ♥♥♥'; } }, 1500); }
     if (bt.report) bt.report('fight');
   }
 };
@@ -3195,7 +3229,7 @@ function renderFights(){
    vote/<id> retained ballot {p:poll id, o:option}, tallied by everyone
    idea/<id> a sticky note sent to the host, who republishes the whole wall as retained `ideas` */
 const QUICK = ['我懂了！', '好有趣', '有問題想問', '+1 同意', '讚', '需要再說明一次'];
-const chatLog = store.get('chat.' + ROOM, []);
+let chatLog = store.get('chat.' + ROOM, []);
 let ideas = store.get('ideas.' + ROOM, {w:'', list:[]});
 const votes = new Map();          // peer id → {p, o, n}
 let poll = null, wall = null, muted = false, seenPoll = null, seenWall = null, lastSay = 0;
@@ -3258,16 +3292,16 @@ function addFeed(r){
 function renderFeed(){
   $('#feedN').hidden = !feedUnread; $('#feedN').textContent = feedUnread;
   if ($('#feed').hidden) return;
-  const el = $('#feedList'); if (!feed.length) return;
+  const el = $('#feedList'); if (!feed.length){ el.innerHTML = '<span class="small">大家的發言會出現在這裡。</span>'; return; }
   const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-  el.innerHTML = feed.map(r => `<div class="m${r.q ? ' q' : ''}">${r.q ? '<span class="tag">提問</span>' : ''}<b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('');
+  el.innerHTML = feed.map(r => `<div class="m${r.q ? ' q' : ''}">${r.q ? '<span class="tag">提問</span>' : ''}<b>${esc(r.n)}</b>：${esc(r.x)}${isHost && r.k ? `<button type="button" class="del" data-delk="${esc(r.k)}" aria-label="刪除這則">×</button>` : ''}</div>`).join('');
   if (atEnd || true) el.scrollTop = el.scrollHeight;
 }
 function openFeed(on){ $('#feed').hidden = !on; if (on){ feedUnread = 0; $('#feedBtn').classList.remove('hot'); } store.set('feedOpen', on); renderFeed(); }
 $('#feedBtn').onclick = () => openFeed($('#feed').hidden);
 // --- raise hand / pending question ---
 function syncMine(){
-  $('#handBtn').textContent = myHand ? '放下手' : '舉手'; $('#handBtn').classList.toggle('hot', myHand);
+  $('#handTxt').textContent = myHand ? '放下手' : '舉手'; $('#handBtn').classList.toggle('hot', myHand);
   $('#handBtn').hidden = isHost; $('#askDone').hidden = !myAsk || isHost;
   if (player) setMark(player, myHand ? 'h' : myAsk ? 'q' : '');
   pushPresence();
@@ -3290,6 +3324,7 @@ function renderHands(){
   $('#qkHands').textContent = hc + qc ? `舉手 ${hc}・提問 ${qc}` : '舉手・提問';
   $('#qkHands').classList.toggle('hot', hc + qc > 0);
   $('#hostBtn').textContent = hc + qc ? `講師主控台（舉手 ${hc}・提問 ${qc}）` : '講師主控台';
+  $('#hostTab').classList.toggle('hot', hc + qc > 0);
   const lastQ = n => { for (let i = chatLog.length - 1; i >= 0; i--) if (chatLog[i].q && chatLog[i].n === n) return chatLog[i].x; return ''; };
   $('#handList').innerHTML = rows.length ? rows.map(r => `<div class="hand-row"><span class="hand-ic ${r.hd ? 'h' : 'q'}">${r.hd ? '✋' : '?'}</span><span style="flex:1;min-width:0"><b>${esc(r.n)}</b>${r.hd && r.qq ? '（也有提問）' : ''}${r.qq && lastQ(r.n) ? `<br><span class="small">${esc(lastQ(r.n))}</span>` : ''}</span><button type="button" class="ghost" data-ack="${esc(r.n)}">${r.hd ? '請放下手' : '已回應'}</button></div>`).join('')
     : '<span class="small">目前沒有人舉手或提問。學員舉手或提問時，人物頭上會出現圖示，這裡也會列出來。</span>';
@@ -3300,6 +3335,7 @@ $('#qkHands').onclick = () => $('#secHands').scrollIntoView({behavior:'smooth', 
 $('#feedClose').onclick = () => openFeed(false);
 function gotFeed(v){
   if (!v || !Array.isArray(v.list)) return;
+  if (Array.isArray(v.del) && v.del.length){ const gone = new Set(v.del.map(String)); feed = feed.filter(f => !gone.has(f.k)); }
   v.list.slice(-40).forEach(r => { const x = cleanText(r.x, 40), n = cleanText(r.n, 16); if (x && n && !feed.some(f => f.k && f.k === r.k)) feed.push({n, x, q:!!r.q, k:cleanText(r.k, 24), t:+r.t || 0}); });
   feed.sort((a, b) => (a.t || 0) - (b.t || 0)); renderFeed();
 }
@@ -3308,13 +3344,13 @@ function logChat(n, x, q, k){
   if (!isHost) return;
   chatLog.push({t:Date.now(), n, x, q:!!q, k:k || ''}); if (chatLog.length > 500) chatLog.splice(0, chatLog.length - 500);
   store.set('chat.' + ROOM, chatLog); renderChatLog();
-  clearTimeout(logChat.t); logChat.t = setTimeout(() => mqPub('chat', {list:chatLog.slice(-40)}, true), 500);
+  clearTimeout(logChat.t); logChat.t = setTimeout(() => mqPub('chat', {list:chatLog.slice(-40), del:chatDel}, true), 500);
 }
 function renderChatLog(){
   if (!isHost) return;
-  const el = $('#chatLog'); if (!chatLog.length) return;
+  const el = $('#chatLog'); if (!chatLog.length){ el.innerHTML = '<span class="small">學員按「說話」送出的話會出現在這裡。</span>'; return; }
   const hm = t => new Date(t).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false});
-  el.innerHTML = chatLog.slice(-60).map(r => `<div><span class="small">${hm(r.t)}</span> ${r.q ? '<span class="tag" style="background:var(--sun);border-radius:6px;padding:0 5px;font-size:11px;font-weight:900">提問</span> ' : ''}<b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('');
+  el.innerHTML = chatLog.slice(-60).map(r => `<div><span class="small">${hm(r.t)}</span> ${r.q ? '<span class="tag" style="background:var(--sun);border-radius:6px;padding:0 5px;font-size:11px;font-weight:900">提問</span> ' : ''}<b>${esc(r.n)}</b>：${esc(r.x)}${r.k ? ` <button type="button" class="del" data-delk="${esc(r.k)}" aria-label="刪除這則">×</button>` : ''}</div>`).join('');
   el.scrollTop = el.scrollHeight;
 }
 const cleanText = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
@@ -3384,10 +3420,22 @@ function say(text){
   $('#sayInput').value = ''; $('#sayBar').hidden = true;
 }
 $('#chatMute').onclick = () => writeLive({mute:!muted});
+$('#qkChat').onclick = () => { writeLive({mute:!muted}); toast(muted ? '已關閉學員聊天與表情' : '已開啟學員聊天'); };
+// the host can take any line down; the retained chat message carries the removed keys to every learner
+let chatDel = store.get('chatDel.' + ROOM, []);
+function delChat(k){
+  if (!isHost || !k) return;
+  chatLog = chatLog.filter(r => r.k !== k); feed = feed.filter(r => r.k !== k);
+  chatDel = chatDel.concat(k).slice(-80); store.set('chatDel.' + ROOM, chatDel); store.set('chat.' + ROOM, chatLog);
+  renderChatLog(); renderFeed(); renderHands();
+  mqPub('chat', {list:chatLog.slice(-40), del:chatDel}, true);
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-delk]'); if (b && isHost) delChat(b.dataset.delk); });
 // --- polls ---
 function applyInteract(d){
   muted = !!(d && d.mute);
   $('#chatMute').textContent = muted ? '恢復學員聊天' : '暫停學員聊天';
+  $('#qkChat').textContent = muted ? '聊天：關' : '聊天：開'; $('#qkChat').classList.toggle('hot', muted);
   const p = d && d.poll && typeof d.poll.id === 'string' && Array.isArray(d.poll.opts) ? {id:d.poll.id, q:cleanText(d.poll.q, 60), opts:d.poll.opts.slice(0, 6).map(o => cleanText(o, 30)), open:!!d.poll.open} : null;
   const newPoll = p && p.id !== (poll && poll.id);
   poll = p; $('#pollBtn').hidden = !poll; $('#pollBtn').classList.toggle('hot', !!poll && poll.open && !myVote());
