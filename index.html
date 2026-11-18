@@ -379,7 +379,8 @@ body.is-host #liveChip{cursor:pointer}
 .hm-now[hidden]{display:none}
 .hm-now-t{font-size:14.5px}
 .hm-now button{padding:9px 14px;font-size:14.500px}
-@media (max-width:700px){.banner{top:calc(env(safe-area-inset-top,0px) + 206px);font-size:14px;padding:8px 16px}}
+@media (max-width:700px){.banner{top:calc(env(safe-area-inset-top,0px) + 178px);font-size:14px;padding:8px 16px}
+.brand{padding:8px 14px 10px}.brand small{display:none}.brand h1{font-size:19px;margin:0 0 5px}}
 .land-title small{display:block;font:700 clamp(18px,4vw,34px)/1.4 var(--round);letter-spacing:.2em;margin-top:6px}
 body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-start #feed,body.pre-start #sayBar,body.pre-start #askDone{display:none!important}
 .feed-form{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
@@ -2879,7 +2880,7 @@ function agTick(){
 setInterval(agTick, 20000);
 // host console: a menu of functions; picking one shows only that function's panel
 const HOST_MENU = [
-  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '開始・注意・休息・離島'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡內容預覽（翻頁查看）']]],
+  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '課堂控制・重設'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡內容預覽（翻頁查看）']]],
   ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
   ['開場與設定', [['登島前小調查', '登島小調查'], ['入港前分享', '入港前分享'], ['學員登入 QR', '登入 QR Code'], ['動物新知', '動物知識卡'], ['學員背包', '背包講義連結']]]
 ];
