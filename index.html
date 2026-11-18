@@ -426,7 +426,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <section>
       <h3 id="secHands">舉手與提問</h3>
       <div id="handList" class="hand-list"></div>
-      <div class="row"><button class="ghost" id="handClear" type="button">全部標示已回應</button></div>
+      <div class="row"><button class="ghost" id="handClear" type="button">全部放下手・清除問號</button></div>
     </section>
     <section>
       <h3>研習流程（8:00–12:00，兩次休息）</h3>
@@ -1168,6 +1168,9 @@ function connectNet(){
     if (gone) firePeers();
   }, 15000);
   addEventListener('pagehide', () => { mqPub('p/' + myId, null, true); });
+  // learners hop to Gemini or Padlet in another tab all morning: the moment they come back, show them on the island again
+  const back = () => { if (document.visibilityState === 'visible'){ try{ if (mq && !mq.connected) mq.reconnect(); }catch(e){} sendPres(); } };
+  document.addEventListener('visibilitychange', back); addEventListener('pageshow', back);
 }
 
 function isOpen(st){
@@ -1874,7 +1877,7 @@ function sailFerry(kind, instant, then){
     ship.position.copy(to); ferryAnim = null;
     if (kind === 'leave') ship.visible = false;
     else faceTo(ship, DOCK_FACE);
-    if (kind === 'arrive'){ showExplorers(true); if (player && !instant){ player.pos.copy(SPAWN); flyToPlayer(); } }
+    if (kind === 'arrive'){ showExplorers(true); if (player && !instant){ player.pos.copy(spawnSpot()); flyToPlayer(); } }
     if (then) then();
     return;
   }
@@ -2079,7 +2082,7 @@ function spawnPlayer(){
   arrow.rotation.x = Math.PI; arrow.renderOrder = 10; player.g.add(arrow); player.arrow = arrow;
   const ring = new THREE.Mesh(new THREE.RingGeometry(.62, .8, 32), new THREE.MeshBasicMaterial({color:0xF4B740, transparent:true, opacity:.9, side:THREE.DoubleSide, depthWrite:false}));
   ring.rotation.x = -Math.PI/2; ring.position.y = .04; player.g.add(ring); player.ring = ring;
-  player.pos = SPAWN.clone(); player.target = null; player.onArrive = null; player.heading = Math.PI;
+  player.pos = spawnSpot(); player.target = null; player.onArrive = null; player.heading = Math.PI;
   player.g.position.copy(player.pos); player.g.rotation.y = player.heading;
   player.g.visible = explorersOn && !boarded;
   scene.add(player.g);
@@ -2114,9 +2117,30 @@ function pushPos(force){
   room.presence({x:Math.round(player.pos.x*10)/10, z:Math.round(player.pos.z*10)/10, h:Math.round(player.heading*10)/10, s:sleeping ? 1 : 0, b:boarded ? 1 : 0}).catch(() => {});
 }
 const _f = new THREE.Vector3(), _r = new THREE.Vector3(), _d = new THREE.Vector3();
+// explorers are solid: you bump into each other instead of standing inside one another
+const BODY = .78;
+const solid = () => !sleeping && !boarded && phase === 'class' && !onPier(player.pos);
+function bump(pos){
+  let hit = false;
+  peerMeshes.forEach(m => {
+    if (!m.g.visible || m.sleep) return;
+    const dx = pos.x - m.cur.x, dz = pos.z - m.cur.z, d = Math.hypot(dx, dz);
+    if (d >= BODY) return;
+    hit = true;
+    if (d > 1e-3){ pos.x = m.cur.x + dx/d*BODY; pos.z = m.cur.z + dz/d*BODY; }
+    else { const a = (parseInt(String(myId).slice(-4), 36) || 1) % 628 / 100; pos.x += Math.cos(a)*BODY; pos.z += Math.sin(a)*BODY; }
+  });
+  return hit;
+}
+function spawnSpot(){
+  const k = (parseInt(String(myId).slice(-5), 36) || 0) % 25, a = k*2.4, r = .5 + Math.sqrt(k)*.62; // sunflower spread, one spot per learner
+  return clampWalk(new THREE.Vector3(SPAWN.x + Math.cos(a)*r, GROUND, SPAWN.z + Math.sin(a)*r));
+}
 function updatePlayer(dt, t){
   if (!player) return;
   _d.set(0, 0, 0);
+  let bumped = false;
+  if (solid() && !player.target && !keys.size){ const b0 = player.pos.clone(); if (bump(player.pos)){ clampWalk(player.pos); player.pos.lerpVectors(b0, player.pos, Math.min(1, dt*6)); player.g.position.copy(player.pos); pushPos(); } }
   if (keys.size && !locked()){
     camera.getWorldDirection(_f); _f.y = 0; _f.normalize(); _r.set(-_f.z, 0, _f.x);
     if (keys.has('w')) _d.add(_f); if (keys.has('s')) _d.sub(_f);
@@ -2134,6 +2158,7 @@ function updatePlayer(dt, t){
     _d.normalize();
     const before = player.pos.clone(), step = 5.6*dt;
     player.pos.addScaledVector(_d, step); clampWalk(player.pos);
+    if (solid() && bump(player.pos)){ bumped = true; clampWalk(player.pos); }
     if (player.target && player.pos.distanceTo(before) < step*.5){
       // head-on into a landmark: sidestep along whichever side ends closer to the goal
       const tries = [new THREE.Vector3(-_d.z, 0, _d.x), new THREE.Vector3(_d.z, 0, -_d.x)].map(s => clampWalk(before.clone().addScaledVector(s.add(_d.clone().multiplyScalar(.3)).normalize(), step)));
@@ -2145,6 +2170,10 @@ function updatePlayer(dt, t){
     let dh = h - player.heading; while (dh > Math.PI) dh -= Math.PI*2; while (dh < -Math.PI) dh += Math.PI*2;
     player.heading += dh*Math.min(1, dt*12);
     if (follow && !camAnim){ const delta = player.pos.clone().sub(before); camera.position.add(delta); controls.target.add(delta); }
+    if (player.target && bumped && player.pos.distanceTo(player.target) < 4 && player.pos.distanceTo(before) < step*.5){
+      // someone is already standing on the spot: close enough counts as arriving
+      player.target = null; const cb = player.onArrive; player.onArrive = null; if (cb) cb();
+    }
     if (player.target && player.pos.distanceTo(before) < step*.1){ player.target = null; player.onArrive = null; } // truly stuck
     pushPos();
   }
@@ -2495,7 +2524,7 @@ function renderRoster(){
   if ($('#host').hidden) return;
   const rows = rosterRows(true), on = rows.filter(r => !r.off).length;
   $('#rosterCount').textContent = rows.length ? `（線上 ${on} 人／共 ${rows.length} 人）` : '';
-  $('#roster').innerHTML = rows.length ? rows.map(r => `<tr style="${r.off ? 'opacity:.45' : ''}"><td><span class="row" style="flex-wrap:nowrap"><span class="av sm">${avatarHTML(r.c)}</span>${esc(r.n)}</span></td><td class="num">${r.d}</td><td>${r.off ? '離線' : r.b ? '已登船' : r.s ? '睡覺中' : r.at ? esc(STATIONS[r.at-1].name) : '島上'}</td></tr>`).join('')
+  $('#roster').innerHTML = rows.length ? rows.map(r => `<tr style="${r.off ? 'opacity:.45' : ''}"><td><span class="row" style="flex-wrap:nowrap"><span class="av sm">${avatarHTML(r.c)}</span>${esc(r.n)}</span></td><td class="num">${r.d}</td><td>${r.off ? '暫離（在別的分頁）' : r.b ? '已登船' : r.s ? '睡覺中' : r.at ? esc(STATIONS[r.at-1].name) : '島上'}</td></tr>`).join('')
     : `<tr><td colspan="3" class="small">${connected ? '目前還沒有學員加入。' : '未連線：可用「手動名單」抽籤。'}</td></tr>`;
 }
 function applyLive(d){
@@ -3261,7 +3290,7 @@ function renderHands(){
   $('#qkHands').classList.toggle('hot', hc + qc > 0);
   $('#hostBtn').textContent = hc + qc ? `講師主控台（舉手 ${hc}・提問 ${qc}）` : '講師主控台';
   const lastQ = n => { for (let i = chatLog.length - 1; i >= 0; i--) if (chatLog[i].q && chatLog[i].n === n) return chatLog[i].x; return ''; };
-  $('#handList').innerHTML = rows.length ? rows.map(r => `<div class="hand-row"><span class="hand-ic ${r.hd ? 'h' : 'q'}">${r.hd ? '✋' : '?'}</span><span style="flex:1;min-width:0"><b>${esc(r.n)}</b>${r.hd && r.qq ? '（也有提問）' : ''}${r.qq && lastQ(r.n) ? `<br><span class="small">${esc(lastQ(r.n))}</span>` : ''}</span><button type="button" class="ghost" data-ack="${esc(r.n)}">已回應</button></div>`).join('')
+  $('#handList').innerHTML = rows.length ? rows.map(r => `<div class="hand-row"><span class="hand-ic ${r.hd ? 'h' : 'q'}">${r.hd ? '✋' : '?'}</span><span style="flex:1;min-width:0"><b>${esc(r.n)}</b>${r.hd && r.qq ? '（也有提問）' : ''}${r.qq && lastQ(r.n) ? `<br><span class="small">${esc(lastQ(r.n))}</span>` : ''}</span><button type="button" class="ghost" data-ack="${esc(r.n)}">${r.hd ? '請放下手' : '已回應'}</button></div>`).join('')
     : '<span class="small">目前沒有人舉手或提問。學員舉手或提問時，人物頭上會出現圖示，這裡也會列出來。</span>';
 }
 $('#handList').onclick = e => { const b = e.target.closest('[data-ack]'); if (b) mqPub('ack/' + myId, {n:b.dataset.ack, w:'a', t:Date.now()}); };
