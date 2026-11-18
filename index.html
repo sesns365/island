@@ -1170,7 +1170,7 @@ function connectNet(){
   }, 15000);
   addEventListener('pagehide', () => { mqPub('p/' + myId, null, true); });
   // learners hop to Gemini or Padlet in another tab all morning: the moment they come back, show them on the island again
-  const back = () => { if (document.visibilityState === 'visible'){ try{ if (mq && !mq.connected) mq.reconnect(); }catch(e){} sendPres(); } };
+  const back = () => { if (document.visibilityState === 'visible' && connected) sendPres(); }; // mqtt.js reconnects by itself; forcing it here races the first connect
   document.addEventListener('visibilitychange', back); addEventListener('pageshow', back);
 }
 
