@@ -355,6 +355,24 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .pack-help ul{margin:8px 0 2px;padding-left:18px;display:grid;gap:5px;line-height:1.5}
 .tools.preview>div{display:flex;flex-direction:column;gap:2px;border:2px dashed var(--line);border-radius:14px;padding:10px 12px;opacity:.85}
 .tools.preview span{font-size:13px;color:var(--ink-soft)}
+.host section[hidden]{display:none}
+#hostMenu{display:flex;flex-direction:column;gap:8px}
+#hostMenu[hidden]{display:none}
+.hm-g{font:700 13px var(--round);color:var(--teal-deep);letter-spacing:.06em;margin-top:4px}
+.hm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hm-grid button{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:14px 10px;font-weight:700;font-size:15px;text-align:left;color:var(--ink)}
+.hm-grid button:hover{border-color:var(--teal);background:var(--mist)}
+#hostBack{align-self:flex-start;padding:6px 14px;font-size:14px}
+#hostBack[hidden]{display:none}
+body.is-host #liveChip{cursor:pointer}
+.roster-pop{position:fixed;z-index:31;top:calc(env(safe-area-inset-top,0px) + 64px);right:12px;width:min(400px,calc(100% - 24px));max-height:72vh;overflow:auto;background:var(--paper);border-radius:18px;box-shadow:0 20px 60px rgba(24,50,58,.35);padding:14px 16px}
+.roster-pop section{display:flex;flex-direction:column;gap:8px}
+.roster-pop h3{margin:0}
+.roster-pop .roster-wrap{max-height:50vh}
+.wall-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wall-nav[hidden]{display:none}
+.wall-nav button{padding:6px 12px;font-size:14px}
+.wall-nav button:disabled{opacity:.35}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -423,6 +441,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   </div>
   <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button><button type="button" id="qkSurvey">調查結果</button><button type="button" id="qkChat">聊天：開</button></div>
   <div class="sheet-body">
+    <button class="ghost" id="hostBack" type="button" hidden>◀ 全部功能</button>
+    <button class="primary" id="hmStart" type="button" hidden>開始研習（全班大畫面提醒，開放第 1 站）</button>
+    <div id="hostMenu"></div>
     <section>
       <h3>登島前小調查（AI 使用經驗）</h3>
       <p class="small" id="svSum">學員輸入名字後會先回答 3 題選擇題，結果即時顯示在這裡。</p>
@@ -568,6 +589,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   </div>
 </aside>
 
+<div class="roster-pop" id="rosterPop" hidden></div>
+
 <div class="overlay" id="setup" hidden style="z-index:45">
   <div class="dialog">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">研習島嶼</small>
@@ -676,6 +699,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 <div class="overlay" id="wallOv" hidden>
   <div class="dialog wall-dialog" id="wallBox">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em" id="wallEyebrow">想法牆</small>
+    <div class="wall-nav" id="wallNav" hidden><button class="ghost" id="wallPrev" type="button">◀ 上一題</button><span class="small" id="wallPos"></span><button class="ghost" id="wallNext" type="button">下一題 ▶</button></div>
     <h2 id="wallQ"></h2>
     <form class="row" id="wallForm" style="flex-wrap:nowrap"><input id="wallInput" maxlength="80" autocomplete="off" placeholder="寫下你的想法（80 字內）" style="flex:1;min-width:0;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit"><button class="primary" type="submit" style="padding:10px 14px">貼上</button></form>
     <p class="small" id="wallMsg"></p>
@@ -703,6 +727,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
   <div class="dialog wall-dialog" style="gap:12px">
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">登島前小調查結果</small>
     <div id="svBig"></div>
+    <button class="primary" id="svSync" type="button" hidden>同步顯示到學員畫面</button>
     <button class="ghost" id="svShowClose" type="button">關閉</button>
   </div>
 </div>
@@ -1196,6 +1221,7 @@ function onMsg(topic, buf){
   if (txt){ try { v = JSON.parse(txt); } catch(e){ return; } }
   if (sub === 'state'){ applyLive(v && typeof v === 'object' ? v : null); return; }
   if (sub === 'ideas'){ if (!isHost) gotIdeas(v); return; }
+  if (sub === 'walls'){ if (!isHost) gotWalls(v); return; }
   if (sub === 'chat'){ if (!isHost) gotFeed(v); return; }
   const [kind, id] = sub.split('/');
   if (!id || id === myId) return;
@@ -1228,7 +1254,7 @@ function connectNet(){
   mq.on('close', () => { connected = false; $('#liveDot').classList.remove('live'); $('#liveText').textContent = '重新連線中'; });
   mq.on('message', onMsg);
   room.onPeers(() => {
-    if (connected) $('#liveText').textContent = isHost ? `線上 ${rosterRows().length} 人` : '已連線';
+    if (connected) $('#liveText').textContent = isHost ? `線上 ${rosterRows().length} 人 ▾` : '已連線';
     renderRoster(); renderHands(); syncPeers();
   });
   // keep my retained profile fresh, drop learners who went silent
@@ -1363,9 +1389,7 @@ function openStation(sid){
   const body = $('#sheetBody');
   if (locked){
     const why = lockReason(st);
-    body.innerHTML = `<div class="note"><b>搶先看</b>：這一站還沒開放，先看看等一下會做什麼。</div>` + (st.guard ? st.intro.replace(/^<div class="note">[\s\S]*?<\/div>/, '') : st.intro) +
-      (st.tools ? `<div class="kit"><div><div class="kit-h">這一站會體驗的工具</div><div class="tools preview">${st.tools.map(t => `<div><b>${esc(t.n)}</b><span>${esc(t.d)}</span></div>`).join('')}</div></div></div>` : '') +
-      `<div class="row start-row"><button class="primary" type="button" disabled>${st.id > openUpTo ? '等講師開放這一站' : '尚未解鎖'}</button><span class="small">${esc(why)}</span></div>`;
+    body.innerHTML = `<div class="note"><b>這一站還沒開放</b><br>${esc(why)}</div><div class="row start-row"><button class="primary" type="button" disabled>${st.id > openUpTo ? '等講師開放這一站' : '尚未解鎖'}</button></div>`;
     body.scrollTop = 0; body.querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
     $('#sheet').hidden = false; return;
   }
@@ -2601,7 +2625,7 @@ function rosterRows(withOffline){
   return [...seen.values()].sort((a, b) => b.d - a.d || a.n.localeCompare(b.n, 'zh-Hant'));
 }
 function renderRoster(){
-  if ($('#host').hidden) return;
+  if ($('#rosterPop').hidden) return;
   const rows = rosterRows(true), on = rows.filter(r => !r.off).length;
   $('#rosterCount').textContent = rows.length ? `（線上 ${on} 人／共 ${rows.length} 人）` : '';
   $('#roster').innerHTML = rows.length ? rows.map(r => `<tr style="${r.off ? 'opacity:.45' : ''}"><td><span class="row" style="flex-wrap:nowrap"><span class="av sm">${avatarHTML(r.c)}</span>${esc(r.n)}</span></td><td class="num">${r.d}</td><td>${r.off ? '暫離（在別的分頁）' : r.b ? '已登船' : r.s ? '睡覺中' : r.at ? esc(STATIONS[r.at-1].name) : '島上'}</td></tr>`).join('')
@@ -2664,6 +2688,7 @@ function applyClass(d){
     if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 2600);
   }
   $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，開放第 1 站</span>';
+  if (typeof hmStartSync === 'function') hmStartSync();
   waitBanner();
   const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:!!d.timer.music} : null;
   if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
@@ -2770,7 +2795,28 @@ function agTick(){
   $('#agClock').textContent = `「${AGENDA[agNow].t}」預定 ${agHM(plan)} 開始、${agHM(plan + AGENDA[agNow].m)} 結束。` + (!within ? '' : d > 3 ? `現在比預定慢 ${d} 分鐘。` : d < -3 ? `現在比預定快 ${-d} 分鐘。` : '進度剛好。');
 }
 setInterval(agTick, 20000);
-const jump = id => $(id).scrollIntoView({behavior:'smooth', block:'start'});
+// host console: a menu of functions; picking one shows only that function's panel
+const HOST_MENU = [
+  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '開始・注意・休息・離島'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔']]],
+  ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
+  ['開場與設定', [['登島前小調查', '登島小調查'], ['入港前分享', '入港前分享'], ['學員登入 QR', '登入 QR Code'], ['動物新知', '動物知識卡'], ['學員背包', '背包講義連結']]]
+];
+$('#rosterPop').appendChild($('#roster').closest('section'));
+const hostSecs = [...document.querySelectorAll('#host .sheet-body > section')];
+const secOf = key => hostSecs.find(x => x.querySelector('h3').textContent.trim().startsWith(key));
+$('#hostMenu').innerHTML = HOST_MENU.map(g => `<div class="hm-g">${esc(g[0])}</div><div class="hm-grid">${g[1].map(m => `<button type="button" data-hm="${esc(m[0])}">${esc(m[1])}</button>`).join('')}</div>`).join('');
+function showSec(sec){
+  hostSecs.forEach(x => x.hidden = x !== sec);
+  $('#hostMenu').hidden = !!sec; $('#hostBack').hidden = !sec; hmStartSync();
+  $('#host .sheet-body').scrollTop = 0;
+}
+$('#hostMenu').addEventListener('click', e => { const b = e.target.closest('[data-hm]'); if (b) showSec(secOf(b.dataset.hm)); });
+$('#hostBack').onclick = () => showSec(null);
+function hmStartSync(){ $('#hmStart').hidden = $('#hostMenu').hidden || !(phase === 'class' && !started); }
+$('#hmStart').onclick = () => $('#cStart').click();
+showSec(null);
+const jump = id => { if ($('#host').hidden) openHost(); showSec($(id).closest('section')); };
+$('#liveChip').onclick = () => { if (!isHost) return; const pop = $('#rosterPop'); pop.hidden = !pop.hidden; renderRoster(); };
 const POLL_PRE = AGENDA.filter(a => a.poll).map(a => a.poll);
 $('#pPre').innerHTML = '<option value="">自己出題</option>' + POLL_PRE.map((x, i) => `<option value="${i}">${esc(x.q)}</option>`).join('');
 $('#pPre').onchange = () => { const x = POLL_PRE[+$('#pPre').value]; if ($('#pPre').value !== '' && x){ $('#pQ').value = x.q; $('#pOpts').value = x.opts.join('\n'); } };
@@ -2885,7 +2931,7 @@ $('#cEnd').onclick = () => {
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; writeLive({phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -3307,6 +3353,8 @@ function renderFights(){
 const QUICK = ['我懂了！', '好有趣', '有問題想問', '+1 同意', '讚', '需要再說明一次'];
 let chatLog = store.get('chat.' + ROOM, []);
 let ideas = store.get('ideas.' + ROOM, {w:'', list:[]});
+let wallArch = store.get('walls.' + ROOM, []), wallView = -1;   // earlier topics; wallView -1 = current topic
+
 const votes = new Map();          // peer id → {p, o, n}
 let poll = null, wall = null, muted = false, seenPoll = null, seenWall = null, lastSay = 0;
 function showFab(){
@@ -3407,7 +3455,7 @@ function renderHands(){
 }
 $('#handList').onclick = e => { const b = e.target.closest('[data-ack]'); if (b) mqPub('ack/' + myId, {n:b.dataset.ack, w:'a', t:Date.now()}); };
 $('#handClear').onclick = () => mqPub('ack/' + myId, {n:'*', w:'a', t:Date.now()});
-$('#qkHands').onclick = () => $('#secHands').scrollIntoView({behavior:'smooth', block:'start'});
+$('#qkHands').onclick = () => jump('#secHands');
 $('#feedClose').onclick = () => openFeed(false);
 function gotFeed(v){
   if (!v || !Array.isArray(v.list)) return;
@@ -3520,12 +3568,18 @@ function applyInteract(d){
   renderPoll();
   const w = d && d.wall && typeof d.wall.id === 'string' ? {id:d.wall.id, q:cleanText(d.wall.q, 60), open:!!d.wall.open, warm:!!d.wall.warm} : null;
   const newWall = w && w.id !== (wall && wall.id);
-  wall = w; $('#wallBtn').classList.toggle('hot', !!wall && wall.open && !isHost);
+  const prevWall = wall;
+  wall = w; if (newWall) wallView = -1; $('#wallBtn').classList.toggle('hot', !!wall && wall.open && !isHost);
   if (newWall && seenWall !== null && w.open && !w.warm && !isHost && nick){ banner('講師開放想法牆：' + w.q, 6000); openWall(); }
   if (seenWall === null || newWall) seenWall = w ? w.id : '';
-  if (isHost && w && ideas.w !== w.id){ ideas = {w:w.id, list:[]}; saveIdeas(); }
+  if (isHost && w && ideas.w !== w.id){
+    if (ideas.w && ideas.list.length && !wallArch.some(a => a.id === ideas.w)){ wallArch.push({id:ideas.w, q:ideas.q || prevWall && prevWall.id === ideas.w && prevWall.q || '先前的題目', list:ideas.list}); wallArch = wallArch.slice(-8); saveWalls(); }
+    ideas = {w:w.id, q:w.q, list:[]}; saveIdeas();
+  }
+  if (isHost && w && ideas.w === w.id && !ideas.q) ideas.q = w.q;
   renderWall();
   checkWarm();
+  applySvShow(d);
 }
 // warm-up share before landing: a learner posts one line before stepping onto the island
 const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
@@ -3559,7 +3613,7 @@ $('#svForm').addEventListener('submit', e => {
   e.preventDefault();
   if (svA < 0 || !svB.size){ $('#svMsg').textContent = '第 1、2 題都選一下再送出喔（第 3 題沒用過可以不選）'; return; }
   const v = {n:nick, a:svA, b:[...svB].sort(), c:[...svC].sort(), o:svC.has(SURVEY.c.length - 1) ? cleanText($('#svOther').value, 20) : ''};
-  mqPub('sv/' + myId, v, true); store.set('sv.' + ROOM, v);
+  mqPub('sv/' + myId, v, true); store.set('sv.' + ROOM, v); gotSurvey(myId, v);
   $('#svOv').hidden = true; toast('謝謝！'); checkWarm();
 });
 function checkSurvey(){
@@ -3572,6 +3626,7 @@ function gotSurvey(id, v){
   else surveys.delete(id);
   renderSurvey();
 }
+{ const mine = store.get('sv.' + ROOM, false); if (mine && !isHost) setTimeout(() => gotSurvey(myId, mine), 0); }
 function surveyHTML(){
   const n = surveys.size, ca = SURVEY.a.map(() => 0), cb = SURVEY.b.map(() => 0), cc = SURVEY.c.map(() => 0), others = [];
   surveys.forEach(v => { if (ca[v.a] != null) ca[v.a]++; v.b.forEach(i => cb[i]++); v.c.forEach(i => cc[i]++); if (v.o) others.push(v.o); });
@@ -3579,13 +3634,21 @@ function surveyHTML(){
   return `<div class="sv-cols"><div><p>${esc(SURVEY.q1)}</p>${rows(SURVEY.a, ca)}</div><div><p>${esc(SURVEY.q2)}</p>${rows(SURVEY.b, cb)}</div><div><p>${esc(SURVEY.q3)}</p>${rows(SURVEY.c, cc)}${others.length ? `<p class="small" style="font-weight:500;margin-top:6px">其他：${esc([...new Set(others)].join('、'))}</p>` : ''}</div></div>`;
 }
 function renderSurvey(){
-  if (!isHost) return;
+  if (!isHost){ if (!$('#svShow').hidden) $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML(); return; }
   $('#svSum').textContent = `已有 ${surveys.size} 位學員回答。結果即時更新，也會收進「下載互動紀錄」。`;
   $('#svRes').innerHTML = surveys.size ? surveyHTML() : '';
   if (!$('#svShow').hidden) $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML();
 }
 $('#svProj').onclick = () => { $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML(); $('#svShow').hidden = false; $('#host').hidden = true; hostTab(); };
-$('#svShowClose').onclick = () => $('#svShow').hidden = true;
+$('#svShowClose').onclick = () => { $('#svShow').hidden = true; if (isHost && liveState && liveState.svShow) writeLive({svShow:false}); };
+$('#svSync').onclick = () => { const on = !(liveState && liveState.svShow); writeLive({svShow:on}); toast(on ? '學員畫面已同步顯示調查結果' : '已收起學員畫面的調查結果'); };
+let svShown = false;
+function applySvShow(d){
+  const on = !!(d && d.svShow);
+  $('#svSync').hidden = !isHost; $('#svSync').textContent = on ? '收起學員畫面的結果' : '同步顯示到學員畫面';
+  if (!isHost && on !== svShown && nick && $('#join').hidden){ $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML(); $('#svShow').hidden = !on; }
+  svShown = on;
+}
 $('#qkSurvey').onclick = () => $('#svProj').click();
 $('#svClear').onclick = () => { if (!confirm('清空所有調查結果？（演練後、正式開始前使用）')) return; [...surveys.keys()].forEach(id => mqPub('sv/' + id, null, true)); surveys.clear(); renderSurvey(); };
 // a returning visitor confirms their name first (and can reach 講師登入) before the sharing gate
@@ -3650,6 +3713,10 @@ $('#pStart').onclick = () => {
 $('#pStop').onclick = () => { if (poll) writeLive({poll:Object.assign({}, liveState.poll, {open:false})}); };
 $('#pShow').onclick = () => openPoll(true);
 // --- idea wall ---
+const cleanWalls = v => (Array.isArray(v) ? v : []).slice(-8).map(a => ({id:cleanText(a.id, 20), q:cleanText(a.q, 60), list:(Array.isArray(a.list) ? a.list : []).slice(-150).map(i => ({n:cleanText(i.n, 16), x:cleanText(i.x, 80), k:cleanText(i.k, 20), t:+i.t || 0}))}));
+wallArch = cleanWalls(wallArch);
+function saveWalls(){ store.set('walls.' + ROOM, wallArch); mqPub('walls', wallArch, true); }
+function gotWalls(v){ wallArch = cleanWalls(v); if (wallView >= wallArch.length) wallView = -1; renderWall(); }
 function saveIdeas(){
   store.set('ideas.' + ROOM, ideas);
   clearTimeout(saveIdeas.t); saveIdeas.t = setTimeout(() => mqPub('ideas', ideas, true), 400);
@@ -3666,7 +3733,7 @@ function gotIdeas(v){
 }
 function openWall(proj){
   $('#wallBox').classList.toggle('proj', !!proj);
-  $('#wallOv').hidden = false; renderWall();
+  wallView = -1; $('#wallOv').hidden = false; renderWall();
   if (!proj && wall && wall.open && !isHost) setTimeout(() => $('#wallInput').focus(), 60);
 }
 function renderWall(){
@@ -3674,6 +3741,17 @@ function renderWall(){
   if (isHost) $('#wCount').textContent = wall ? `「${wall.q}」${wall.open ? '投稿中' : '已停止投稿'}・${list.length} 則想法` : '學員也可以走到島上的布告欄貼便利貼。';
   if ($('#wallOv').hidden) return;
   const proj = $('#wallBox').classList.contains('proj');
+  const gate = warmGate && needWarm(), arch = wallArch.filter(a => !wall || a.id !== wall.id), old = !gate && wallView >= 0 && arch[wallView];
+  $('#wallNav').hidden = gate || !arch.length;
+  $('#wallPos').textContent = `第 ${old ? wallView + 1 : arch.length + 1} 題／共 ${arch.length + 1} 題`;
+  $('#wallPrev').disabled = old ? wallView === 0 : false; $('#wallNext').disabled = !old;
+  if (old){
+    $('#wallQ').textContent = old.q; $('#wallEyebrow').textContent = '想法牆・先前的題目';
+    $('#wallClose').hidden = false; $('#wallHost').hidden = true; $('#wallClose').textContent = '關閉'; $('#wallForm').hidden = true;
+    $('#wallMsg').textContent = `共 ${old.list.length} 則分享`;
+    $('#wallGrid').innerHTML = old.list.slice().reverse().map(i => `<div class="note-card">${esc(i.x)}<small>${esc(i.n)}</small></div>`).join('');
+    return;
+  }
   $('#wallQ').textContent = wall ? wall.q : '講師還沒開放想法牆';
   $('#wallEyebrow').textContent = wall && wall.warm ? '入港前分享' : '想法牆';
   $('#wallClose').hidden = warmGate && needWarm(); $('#wallHost').hidden = !(warmGate && needWarm());
@@ -3698,6 +3776,8 @@ $('#wallForm').addEventListener('submit', e => {
 });
 $('#wallBtn').onclick = () => openWall(isHost && !!wall);
 $('#wallClose').onclick = () => $('#wallOv').hidden = true;
+$('#wallPrev').onclick = () => { const n = wallArch.filter(a => !wall || a.id !== wall.id).length; wallView = wallView < 0 ? n - 1 : Math.max(0, wallView - 1); renderWall(); };
+$('#wallNext').onclick = () => { const n = wallArch.filter(a => !wall || a.id !== wall.id).length; wallView = wallView + 1 >= n ? -1 : wallView + 1; renderWall(); };
 $('#wStart').onclick = () => {
   const q = cleanText($('#wQ').value, 60); if (!q) return toast('請輸入引導問題');
   if (wall && wall.q === q && !wall.open) return writeLive({wall:Object.assign({}, liveState.wall, {open:true})});
@@ -3705,13 +3785,14 @@ $('#wStart').onclick = () => {
 };
 $('#wStop').onclick = () => { if (wall) writeLive({wall:Object.assign({}, liveState.wall, {open:false})}); };
 $('#wShow').onclick = () => openWall(true);
-$('#wClear').onclick = () => { if (wall && confirm('清空想法牆上的所有便利貼？')){ ideas = {w:wall.id, list:[]}; saveIdeas(); renderWall(); } };
+$('#wClear').onclick = () => { if (wall && confirm('清空想法牆上的所有便利貼？')){ ideas = {w:wall.id, q:wall.q, list:[]}; saveIdeas(); renderWall(); } };
 // --- export everything as one CSV ---
 $('#logCsv').onclick = () => {
   const t2s = t => t ? new Date(t).toLocaleString('zh-TW', {hour12:false}) : '';
   const cell = v => '"' + String(v).replace(/"/g, '""') + '"';
   const rows = [['類型', '時間', '暱稱', '內容']];
   chatLog.forEach(r => rows.push(['聊天', t2s(r.t), r.n, r.x]));
+  wallArch.filter(a => !wall || a.id !== wall.id).forEach(a => a.list.forEach(i => rows.push(['想法牆：' + a.q, t2s(i.t), i.n, i.x])));
   if (wall) ideas.list.forEach(i => rows.push(['想法牆：' + wall.q, t2s(i.t), i.n, i.x]));
   archivePoll();
   pollLog.forEach(x => {
