@@ -449,7 +449,7 @@ body.is-host #liveChip{cursor:pointer}
   <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button><button type="button" id="qkSurvey">調查結果</button><button type="button" id="qkChat">聊天：開</button></div>
   <div class="sheet-body">
     <button class="ghost" id="hostBack" type="button" hidden>◀ 全部功能</button>
-    <button class="primary" id="hmStart" type="button" hidden>開始研習（全班大畫面提醒，開放第 1 站）</button>
+    <button class="primary" id="hmStart" type="button" hidden>開始研習（全班大畫面提醒，各站仍由你開放）</button>
     <div class="hm-now" id="hmNow" hidden></div>
     <div id="hostMenu"></div>
     <section>
@@ -467,7 +467,7 @@ body.is-host #liveChip{cursor:pointer}
     <section>
       <h3>課堂控制</h3>
       <div class="class-grid">
-        <button type="button" class="start" id="cStart">開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，開放第 1 站</span></button>
+        <button type="button" class="start" id="cStart">開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，各站仍鎖定</span></button>
         <button type="button" class="pause" id="cAttn">注意！<br><span class="small" style="color:inherit" id="cAttnSub">暫停全班畫面</span></button>
         <button type="button" class="rest" id="cRest">休息<br><span class="small" style="color:inherit" id="cRestSub">島上入夜，角色睡覺</span></button>
         <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，全員登船開走</span></button>
@@ -1171,7 +1171,7 @@ let frags = new Set(store.get('frags', []));
 let sleeping = false, boarded = false, explorersOn = true;
 let cards = new Set(store.get('cards', []));
 const knowAt = i => { const k = liveState && Array.isArray(liveState.know) && liveState.know[i]; return k && k.t ? {t:String(k.t).slice(0, 40), b:String(k.b || '').slice(0, 400)} : ANIMALS[i].card; };
-let openUpTo = 0;          // host-controlled; 0 = every station locked until the host opens it, 7 = all open
+let openSeen = false; let openUpTo = 0;          // host-controlled; 0 = every station locked until the host opens it, 7 = all open
 let liveState = null;      // last live/state doc
 let currentSid = null;
 let isHost = false;
@@ -1285,7 +1285,7 @@ function isOpen(st){
 }
 const oresDone = () => [1,2,3,4,5,6].filter(i => done.has(i)).length;
 function lockReason(st){
-  if (st.id > openUpTo) return (started ? '講師還沒開放這一站，先專心聽講喔！' : '講師按「開始研習」後就會開放');
+  if (st.id > openUpTo) return (started ? '講師還沒開放這一站，先專心聽講喔！' : '等講師開放後就能進來');
   return `社交寶箱需要 6 顆礦石＋${FRAGS.length} 片藏寶圖碎片（目前礦石 ${oresDone()}/6、碎片 ${frags.size}/${FRAGS.length}）`;
 }
 
@@ -2472,7 +2472,7 @@ function loop(){
           player.pos.copy(PIER_B); player.target = null; flyToPlayer(); lastPos = 0; pushPos();
           walkTo(SPAWN.clone(), null, true);
           toast('下船囉！點地面、地標或動物就會走過去');
-          if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 2200);
+          if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started && openUpTo >= 1) $('#missionOv').hidden = false; }, 2200);
         }, 500);
       }
     }
@@ -2652,7 +2652,8 @@ function applyLive(d){
     } }
   $('#brandSub').textContent = d && typeof d.title === 'string' && d.title.trim() ? d.title.trim().slice(0, 40) : DEFAULT_TITLE;
   const o = d && Number.isFinite(+d.open) ? Math.max(0, Math.min(7, +d.open)) : 0;
-  if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost) toast(o === 0 ? '講師還沒開放關卡' : o < 7 ? `講師已開放到第 ${o} 站` : '講師已開放全部關卡'); }
+  if (o !== openUpTo){ const was = openUpTo; openUpTo = o; renderHUD();
+    if (was === 0 && o >= 1 && openSeen && started && !done.has(1) && !isHost && nick) setTimeout(() => { if (openUpTo >= 1 && $('#sheet').hidden) $('#missionOv').hidden = false; }, 900); if (!isHost) toast(o === 0 ? '講師還沒開放關卡' : o < 7 ? `講師已開放到第 ${o} 站` : '講師已開放全部關卡'); }
   packLink = d && typeof d.handout === 'string' && d.handout ? d.handout : PACK_HANDOUT; renderPack();
   renderOpenGrid();
   renderHist();
@@ -2702,9 +2703,9 @@ function applyClass(d){
   if (!first && ph === 'class' && started && wasStarted === false){
     closeSheet(); if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; $('#packOv').hidden = true;
     landTitle('研習開始！'); banner('研習開始囉！請看講師，準備出發探險', 7000); confetti();
-    if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 3500);
+    if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started && openUpTo >= 1) $('#missionOv').hidden = false; }, 3500);
   }
-  $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，開放第 1 站</span>';
+  $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，各站仍鎖定</span>';
   if (typeof hmStartSync === 'function') hmStartSync();
   waitBanner();
   const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:!!d.timer.music} : null;
@@ -2950,7 +2951,7 @@ function showEnd(onBoard){
   $('#endOv').hidden = false;
 }
 $('#endClose').onclick = () => $('#endOv').hidden = true;
-$('#cStart').onclick = () => { if (phase === 'class' && started) return toast('研習已經開始了'); writeLive(Object.assign({started:true, attention:false, rest:null, open:Math.max(1, openUpTo)}, phase === 'class' ? {} : {phase:'class', phaseAt:Date.now()})); };
+$('#cStart').onclick = () => { if (phase === 'class' && started) return toast('研習已經開始了'); writeLive(Object.assign({started:true, attention:false, rest:null}, phase === 'class' ? {} : {phase:'class', phaseAt:Date.now()})); };
 $('#cEnd').onclick = () => {
   if (phase === 'gone') return toast('大家已經離島了；要重來請按「重設島嶼」');
   const farewell = $('#farewell').value.trim().slice(0, 160);
@@ -3608,6 +3609,7 @@ function applyInteract(d){
   checkWarm();
   applySvShow(d);
   if (isHost) hmStartSync();
+  openSeen = true;
 }
 // warm-up share before landing: a learner posts one line before stepping onto the island
 const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
