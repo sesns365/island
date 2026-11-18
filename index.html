@@ -2085,7 +2085,7 @@ function markSprite(kind){
   if (kind === 'h'){ c.font = '92px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; c.fillText('✋', 80, 86); }
   else { c.font = '900 110px "Noto Sans TC",sans-serif'; c.fillStyle = '#fff'; c.fillText('?', 80, 88); }
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv), depthTest:false, transparent:true, sizeAttenuation:false}));
-  sp.scale.set(.075, .075, 1); sp.renderOrder = 12; return sp; // constant size on screen, so the host spots it from the bird's-eye view
+  sp.scale.set(.058, .058, 1); sp.renderOrder = 12; return sp; // constant size on screen, so the host spots it from the bird's-eye view
 }
 function setMark(m, kind){
   if (!m || m.markKind === kind) return;
