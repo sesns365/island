@@ -261,7 +261,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .ai-box textarea{font:inherit;font-size:15px;border:2px solid var(--line);border-radius:12px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical}
 .dialog{max-height:calc(100dvh - 32px);overflow-y:auto}
 .draw-q{background:var(--mist);border-radius:14px;padding:12px 14px;font-weight:700;font-size:17px;color:var(--ink);text-align:left;width:100%;box-sizing:border-box}
-.land-title{position:fixed;z-index:45;inset:0;display:grid;place-items:center;pointer-events:none}
+.land-title{position:fixed;z-index:45;inset:0;display:grid;place-items:center;pointer-events:none;background:rgba(24,50,58,.5);animation:landBg 3.2s ease forwards}
+@keyframes landBg{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
 .land-title div{font:900 clamp(40px,10vw,90px)/1.1 var(--display);color:#fff;text-shadow:0 6px 24px rgba(24,50,58,.55);letter-spacing:.08em;animation:landIn 3.2s ease forwards}
 @keyframes landIn{0%{opacity:0;transform:scale(.7)}15%{opacity:1;transform:scale(1.05)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
 .class-grid .sail{background:#8A5A3B}
@@ -373,6 +374,12 @@ body.is-host #liveChip{cursor:pointer}
 .wall-nav[hidden]{display:none}
 .wall-nav button{padding:6px 12px;font-size:14px}
 .wall-nav button:disabled{opacity:.35}
+.start-row button[disabled]{background:#9AA9AA;box-shadow:none}
+.hm-now{background:var(--mist);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.hm-now[hidden]{display:none}
+.hm-now-t{font-size:14.5px}
+.hm-now button{padding:9px 14px;font-size:14.500px}
+@media (max-width:700px){.banner{top:calc(env(safe-area-inset-top,0px) + 206px);font-size:14px;padding:8px 16px}}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -443,6 +450,7 @@ body.is-host #liveChip{cursor:pointer}
   <div class="sheet-body">
     <button class="ghost" id="hostBack" type="button" hidden>◀ 全部功能</button>
     <button class="primary" id="hmStart" type="button" hidden>開始研習（全班大畫面提醒，開放第 1 站）</button>
+    <div class="hm-now" id="hmNow" hidden></div>
     <div id="hostMenu"></div>
     <section>
       <h3>登島前小調查（AI 使用經驗）</h3>
@@ -1324,7 +1332,7 @@ function renderHUD(){
     const open = isOpen(s), d = done.has(s.id);
     return `<button class="st-btn ${d?'done':''} ${open?'':'locked'}" data-sid="${s.id}" type="button">
       <span class="n" style="background:${s.color}">${s.id}</span>
-      <span>${esc(s.name)}<br><span class="state">${d?'已挖到'+GEMS[s.id-1].name:open?'可挑戰':'未開放'}</span></span></button>`;
+      <span>${esc(s.name)}<br><span class="state">${d?'已挖到'+GEMS[s.id-1].name:open?(quizOpen(s)?'可挑戰':'已開放'):'未開放'}</span></span></button>`;
   }).join('');
   $('#meName').textContent = nick || '—';
   $('#meAv').innerHTML = avatarHTML(charIdx);
@@ -2685,7 +2693,7 @@ function applyClass(d){
   if (!first && ph === 'class' && started && wasStarted === false){
     closeSheet(); if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; $('#packOv').hidden = true;
     landTitle('研習開始！'); banner('研習開始囉！請看講師，準備出發探險', 7000); confetti();
-    if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 2600);
+    if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 3500);
   }
   $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，開放第 1 站</span>';
   if (typeof hmStartSync === 'function') hmStartSync();
@@ -2812,7 +2820,17 @@ function showSec(sec){
 }
 $('#hostMenu').addEventListener('click', e => { const b = e.target.closest('[data-hm]'); if (b) showSec(secOf(b.dataset.hm)); });
 $('#hostBack').onclick = () => showSec(null);
-function hmStartSync(){ $('#hmStart').hidden = $('#hostMenu').hidden || !(phase === 'class' && !started); }
+function hmStartSync(){
+  $('#hmStart').hidden = $('#hostMenu').hidden || !(phase === 'class' && !started);
+  const show = !$('#hostMenu').hidden && phase === 'class' && started, el = $('#hmNow'); el.hidden = !show; if (!show) return;
+  const st = STATIONS.find(x => x.id === openUpTo), nx = STATIONS.find(x => x.id === openUpTo + 1);
+  el.innerHTML = `<div class="hm-now-t">${st ? `目前開放到 <b>第 ${st.id} 站 ${esc(st.name)}</b>・${quizUpTo >= st.id ? '挑戰已開啟' : '挑戰未開啟'}` : '目前各站都還沒開放'}</div><div class="row">` +
+    (st && quizUpTo < st.id ? `<button class="primary" type="button" data-hq="${st.id}">開啟第 ${st.id} 站挑戰</button>` : '') +
+    (nx ? `<button class="${st && quizUpTo < st.id ? 'ghost' : 'primary'}" type="button" data-ho="${nx.id}">開放第 ${nx.id} 站 ${esc(nx.name)}</button>` : '') + '</div>';
+}
+$('#hmNow').onclick = e => { const q = e.target.closest('[data-hq]'), o = e.target.closest('[data-ho]');
+  if (q){ const n = +q.dataset.hq; writeLive({quiz:Math.max(quizUpTo, n), open:Math.max(openUpTo, n)}); toast(`第 ${n} 站的挑戰已開啟`); }
+  if (o){ writeLive({open:+o.dataset.ho}); toast(`第 ${o.dataset.ho} 站已開放`); } };
 $('#hmStart').onclick = () => $('#cStart').click();
 showSec(null);
 const jump = id => { if ($('#host').hidden) openHost(); showSec($(id).closest('section')); };
@@ -2908,7 +2926,7 @@ function waitBanner(){
   if (restUntil && restUntil > Date.now() - 15000){ b.hidden = true; return; }
   if (bannerMsg){ b.hidden = false; return; }
   if (phase === 'before'){ b.className = 'banner wait'; b.textContent = isHost ? '學員等待中：按「開始研習」讓渡輪開進島' : '等待講師開始…渡輪準備出發'; b.hidden = false; }
-  else if (phase === 'class' && !started){ b.className = 'banner wait'; b.textContent = isHost ? '學員自由探索中：準備好就按「開始研習」' : '等待講師按「開始研習」，先在島上逛逛、找動物聊天'; b.hidden = false; }
+  else if (phase === 'class' && !started){ b.className = 'banner wait'; b.textContent = isHost ? '學員自由探索中：準備好就按「開始研習」' : '等講師按「開始研習」・先逛逛島嶼'; b.hidden = false; }
   else b.hidden = true;
 }
 const DEFAULT_FAREWELL = '謝謝大家今天的參與！\n願你帶著今天挖到的寶藏回到教室，成為孩子最好的學習探險夥伴。\n祝教學順利，一路順風！';
@@ -3149,7 +3167,7 @@ function applyCheck(){
   const on = checkOpen();
   $('#m1Check').textContent = on ? '關閉檢核闖關' : '開放檢核闖關';
   $('#m1State').textContent = on ? '檢核已開放' : '檢核尚未開放';
-  renderQuizGrid(); if (isHost) renderAgenda();
+  renderQuizGrid(); renderHUD(); if (isHost) renderAgenda();
   if (seenQuiz !== undefined && q > seenQuiz && !isHost){
     const st = STATIONS[q - 1];
     banner(`講師開啟「${st.name}」的挑戰了！到第 ${q} 站作答挖礦石`, 7000);
@@ -3580,6 +3598,7 @@ function applyInteract(d){
   renderWall();
   checkWarm();
   applySvShow(d);
+  if (isHost) hmStartSync();
 }
 // warm-up share before landing: a learner posts one line before stepping onto the island
 const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
