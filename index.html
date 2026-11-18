@@ -380,6 +380,22 @@ body.is-host #liveChip{cursor:pointer}
 .hm-now-t{font-size:14.5px}
 .hm-now button{padding:9px 14px;font-size:14.500px}
 @media (max-width:700px){.banner{top:calc(env(safe-area-inset-top,0px) + 206px);font-size:14px;padding:8px 16px}}
+.land-title small{display:block;font:700 clamp(18px,4vw,34px)/1.4 var(--round);letter-spacing:.2em;margin-top:6px}
+body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-start #feed,body.pre-start #sayBar,body.pre-start #askDone{display:none!important}
+.feed-form{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
+.feed-form input{flex:1;min-width:0;border:2px solid var(--line);border-radius:10px;padding:7px 9px;font:inherit;font-size:16px}
+.feed-form button{padding:7px 12px;font-size:14px}
+.pack-items{display:flex;flex-direction:column;gap:8px;text-align:left}
+.pack-items[hidden]{display:none}
+.pack-items details{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:10px 14px;font-size:14px}
+.pack-items summary{cursor:pointer;font-weight:700;color:var(--teal-deep)}
+.pack-items ul{margin:8px 0 2px;padding-left:18px;display:grid;gap:5px;line-height:1.5}
+.pack-items .kcard{margin-top:8px}
+.dialog.peek{width:min(760px,100%);max-height:calc(100dvh - 32px);gap:10px}
+.peek-body{overflow-y:auto;display:flex;flex-direction:column;gap:10px;text-align:left;min-height:0}
+.peek-quiz{margin:0;padding-left:20px;display:grid;gap:10px}
+.peek-quiz ul{margin:4px 0;padding-left:18px}
+.peek-quiz li.ok{color:var(--teal-deep);font-weight:700}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -417,6 +433,7 @@ body.is-host #liveChip{cursor:pointer}
 <aside class="feed" id="feed" hidden aria-label="聊天室">
   <div class="feed-head"><span>聊天室・想法與提問</span><button type="button" id="feedClose" aria-label="收起">×</button></div>
   <div class="feed-list" id="feedList"><span class="small">大家的發言會出現在這裡。</span></div>
+  <form class="feed-form" id="feedForm"><input id="feedInput" maxlength="40" autocomplete="off" placeholder="在這裡打字聊天"><button class="primary" type="submit">送出</button></form>
 </aside>
 <form class="say-bar" id="sayBar" hidden>
   <div class="emojis" id="emojis"></div>
@@ -505,6 +522,11 @@ body.is-host #liveChip{cursor:pointer}
       <div class="row"><button class="primary" id="m1Timer" type="button">任務一計時 10 分鐘（含音樂）</button><button class="ghost" id="m1Four" type="button">投影四大向度圖</button></div>
       <div class="row"><button class="ghost" id="m1Check" type="button">開放檢核闖關</button><span class="small" id="m1State"></span></div>
       <p class="small">登島後學員會收到任務一，先打開個案資料做需求分析；你按「開放檢核闖關」後，學員才能在燈塔作答（等同開啟第 1 站的挑戰）。</p>
+    </section>
+    <section>
+      <h3>關卡內容預覽</h3>
+      <p class="small">一站一頁，查看學員會看到的內容、工具、實作與挑戰題目（含答案）。只有你看得到，不會影響學員。</p>
+      <div class="open-grid" id="peekGrid"></div>
     </section>
     <section>
       <h3 id="secBeast">野獸突襲</h3>
@@ -599,6 +621,13 @@ body.is-host #liveChip{cursor:pointer}
 </aside>
 
 <div class="roster-pop" id="rosterPop" hidden></div>
+<div class="overlay" id="peekOv" hidden style="z-index:44">
+  <div class="dialog peek">
+    <div class="wall-nav"><button class="ghost" id="peekPrev" type="button">◀ 上一站</button><b id="peekPos"></b><button class="ghost" id="peekNext" type="button">下一站 ▶</button></div>
+    <div class="peek-body" id="peekBody"></div>
+    <button class="ghost" id="peekClose" type="button">關閉</button>
+  </div>
+</div>
 
 <div class="overlay" id="setup" hidden style="z-index:45">
   <div class="dialog">
@@ -747,6 +776,7 @@ body.is-host #liveChip{cursor:pointer}
     <h2>我的背包</h2>
     <div class="tools" id="packLinks"></div>
     <div class="note" id="packMine"></div>
+    <div class="pack-items" id="packItems" hidden></div>
     <details class="pack-help" id="packHelp">
       <summary>功能鍵說明</summary>
       <ul>
@@ -1906,7 +1936,7 @@ function checkFrags(){
     if (frags.has(i) || Math.hypot(player.pos.x - f.pos[0], player.pos.z - f.pos[1]) > 1.3) return;
     frags.add(i); store.set('frags', [...frags]); renderHUD(); confetti();
     toast(`撿到藏寶圖碎片 ${frags.size}/${FRAGS.length}：${f.tip}`);
-    if (frags.size >= FRAGS.length && oresDone() === 6) setTimeout(() => banner('藏寶圖拼好了！快去社交寶箱拿黃金船票', 5000), 2800);
+    if (frags.size >= FRAGS.length) setTimeout(() => { banner('藏寶圖拼好了！四句寶藏口訣收進背包，打開「我的背包」看看', 6500); confetti(); }, 2800);
   });
 }
 
@@ -2269,14 +2299,15 @@ function updatePlayer(dt, t){
   const moving = _d.lengthSq() > 0;
   if (moving){
     _d.normalize();
-    const before = player.pos.clone(), step = 5.6*dt;
+    const before = player.pos.clone(), step = 7.2*dt;
     player.pos.addScaledVector(_d, step); clampWalk(player.pos);
     if (solid() && bump(player.pos)){ bumped = true; clampWalk(player.pos); }
     if (player.target && player.pos.distanceTo(before) < step*.5){
       // head-on into a landmark: sidestep along whichever side ends closer to the goal
       const tries = [new THREE.Vector3(-_d.z, 0, _d.x), new THREE.Vector3(_d.z, 0, -_d.x)].map(s => clampWalk(before.clone().addScaledVector(s.add(_d.clone().multiplyScalar(.3)).normalize(), step)));
-      tries.sort((a, b) => a.distanceTo(player.target) - b.distanceTo(player.target));
-      player.pos.copy(tries[0]);
+      // keep going round the same side for a moment, otherwise the two sides alternate and the explorer shakes in place
+      if (!(player.sideT > t)){ player.side = tries[0].distanceTo(player.target) <= tries[1].distanceTo(player.target) ? 0 : 1; player.sideT = t + 1.2; }
+      player.pos.copy(tries[player.side]);
       _d.copy(player.pos).sub(before); if (_d.lengthSq()) _d.normalize();
     }
     const h = Math.atan2(_d.x, _d.z);
@@ -2288,6 +2319,11 @@ function updatePlayer(dt, t){
       player.target = null; const cb = player.onArrive; player.onArrive = null; if (cb) cb();
     }
     if (player.target && player.pos.distanceTo(before) < step*.1){ player.target = null; player.onArrive = null; } // truly stuck
+    if (player.target){   // no real progress toward the goal for a while: stop instead of jittering against the obstacle
+      const dT = player.pos.distanceTo(player.target);
+      if (player.progTarget !== player.target || dT < player.progD - .35){ player.progTarget = player.target; player.progD = dT; player.progT = t; }
+      else if (t - player.progT > 1.1){ const cb = dT < 4.5 ? player.onArrive : null; player.target = null; player.onArrive = null; if (cb) cb(); }
+    }
     pushPos();
   }
   const swing = moving && !reduced ? Math.sin(t*11)*.6 : 0;
@@ -2428,7 +2464,18 @@ function loop(){
   if (!renderer) return;
   const t = clock.getElapsedTime(), now = performance.now(), dt = Math.min((now - (loop.last || now))/1000, .05); loop.last = now;
   updatePlayer(dt, t); updatePeers(dt, t); updateNight(dt, t); updateFrags(t); updateAnimals(dt, t);
-  if (!reduced){
+  // keep slower phones smooth: when the frame rate stays low, step the picture quality down (sharpness first, then shadows)
+  loop.n = (loop.n || 0) + 1;
+  if (!loop.t0) loop.t0 = now;
+  if (now - loop.t0 > 3000){
+    const fps = loop.n*1000/(now - loop.t0); loop.n = 0; loop.t0 = now; loop.warm = (loop.warm || 0) + 1;
+    if (loop.warm > 1 && fps < 27 && document.visibilityState === 'visible' && (loop.q || 0) < 2){
+      loop.q = (loop.q || 0) + 1;
+      renderer.setPixelRatio(loop.q === 1 ? Math.min(devicePixelRatio, 1.25) : 1);
+      if (loop.q === 2) sun.castShadow = false;
+    }
+  }
+  if (!reduced && !(loop.q === 2 && loop.n % 2)){
     const p = waterGeo.attributes.position;
     for (let i = 0; i < p.count; i++){
       const x = wBase[i*3], z = wBase[i*3 + 2];
@@ -2590,7 +2637,9 @@ function hostLogin(){
   warmGate = false; $('#wallOv').hidden = true; openHost();
   if (!liveState || !liveState.phase) writeLive({phase:'class', started:false, open:0, quiz:0, phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
 }
-function becomeHost(){ isHost = true; document.body.classList.add('is-host'); setTimeout(hostTab, 0); $('#hostBtn').hidden = false; $('#handBtn').hidden = true; renderHUD(); renderOpenGrid(); showFab(); }
+function hostSpawn(){ if (!nick) nick = '講師'; if (!player) spawnPlayer(); renderHUD(); }
+function hostEnsure(){ if (isHost && connected && (!liveState || !liveState.phase || liveState.phase === 'before')) writeLive({phase:'class', started:false, phaseAt:Date.now(), attention:false, rest:null}); }
+function becomeHost(){ isHost = true; setTimeout(hostSpawn, 50); setTimeout(hostEnsure, 2500); setTimeout(hostEnsure, 6000); document.body.classList.add('is-host'); setTimeout(hostTab, 0); $('#hostBtn').hidden = false; $('#handBtn').hidden = true; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
 /* backpack: today's handout and reference folders, one tap away */
 const PACK_REF = 'https://drive.google.com/drive/folders/1iz7FVaATFl4hKBha3iY3mTYjc72e7FVH?usp=sharing';
@@ -2604,6 +2653,11 @@ function renderPack(){
   $('#packLinks').innerHTML = items.map(t => `<a href="${esc(t[2])}" target="_blank" rel="noopener"><b>${esc(t[0])}</b><span>${esc(t[1])}</span></a>`).join('');
   $('#packMine').innerHTML = nick ? `<b>${esc(nick)}</b> 的收藏：礦石 ${oresDone()}/6・藏寶圖 ${frags.size}/${FRAGS.length}${done.has(7) ? '・黃金船票' : ''}<br><span class="small">接續碼 ${esc(makeCode())}（換裝置時輸入）</span>` : '';
   $('#packMine').hidden = !nick;
+  const ores = STATIONS.filter(x => x.id <= 6 && done.has(x.id)), fr = FRAGS.filter((f, i) => frags.has(i)), cs = ANIMALS.map((a, i) => i).filter(i => cards.has(i));
+  $('#packItems').hidden = !nick || isHost;
+  $('#packItems').innerHTML = `<details${ores.length ? ' open' : ''}><summary>礦石 ${ores.length}/6</summary>${ores.length ? '<ul>' + ores.map(x => `<li><b>${esc(GEMS[x.id - 1].name)}</b>：${esc(x.name)}</li>`).join('') + '</ul>' : '<p class="small">通過各站的挑戰就能挖到礦石。</p>'}</details>
+    <details><summary>藏寶圖碎片 ${fr.length}/${FRAGS.length}${fr.length >= FRAGS.length ? '・已拼好' : ''}</summary>${fr.length ? '<ul>' + fr.map(f => `<li>${esc(f.tip)}</li>`).join('') + '</ul>' : '<p class="small">島上有發光的碎片，走過去就能撿起來。</p>'}${fr.length >= FRAGS.length ? '<p class="small"><b>四句寶藏口訣都到手了</b>，這就是今天最想讓你帶走的四件事。</p>' : ''}</details>
+    <details><summary>知識卡 ${cs.length}/${ANIMALS.length}</summary>${cs.length ? cs.map(i => { const k = knowAt(i); return `<div class="kcard"><small>${esc(ANIMALS[i].name)}</small><b>${esc(k.t)}</b>${esc(k.b)}</div>`; }).join('') : '<p class="small">找島上的動物聊天，可以拿到知識卡。</p>'}</details>`;
   if (isHost && document.activeElement !== $('#packUrl')){ $('#packUrl').value = packLink; $('#packState').textContent = okUrl ? '已設定' : '尚未設定'; }
 }
 $('#packBtn').onclick = () => { renderPack(); $('#packOv').hidden = false; };
@@ -2625,6 +2679,7 @@ function rosterRows(withOffline){
   if (withOffline) joined.forEach((v, n) => seen.set(n, {n, d:v.d || 0, at:0, c:v.c ? unpackSpec(v.c) || CHARS[0] : CHARS[Math.max(0, Math.min(CHARS.length - 1, v.ci || 0))], off:true}));
   room.peers().forEach(pr => {
     if (pr.kind !== 'viewer' || !pr.presence || typeof pr.presence.nick !== 'string') return;
+    if (pr.isMe && isHost) return;   // the host walks the island too but is not a learner
     const n = pr.presence.nick.trim().slice(0, 16); if (!n) return;
     const d = String(pr.presence.done || '').split(',').filter(Boolean).length;
     const at = +pr.presence.at || 0;
@@ -2702,14 +2757,16 @@ function applyClass(d){
   }
   if (!first && ph === 'class' && started && wasStarted === false){
     closeSheet(); if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; $('#packOv').hidden = true;
-    landTitle('研習開始！'); banner('研習開始囉！請看講師，準備出發探險', 7000); confetti();
+    landTitle('登島！', '研習開始'); banner('研習開始囉！請看講師，準備出發探險', 7000); confetti();
     if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started && openUpTo >= 1) $('#missionOv').hidden = false; }, 3500);
   }
   $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，各站仍鎖定</span>';
   if (typeof hmStartSync === 'function') hmStartSync();
+  document.body.classList.toggle('pre-start', !isHost && !started);
   waitBanner();
   const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:!!d.timer.music} : null;
   if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
+  else if (tm && timer && tm.music !== timer.music){ timer.music = tm.music; tickTimer(); }
   // attention pause
   const att = !!(d && d.attention) && ph !== 'ended';
   if (!isHost){
@@ -2737,10 +2794,13 @@ function tickTimer(){
     if (left < -60000){ box.hidden = true; clearInterval(timerT); music(false); return; }
     const sec = Math.max(0, Math.ceil(left/1000));
     box.hidden = false; box.classList.toggle('over', left <= 0);
+    if (left <= 0 && timer.wasLeft > 0) chime();
+    timer.wasLeft = left;
     $('#timerLabel').textContent = left > 0 ? timer.label : timer.label + '・時間到';
     $('#timerClock').textContent = `${String(Math.floor(sec/60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
-    $('#musicBtn').hidden = !timer.music || left <= 0;
-    music(timer.music && left > 0 && musicOn());
+    $('#musicBtn').hidden = !isHost || left <= 0;   // only the host switches the music, for everyone
+    $('#musicBtn').textContent = timer.music ? '音樂：開' : '音樂：關';
+    music(!!timer.music && left > 0);
   };
   draw(); timerT = setInterval(draw, 500);
 }
@@ -2749,8 +2809,13 @@ let musicPref = store.get('music', null); // null: on for the host's projector, 
 const musicOn = () => musicPref === null ? isHost : musicPref;
 let actx = null, musicT = null, musicStep = 0;
 const MUSIC_NOTES = [0, 4, 7, 12, 9, 7, 4, 2, 0, 4, 7, 9, 7, 4, 2, -3];
+function chime(){
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch(e){ return; }
+  [0, .28, .56].forEach((d, i) => { const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + .05 + d; o.type = 'sine'; o.frequency.value = i === 2 ? 1046.5 : 784;
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.22, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + (i === 2 ? 1.1 : .35)); o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 1.3); });
+}
+addEventListener('pointerdown', () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch(e){} }, {once:true});
 function music(on){
-  $('#musicBtn').textContent = musicOn() ? '音樂：開' : '音樂：關';
   if (!on){ clearInterval(musicT); musicT = null; return; }
   if (musicT) return;
   try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch(e){ return; }
@@ -2766,7 +2831,7 @@ function music(on){
     if (k % 4 === 0) note(MUSIC_NOTES[k] - 12, t, 2.4, .05);
   }, 520);
 }
-$('#musicBtn').onclick = () => { musicPref = !musicOn(); store.set('music', musicPref); tickTimer(); };
+$('#musicBtn').onclick = () => { if (isHost && liveState && liveState.timer) writeLive({timer:Object.assign({}, liveState.timer, {music:!liveState.timer.music})}); };
 $('#tStart').onclick = () => {
   const m = Math.max(1, Math.min(120, +$('#tMin').value || 5));
   writeLive({timer:{until:Date.now() + m*60000, label:$('#tLabel').value.trim().slice(0, 20) || '計時'}});
@@ -2814,7 +2879,7 @@ function agTick(){
 setInterval(agTick, 20000);
 // host console: a menu of functions; picking one shows only that function's panel
 const HOST_MENU = [
-  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '開始・注意・休息・離島'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔']]],
+  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '開始・注意・休息・離島'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡內容預覽（翻頁查看）']]],
   ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
   ['開場與設定', [['登島前小調查', '登島小調查'], ['入港前分享', '入港前分享'], ['學員登入 QR', '登入 QR Code'], ['動物新知', '動物知識卡'], ['學員背包', '背包講義連結']]]
 ];
@@ -2827,6 +2892,27 @@ function showSec(sec){
   $('#hostMenu').hidden = !!sec; $('#hostBack').hidden = !sec; hmStartSync();
   $('#host .sheet-body').scrollTop = 0;
 }
+let peekAt = 1;
+$('#peekGrid').innerHTML = STATIONS.map(x => `<button type="button" data-peek="${x.id}">第 ${x.id} 站</button>`).join('');
+function renderPeek(){
+  const st = STATIONS.find(x => x.id === peekAt); if (!st) return;
+  $('#peekPos').textContent = `第 ${st.id} 站・${st.name}（${st.area}）`;
+  $('#peekPrev').disabled = peekAt <= 1; $('#peekNext').disabled = peekAt >= STATIONS.length;
+  const quiz = st.steps.map((q, i) => `<li><b>${esc(q.q)}</b>` +
+    (q.type === 'mc' ? `<ul>${q.opts.map((o, k) => `<li${k === q.a ? ' class="ok"' : ''}>${esc(o)}${k === q.a ? '（正確）' : ''}</li>`).join('')}</ul>${q.why ? `<p class="small">說明：${esc(q.why)}</p>` : ''}` :
+     q.type === 'order' ? `<p class="small">正確順序：${q.items.map(esc).join(' → ')}</p>` :
+     q.type === 'sort' ? `<ul>${q.buckets.map((b, k) => `<li><b>${esc(b)}</b>：${q.items.filter(it => it[1] === k).map(it => esc(it[0])).join('、')}</li>`).join('')}</ul>` : '') + '</li>').join('');
+  $('#peekBody').innerHTML = (st.task ? taskBlock() : '') + st.intro + kitBlock(st) +
+    (st.guard ? `<div class="note"><b>守門獸</b>：${esc(st.guard.q)}</div>` : '') +
+    `<div class="kit-h" style="margin-top:6px">挑戰題目（${st.steps.length} 題）</div><ol class="peek-quiz">${quiz}</ol>`;
+  $('#peekBody').scrollTop = 0;
+  $('#peekBody').querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
+  $('#peekBody').querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(st.make.copy));
+}
+$('#peekGrid').onclick = e => { const b = e.target.closest('[data-peek]'); if (b){ peekAt = +b.dataset.peek; renderPeek(); $('#peekOv').hidden = false; } };
+$('#peekPrev').onclick = () => { peekAt = Math.max(1, peekAt - 1); renderPeek(); };
+$('#peekNext').onclick = () => { peekAt = Math.min(STATIONS.length, peekAt + 1); renderPeek(); };
+$('#peekClose').onclick = () => $('#peekOv').hidden = true;
 $('#hostMenu').addEventListener('click', e => { const b = e.target.closest('[data-hm]'); if (b) showSec(secOf(b.dataset.hm)); });
 $('#hostBack').onclick = () => showSec(null);
 function hmStartSync(){
@@ -2919,9 +3005,9 @@ function tickRest(){
   draw(); restTimer = setInterval(draw, 500);
 }
 let landT;
-function landTitle(msg){
+function landTitle(msg, sub){
   if (reduced) return;
-  $('#landText').textContent = msg; const el = $('#landTitle'); el.hidden = false;
+  $('#landText').textContent = msg; if (sub){ const e = document.createElement('small'); e.textContent = sub; $('#landText').appendChild(e); } const el = $('#landTitle'); el.hidden = false;
   const d = $('#landText'); d.style.animation = 'none'; void d.offsetWidth; d.style.animation = '';
   clearTimeout(landT); landT = setTimeout(() => el.hidden = true, 3300);
 }
@@ -2959,7 +3045,7 @@ $('#cEnd').onclick = () => {
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
 let wiping = false;
-$('#cReset').onclick = () => { if (wiping || confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive(Object.assign({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, poll:null, beast:null, mute:false, wall:warmWall()}, wiping ? {epoch:Date.now()} : {})); };
+$('#cReset').onclick = () => { if (wiping || confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive(Object.assign({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, poll:null, beast:null, mute:false, four:false, wall:warmWall()}, wiping ? {epoch:Date.now()} : {})); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -3164,10 +3250,12 @@ $('#sJoin').onclick = () => { const c = cleanRoom($('#sJoinCode').value); if (c)
 $('#sJoinCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#sJoin').click(); });
 
 /* ---------------- task one: needs lighthouse ---------------- */
-$('#fourClose').onclick = () => $('#fourOv').hidden = true;
+$('#fourClose').onclick = () => { $('#fourOv').hidden = true; if (isHost && liveState && liveState.four) writeLive({four:false}); };
 $('#missionFour').onclick = openFour;
 $('#missionGo').onclick = () => { $('#missionOv').hidden = true; goStation(1); };
-$('#m1Four').onclick = openFour;
+$('#m1Four').onclick = () => { openFour(); writeLive({four:true}); toast('四大向度圖已同步到學員畫面，關閉時一起收起'); };
+let fourShown = false;
+function applyFour(d){ const on = !!(d && d.four); if (!isHost && on !== fourShown && nick && $('#join').hidden) $('#fourOv').hidden = !on; fourShown = on; }
 $('#m1Timer').onclick = () => writeLive({timer:{until:Date.now() + 10*60000, label:'任務一：個案需求分析', music:true}});
 $('#m1Check').onclick = () => writeLive({quiz:checkOpen() ? 0 : 1});
 let seenQuiz;
@@ -3378,7 +3466,7 @@ function renderFights(){
    say/<id>  one line of chat (not kept), shown as a bubble over that explorer
    vote/<id> retained ballot {p:poll id, o:option}, tallied by everyone
    idea/<id> a sticky note sent to the host, who republishes the whole wall as retained `ideas` */
-const QUICK = ['我懂了！', '好有趣', '有問題想問', '+1 同意', '讚', '需要再說明一次'];
+const QUICK = ['我懂了！', '好有趣', '+1 同意', '讚', '想再聽一次說明'];
 let chatLog = store.get('chat.' + ROOM, []);
 let ideas = store.get('ideas.' + ROOM, {w:'', list:[]});
 let wallArch = store.get('walls.' + ROOM, []), wallView = -1;   // earlier topics; wallView -1 = current topic
@@ -3557,6 +3645,7 @@ $('#sayBtn').onclick = () => {
 };
 $('#sayClose').onclick = () => $('#sayBar').hidden = true;
 $('#sayBar').addEventListener('submit', e => { e.preventDefault(); say($('#sayInput').value); });
+$('#feedForm').addEventListener('submit', e => { e.preventDefault(); const v = $('#feedInput').value; if (!v.trim()) return; const was = sayQ; sayQ = false; say(v); sayQ = was; if (Date.now() - lastSay < 200) $('#feedInput').value = ''; });
 function say(text){
   const x = cleanText(text, 40); if (!x) return;
   if (muted && !isHost) return toast('講師暫停了聊天');
@@ -3607,7 +3696,7 @@ function applyInteract(d){
   if (isHost && w && ideas.w === w.id && !ideas.q) ideas.q = w.q;
   renderWall();
   checkWarm();
-  applySvShow(d);
+  applySvShow(d); applyFour(d);
   if (isHost) hmStartSync();
   openSeen = true;
 }
@@ -3784,7 +3873,7 @@ function renderWall(){
   }
   $('#wallQ').textContent = wall ? wall.q : '講師還沒開放想法牆';
   $('#wallEyebrow').textContent = wall && wall.warm ? '入港前分享' : '想法牆';
-  $('#wallClose').hidden = warmGate && needWarm(); $('#wallHost').hidden = !(warmGate && needWarm());
+  $('#wallClose').hidden = warmGate && needWarm(); $('#wallHost').hidden = true;
   $('#wallClose').textContent = wall && wall.warm && !isHost && !started ? '進入島嶼，自由探索' : '關閉';
   $('#wallForm').hidden = !wall || !wall.open || proj || isHost && !nick;
   $('#wallMsg').textContent = !wall ? '等講師出題後，就可以在這裡貼上你的想法。' : warmGate && needWarm() ? `寫下一句分享就能進入島嶼・已經有 ${list.length} 位分享` : wall.open ? `已經有 ${list.length} 則分享` : `投稿已停止，共 ${list.length} 則分享`;
