@@ -308,8 +308,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .say-kind{display:flex;gap:6px}
 .say-kind button{flex:1;border:2px solid var(--line);background:var(--paper);border-radius:10px;padding:6px;font-weight:700}
 .say-kind button[aria-pressed="true"]{border-color:var(--teal);background:#D6EEEE}
-.emojis{display:flex;gap:4px;justify-content:space-between}
-.emojis button{border:0;background:#F1F7F6;border-radius:12px;font-size:24px;padding:4px 0;flex:1}
+.emojis{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.emojis button{border:0;background:#F1F7F6;border-radius:12px;font-size:22px;padding:4px 0}
+.emojis input{grid-column:1 / -1;border:2px dashed var(--line);border-radius:12px;padding:6px 10px;font-size:15px;text-align:center}
 @media (max-width:700px){.feed{left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);max-height:36vh}}
 /* interaction: chat bubbles, polls, idea wall */
 .fab{position:fixed;left:max(12px,env(safe-area-inset-left,0px));top:42%;z-index:6;display:flex;flex-direction:column;gap:8px}
@@ -3320,7 +3321,7 @@ const cleanText = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/
 function gotInteract(kind, id, v){
   if (kind === 'say'){
     if (!v || muted) return;
-    if (typeof v.e === 'string' && EMOJIS.includes(v.e)){ showEmoji(peerMeshes.get(id), v.e); return; }
+    if (isEmoji(v.e)){ showEmoji(peerMeshes.get(id), v.e); return; }
     const x = cleanText(v.x, 40), n = cleanText(v.n, 16); if (!x || !n) return;
     showBubble(peerMeshes.get(id), (v.q ? '提問：' : '') + x); logChat(n, x, !!v.q, cleanText(v.k, 24));
   } else if (kind === 'vote'){
@@ -3331,17 +3332,28 @@ function gotInteract(kind, id, v){
   }
 }
 // --- chat ---
-const EMOJIS = ['👍', '😂', '😮', '❤️', '🙋', '👏'];
+const EMOJIS = ['👍', '👏', '❤️', '😂', '😮', '🤔', '😊', '🥳', '😭', '💪', '🙏', '✨', '🎉', '💡', '👀', '😴'];
+const isEmoji = e => typeof e === 'string' && e.length <= 14 && /^(\p{Extended_Pictographic}|\p{Emoji_Component})+$/u.test(e) && /\p{Extended_Pictographic}/u.test(e);
 let sayQ = false, lastEmoji = 0;
-$('#emojis').innerHTML = EMOJIS.map(e => `<button type="button" data-e="${e}" aria-label="送出 ${e}">${e}</button>`).join('');
+$('#emojis').innerHTML = EMOJIS.map(e => `<button type="button" data-e="${e}" aria-label="送出 ${e}">${e}</button>`).join('') + '<input id="emojiOwn" maxlength="8" autocomplete="off" placeholder="＋用鍵盤輸入自己的表情符號" aria-label="輸入自己的表情符號">';
 $('#emojis').onclick = e => {
-  const b = e.target.closest('[data-e]'); if (!b) return;
+  const b = e.target.closest('[data-e]'); if (b) sendEmoji(b.dataset.e);
+};
+function sendEmoji(em){
   if (muted && !isHost) return toast('講師暫停了聊天');
   if (Date.now() - lastEmoji < 1200) return;
   lastEmoji = Date.now();
-  mqPub('say/' + myId, {n:nick || '講師', e:b.dataset.e});
-  if (player) showEmoji(player, b.dataset.e);
-};
+  mqPub('say/' + myId, {n:nick || '講師', e:em});
+  if (player) showEmoji(player, em);
+}
+// a learner's own emoji from the phone keyboard: sent as soon as one is typed
+$('#emojiOwn').addEventListener('input', () => {
+  const v = $('#emojiOwn').value.trim(); if (!v) return;
+  const first = (v.match(/\p{Extended_Pictographic}(\p{Emoji_Component}|\u200d\p{Extended_Pictographic})*/u) || [''])[0];
+  if (!first){ if (v.length >= 2){ toast('這一格只能放表情符號'); $('#emojiOwn').value = ''; } return; }
+  sendEmoji(first); $('#emojiOwn').value = '';
+});
+$('#emojiOwn').addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
 $('#sayKind').onclick = e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
   sayQ = b.dataset.k === 'q';
