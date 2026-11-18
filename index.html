@@ -107,8 +107,9 @@ button.del{border:0;background:#F3D9D4;color:#A33;border-radius:8px;font-weight:
 .sv-cols p{margin:0 0 6px;font-weight:700}
 .sv-cols .poll-opt{padding:6px 12px;border-radius:10px;font-size:15px}
 .sv-cols .poll-opts{gap:5px}
+.sv-cols div.poll-opt{box-sizing:border-box}
 #svBig{overflow:auto;min-height:0}
-#svBig .sv-cols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 24px}
+#svBig .sv-cols{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 20px}
 @media (max-width:700px){#svBig .sv-cols{grid-template-columns:1fr}}
 .opt-tag{margin-left:8px;background:var(--sun);color:var(--ink);border-radius:999px;padding:1px 9px;font-size:11px;letter-spacing:0}
 .make b.t{display:block;font-size:16px;margin-bottom:4px}
@@ -260,7 +261,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .ai-box textarea{font:inherit;font-size:15px;border:2px solid var(--line);border-radius:12px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical}
 .dialog{max-height:calc(100dvh - 32px);overflow-y:auto}
 .draw-q{background:var(--mist);border-radius:14px;padding:12px 14px;font-weight:700;font-size:17px;color:var(--ink);text-align:left;width:100%;box-sizing:border-box}
-.land-title{position:fixed;z-index:9;inset:0;display:grid;place-items:center;pointer-events:none}
+.land-title{position:fixed;z-index:45;inset:0;display:grid;place-items:center;pointer-events:none}
 .land-title div{font:900 clamp(40px,10vw,90px)/1.1 var(--display);color:#fff;text-shadow:0 6px 24px rgba(24,50,58,.55);letter-spacing:.08em;animation:landIn 3.2s ease forwards}
 @keyframes landIn{0%{opacity:0;transform:scale(.7)}15%{opacity:1;transform:scale(1.05)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
 .class-grid .sail{background:#8A5A3B}
@@ -349,6 +350,9 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .proj .poll-opt{font-size:24px;padding:18px 20px}.proj h2{font-size:34px}
 .chat-log{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:14px;border:2px solid var(--line);border-radius:12px;padding:8px}
 .chat-log b{color:var(--teal-deep)}
+.pack-help{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:10px 14px;text-align:left;font-size:14px}
+.pack-help summary{cursor:pointer;font-weight:700;color:var(--teal-deep)}
+.pack-help ul{margin:8px 0 2px;padding-left:18px;display:grid;gap:5px;line-height:1.5}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -415,11 +419,11 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     </div>
     <button class="close" id="hostClose" type="button" aria-label="收起主控台" title="收起（Esc）" style="font-size:16px">◀</button>
   </div>
-  <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button><button type="button" id="qkChat">聊天：開</button></div>
+  <div class="quick"><span>隨時可用</span><button type="button" id="qkHands">舉手・提問</button><button type="button" id="qkDraw">抽人</button><button type="button" id="qkPoll">投票</button><button type="button" id="qkBeast">野獸突襲</button><button type="button" id="qkTimer">計時</button><button type="button" id="qkSurvey">調查結果</button><button type="button" id="qkChat">聊天：開</button></div>
   <div class="sheet-body">
     <section>
       <h3>登島前小調查（AI 使用經驗）</h3>
-      <p class="small" id="svSum">學員輸入名字後會先回答 2 題選擇題，結果即時顯示在這裡。</p>
+      <p class="small" id="svSum">學員輸入名字後會先回答 3 題選擇題，結果即時顯示在這裡。</p>
       <div id="svRes"></div>
       <div class="row"><button class="primary" id="svProj" type="button">投影調查結果</button><button class="ghost" id="svClear" type="button">清空調查</button></div>
     </section>
@@ -432,11 +436,11 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <section>
       <h3>課堂控制</h3>
       <div class="class-grid">
-        <button type="button" class="start" id="cStart">登島<br><span class="small" style="color:inherit">渡輪開進島，開放第 1 站</span></button>
+        <button type="button" class="start" id="cStart">開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，開放第 1 站</span></button>
         <button type="button" class="pause" id="cAttn">注意！<br><span class="small" style="color:inherit" id="cAttnSub">暫停全班畫面</span></button>
         <button type="button" class="rest" id="cRest">休息<br><span class="small" style="color:inherit" id="cRestSub">島上入夜，角色睡覺</span></button>
         <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，全員登船開走</span></button>
-        <button type="button" class="end" id="cReset" style="grid-column:1 / -1;background:#9AA9AA">重設島嶼<br><span class="small" style="color:inherit">回到登島前，清除計時與抽籤紀錄</span></button>
+        <button type="button" class="end" id="cReset" style="grid-column:1 / -1;background:#9AA9AA">重設島嶼<br><span class="small" style="color:inherit">回到研習開始前，清除計時與抽籤紀錄</span></button>
       </div>
       <label class="field small">離島祝福話（按「離島」時顯示在全班畫面）
         <textarea id="farewell" rows="3" maxlength="160"></textarea></label>
@@ -579,7 +583,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
       <div id="sQr" style="background:#fff;padding:10px;border-radius:14px;line-height:0"></div>
       <div class="qr-url" id="sUrl"></div>
       <div class="row" style="justify-content:center"><button class="ghost" id="sCopy" type="button">複製學員連結</button><button class="primary" id="sGo" type="button">進入講師主控台</button></div>
-      <p class="small" style="margin:0">學員打開連結、選好角色，就會等你按「登島」。主控台裡也可以隨時再投影這個 QR Code。</p>
+      <p class="small" style="margin:0">學員打開連結、選好角色，就能先在島上逛，等你按「開始研習」。主控台裡也可以隨時再投影這個 QR Code。</p>
     </div>
     <div class="field" style="border-top:1px solid var(--line);padding-top:12px">
       <div style="font:900 18px var(--display)">學員：輸入場次代碼</div>
@@ -681,11 +685,14 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 
 <div class="overlay" id="svOv" hidden style="z-index:41">
   <form class="dialog" id="svForm" style="gap:12px">
-    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">登島前小調查・2 題</small>
+    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">登島前小調查・3 題</small>
     <h2 style="font-size:20px" id="svQ1"></h2>
     <div class="poll-opts" id="svA"></div>
     <h2 style="font-size:20px" id="svQ2"></h2>
     <div class="poll-opts multi" id="svB"></div>
+    <h2 style="font-size:20px" id="svQ3"></h2>
+    <div class="poll-opts multi" id="svC"></div>
+    <input id="svOther" maxlength="20" autocomplete="off" placeholder="其他：請輸入你常用的 AI" hidden style="border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px">
     <button class="primary" type="submit">送出，繼續登島</button>
     <p class="small" id="svMsg">不記分，只是讓講師了解大家的起點。</p>
   </form>
@@ -704,6 +711,20 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <h2>我的背包</h2>
     <div class="tools" id="packLinks"></div>
     <div class="note" id="packMine"></div>
+    <details class="pack-help" id="packHelp">
+      <summary>功能鍵說明</summary>
+      <ul>
+        <li><b>移動</b>：點地面或地標就會走過去，也可以用方向鍵或 WASD；拖曳畫面可以轉視角</li>
+        <li><b>我的背包</b>：講義、參考檔案、相關文獻與分享牆</li>
+        <li><b>舉手</b>：頭上出現舉手標示，講師會看到；再按一次放下</li>
+        <li><b>說話・表情</b>：在人物頭上說一句話、發問或送表情</li>
+        <li><b>聊天室</b>：看全班訊息，和大家對話</li>
+        <li><b>想法牆</b>：寫下想法，看看其他人寫了什麼</li>
+        <li><b>投票</b>：講師開啟投票時才會出現</li>
+        <li><b>站別地標</b>：講師開放後走過去，就能看工具、做任務、開始挑戰</li>
+        <li><b>島上動物</b>：走近聊天，可以拿到知識卡</li>
+      </ul>
+    </details>
     <button class="ghost" id="packClose" type="button">關閉</button>
   </div>
 </div>
@@ -765,7 +786,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
     <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">掃描登島</small>
     <h2>用手機相機掃描</h2>
     <div id="qrBig"></div>
-    <p>不用帳號：選探險家、輸入名字 → 分享你的經驗 → 等講師按「登島」</p>
+    <p>不用帳號：選探險家、輸入名字 → 小調查與分享 → 先在島上逛逛，等講師按「開始研習」</p>
     <div class="qr-url" id="qrText"></div>
     <button class="ghost" id="qrClose" type="button">關閉</button>
   </div>
@@ -2408,7 +2429,7 @@ function loop(){
           player.pos.copy(PIER_B); player.target = null; flyToPlayer(); lastPos = 0; pushPos();
           walkTo(SPAWN.clone(), null, true);
           toast('下船囉！點地面、地標或動物就會走過去');
-          if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class') $('#missionOv').hidden = false; }, 2200);
+          if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 2200);
         }, 500);
       }
     }
@@ -2513,7 +2534,7 @@ $('#joinForm').addEventListener('submit', e => {
   spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
   lastPos = 0; pushPos();
   pushFace();
-  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '探險家準備好了！等講師按「登島」出發挖寶');
+  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '探險家準備好了！先在島上逛逛，等講師按「開始研習」');
 });
 $('#hostSkip').onclick = hostLogin;
 function hostLogin(){
@@ -2523,7 +2544,7 @@ function hostLogin(){
   if (pin.trim() !== HOST_PIN){ toast('密碼不正確'); return; }
   becomeHost(); store.set('hostAuth', true); store.set('host.' + ROOM, true); $('#join').hidden = true;
   warmGate = false; $('#wallOv').hidden = true; openHost();
-  if (!liveState || !liveState.phase) writeLive({phase:'before', phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
+  if (!liveState || !liveState.phase) writeLive({phase:'class', started:false, open:0, quiz:0, phaseAt:Date.now(), attention:false, rest:null, wall:warmWall()});
 }
 function becomeHost(){ isHost = true; document.body.classList.add('is-host'); setTimeout(hostTab, 0); $('#hostBtn').hidden = false; $('#handBtn').hidden = true; renderHUD(); renderOpenGrid(); showFab(); }
 $('#meChip').onclick = askNick;
@@ -2600,17 +2621,20 @@ let seenDraw;
 
 /* ---------------- class phase: before → class → ended, plus attention pause ---------------- */
 let phase;          // undefined until the first live state arrives
+let started = false;
 function applyClass(d){
   const ph = d && ['before','class','ended','gone'].includes(d.phase) ? d.phase : null;
   const fresh = d && Date.now() - (+d.phaseAt || 0) < 20000;
   const first = phase === undefined;
+  // "started": learners roam the island freely after logging in; the workshop begins when the host says so
+  const wasStarted = started; started = ph === 'class' ? !(d && d.started === false) : ph !== 'before' && ph !== null;
   if (ph !== phase){
     const prev = phase; phase = ph;
     if (ph === 'before'){ ferryAway(); boarded = false; showExplorers(false); }
     if (ph === 'class'){
       boarded = false; $('#endOv').hidden = true;
       if (first && !fresh || prev === 'ended') sailFerry('arrive', true);
-      else { closeSheet(); if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; sailFerry('arrive'); banner('登島囉！渡輪正開進研習島嶼', 6500); landTitle('登島！'); }
+      else { closeSheet(); if (started){ if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; } sailFerry('arrive'); banner(started ? '登島囉！渡輪正開進研習島嶼' : '渡輪正開進研習島嶼，先到處逛逛', 6500); landTitle('登島！'); }
     }
     if (ph === 'ended'){
       if (first && !fresh) sailFerry('dock', true);
@@ -2624,6 +2648,12 @@ function applyClass(d){
     if (ph === null && !first){ boarded = false; sailFerry('arrive', true); }
     updateBoardBtn(); pushPos(true);
   }
+  if (!first && ph === 'class' && started && wasStarted === false){
+    closeSheet(); if (wall && wall.warm) $('#wallOv').hidden = true; warmGate = false; $('#packOv').hidden = true;
+    landTitle('研習開始！'); banner('研習開始囉！請看講師，準備出發探險', 7000); confetti();
+    if (!done.has(1) && !isHost && nick) setTimeout(() => { if (phase === 'class' && started) $('#missionOv').hidden = false; }, 2600);
+  }
+  $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '開始研習<br><span class="small" style="color:inherit">全班大畫面提醒，開放第 1 站</span>';
   waitBanner();
   const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:!!d.timer.music} : null;
   if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
@@ -2692,7 +2722,7 @@ $('#tStop').onclick = () => writeLive({timer:null});
 
 /* workshop agenda: 210 minutes, one tap per segment */
 const AGENDA = [
-  {t:'入港暖身：分享 AI 經驗', m:10, note:'開放入港前分享 → 投影分享牆 → 按「登島」'},
+  {t:'入港暖身：調查與分享', m:10, note:'學員登入、答調查、寫分享、自由探索 → 投影調查與分享牆 → 按「開始研習」'},
   {t:'第 1 站 需求燈塔', m:25, open:1, note:'個案需求分析（下方任務一可計時）→ 開放檢核 → 討論',
     poll:{q:'這個孩子最需要先調整哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量']}, dq:0},
   {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 安裝圖解識字 Skill → Padlet',
@@ -2821,7 +2851,8 @@ function waitBanner(){
   const b = $('#banner');
   if (restUntil && restUntil > Date.now() - 15000){ b.hidden = true; return; }
   if (bannerMsg){ b.hidden = false; return; }
-  if (phase === 'before'){ b.className = 'banner wait'; b.textContent = isHost ? '學員等待中：按「登島」讓渡輪開進島' : '等待講師按「登島」…渡輪準備出發'; b.hidden = false; }
+  if (phase === 'before'){ b.className = 'banner wait'; b.textContent = isHost ? '學員等待中：按「開始研習」讓渡輪開進島' : '等待講師開始…渡輪準備出發'; b.hidden = false; }
+  else if (phase === 'class' && !started){ b.className = 'banner wait'; b.textContent = isHost ? '學員自由探索中：準備好就按「開始研習」' : '等待講師按「開始研習」，先在島上逛逛、找動物聊天'; b.hidden = false; }
   else b.hidden = true;
 }
 const DEFAULT_FAREWELL = '謝謝大家今天的參與！\n願你帶著今天挖到的寶藏回到教室，成為孩子最好的學習探險夥伴。\n祝教學順利，一路順風！';
@@ -2837,14 +2868,14 @@ function showEnd(onBoard){
   $('#endOv').hidden = false;
 }
 $('#endClose').onclick = () => $('#endOv').hidden = true;
-$('#cStart').onclick = () => writeLive({phase:'class', phaseAt:Date.now(), attention:false, rest:null, open:Math.max(1, openUpTo)});
+$('#cStart').onclick = () => { if (phase === 'class' && started) return toast('研習已經開始了'); writeLive(Object.assign({started:true, attention:false, rest:null, open:Math.max(1, openUpTo)}, phase === 'class' ? {} : {phase:'class', phaseAt:Date.now()})); };
 $('#cEnd').onclick = () => {
   if (phase === 'gone') return toast('大家已經離島了；要重來請按「重設島嶼」');
   const farewell = $('#farewell').value.trim().slice(0, 160);
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？學員會回到等待登島的畫面。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; writeLive({phase:'before', phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+$('#cReset').onclick = () => { if (confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; writeLive({phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -3489,31 +3520,35 @@ function applyInteract(d){
 // warm-up share before landing: a learner posts one line before stepping onto the island
 const WARM_Q = '你曾經看過現場教師使用生成式 AI 備課或教學嗎？也可以分享你用過的數位工具。';
 let warmGate = false;
-const needWarm = () => !!(wall && wall.warm && wall.open && !isHost && nick && phase === 'before' && !store.get('posted.' + wall.id, false));
+const needWarm = () => !!(wall && wall.warm && wall.open && !isHost && nick && (phase === 'before' || phase === 'class' && !started) && !store.get('posted.' + wall.id, false));
 /* entry survey: two taps after the name, before the sharing wall; sv/<id> retained {n, a, b:[…]} */
 const SURVEY = {
   q1:'你平常使用生成式 AI（ChatGPT、Gemini、Claude…）的程度？', a:['幾乎沒用過','偶爾用（一個月幾次）','每週都會用','幾乎每天用'],
-  q2:'你用 AI 做過哪些事？（可複選）', b:['查資料、問問題','寫報告或作業','做簡報或圖片','設計教案或教材','做學習單或評量','寫程式或做網頁','還沒用過']
+  q2:'你用 AI 做過哪些事？（可複選）', b:['查資料、問問題','寫報告或作業','做簡報或圖片','設計教案或教材','做學習單或評量','寫程式或做網頁','還沒用過'],
+  q3:'你常用哪些生成式 AI？（可複選）', c:['ChatGPT','Gemini','Claude','Copilot','其他']
 };
 const surveys = new Map();
-let svA = -1; const svB = new Set();
+let svA = -1; const svB = new Set(), svC = new Set();
 const needSurvey = () => !isHost && !!nick && HAS_ROOM && !store.get('sv.' + ROOM, false);
-$('#svQ1').textContent = '1. ' + SURVEY.q1; $('#svQ2').textContent = '2. ' + SURVEY.q2;
+$('#svQ1').textContent = '1. ' + SURVEY.q1; $('#svQ2').textContent = '2. ' + SURVEY.q2; $('#svQ3').textContent = '3. ' + SURVEY.q3;
 function drawSurveyForm(){
   $('#svA').innerHTML = SURVEY.a.map((o, i) => `<button type="button" class="poll-opt${svA === i ? ' picked' : ''}" data-a="${i}"><span>${esc(o)}</span></button>`).join('');
   $('#svB').innerHTML = SURVEY.b.map((o, i) => `<button type="button" class="poll-opt${svB.has(i) ? ' picked' : ''}" data-b="${i}"><span>${esc(o)}</span></button>`).join('');
+  $('#svC').innerHTML = SURVEY.c.map((o, i) => `<button type="button" class="poll-opt${svC.has(i) ? ' picked' : ''}" data-c="${i}"><span>${esc(o)}</span></button>`).join('');
+  $('#svOther').hidden = !svC.has(SURVEY.c.length - 1);
 }
 $('#svForm').onclick = e => {
-  const a = e.target.closest('[data-a]'), b = e.target.closest('[data-b]');
+  const a = e.target.closest('[data-a]'), b = e.target.closest('[data-b]'), c = e.target.closest('[data-c]');
   if (a){ svA = +a.dataset.a; drawSurveyForm(); }
+  if (c){ const i = +c.dataset.c; if (svC.has(i)) svC.delete(i); else svC.add(i); drawSurveyForm(); if (i === SURVEY.c.length - 1 && svC.has(i)) $('#svOther').focus(); }
   if (b){ const i = +b.dataset.b, none = SURVEY.b.length - 1;
     if (svB.has(i)) svB.delete(i); else { if (i === none) svB.clear(); else svB.delete(none); svB.add(i); }
     drawSurveyForm(); }
 };
 $('#svForm').addEventListener('submit', e => {
   e.preventDefault();
-  if (svA < 0 || !svB.size){ $('#svMsg').textContent = '兩題都選一下再送出喔'; return; }
-  const v = {n:nick, a:svA, b:[...svB].sort()};
+  if (svA < 0 || !svB.size){ $('#svMsg').textContent = '第 1、2 題都選一下再送出喔（第 3 題沒用過可以不選）'; return; }
+  const v = {n:nick, a:svA, b:[...svB].sort(), c:[...svC].sort(), o:svC.has(SURVEY.c.length - 1) ? cleanText($('#svOther').value, 20) : ''};
   mqPub('sv/' + myId, v, true); store.set('sv.' + ROOM, v);
   $('#svOv').hidden = true; toast('謝謝！'); checkWarm();
 });
@@ -3523,15 +3558,15 @@ function checkSurvey(){
   return true;
 }
 function gotSurvey(id, v){
-  if (v && typeof v === 'object' && Number.isFinite(+v.a) && Array.isArray(v.b)) surveys.set(id, {n:cleanText(v.n, 16), a:+v.a, b:v.b.map(Number).filter(i => i >= 0 && i < SURVEY.b.length)});
+  if (v && typeof v === 'object' && Number.isFinite(+v.a) && Array.isArray(v.b)) surveys.set(id, {n:cleanText(v.n, 16), a:+v.a, b:v.b.map(Number).filter(i => i >= 0 && i < SURVEY.b.length), c:(Array.isArray(v.c) ? v.c : []).map(Number).filter(i => i >= 0 && i < SURVEY.c.length), o:cleanText(v.o, 20)});
   else surveys.delete(id);
   renderSurvey();
 }
 function surveyHTML(){
-  const n = surveys.size, ca = SURVEY.a.map(() => 0), cb = SURVEY.b.map(() => 0);
-  surveys.forEach(v => { if (ca[v.a] != null) ca[v.a]++; v.b.forEach(i => cb[i]++); });
+  const n = surveys.size, ca = SURVEY.a.map(() => 0), cb = SURVEY.b.map(() => 0), cc = SURVEY.c.map(() => 0), others = [];
+  surveys.forEach(v => { if (ca[v.a] != null) ca[v.a]++; v.b.forEach(i => cb[i]++); v.c.forEach(i => cc[i]++); if (v.o) others.push(v.o); });
   const rows = (opts, c) => `<div class="poll-opts">${opts.map((o, i) => `<div class="poll-opt"><i class="bar" style="width:${n ? Math.round(c[i]/n*100) : 0}%"></i><span>${esc(o)}</span><span><b>${c[i]}</b> 人</span></div>`).join('')}</div>`;
-  return `<div class="sv-cols"><div><p>${esc(SURVEY.q1)}</p>${rows(SURVEY.a, ca)}</div><div><p>${esc(SURVEY.q2)}</p>${rows(SURVEY.b, cb)}</div></div>`;
+  return `<div class="sv-cols"><div><p>${esc(SURVEY.q1)}</p>${rows(SURVEY.a, ca)}</div><div><p>${esc(SURVEY.q2)}</p>${rows(SURVEY.b, cb)}</div><div><p>${esc(SURVEY.q3)}</p>${rows(SURVEY.c, cc)}${others.length ? `<p class="small" style="font-weight:500;margin-top:6px">其他：${esc([...new Set(others)].join('、'))}</p>` : ''}</div></div>`;
 }
 function renderSurvey(){
   if (!isHost) return;
@@ -3541,6 +3576,7 @@ function renderSurvey(){
 }
 $('#svProj').onclick = () => { $('#svBig').innerHTML = `<p class="small">已有 ${surveys.size} 位回答</p>` + surveyHTML(); $('#svShow').hidden = false; $('#host').hidden = true; hostTab(); };
 $('#svShowClose').onclick = () => $('#svShow').hidden = true;
+$('#qkSurvey').onclick = () => $('#svProj').click();
 $('#svClear').onclick = () => { if (!confirm('清空所有調查結果？（演練後、正式開始前使用）')) return; [...surveys.keys()].forEach(id => mqPub('sv/' + id, null, true)); surveys.clear(); renderSurvey(); };
 // a returning visitor confirms their name first (and can reach 講師登入) before the sharing gate
 let nameOk = false;
@@ -3631,7 +3667,7 @@ function renderWall(){
   $('#wallQ').textContent = wall ? wall.q : '講師還沒開放想法牆';
   $('#wallEyebrow').textContent = wall && wall.warm ? '入港前分享' : '想法牆';
   $('#wallClose').hidden = warmGate && needWarm(); $('#wallHost').hidden = !(warmGate && needWarm());
-  $('#wallClose').textContent = wall && wall.warm && !isHost && phase === 'before' ? '進入島嶼，等待登島' : '關閉';
+  $('#wallClose').textContent = wall && wall.warm && !isHost && !started ? '進入島嶼，自由探索' : '關閉';
   $('#wallForm').hidden = !wall || !wall.open || proj || isHost && !nick;
   $('#wallMsg').textContent = !wall ? '等講師出題後，就可以在這裡貼上你的想法。' : warmGate && needWarm() ? `寫下一句分享就能進入島嶼・已經有 ${list.length} 位分享` : wall.open ? `已經有 ${list.length} 則分享` : `投稿已停止，共 ${list.length} 則分享`;
   $('#wallGrid').innerHTML = list.slice().reverse().map(i => `<div class="note-card">${esc(i.x)}<small>${esc(i.n)}</small></div>`).join('');
@@ -3672,7 +3708,7 @@ $('#logCsv').onclick = () => {
     x.opts.forEach((o, i) => rows.push(['投票結果：' + x.q, t2s(x.t), '', `${o}：${x.c[i]} 票`]));
     x.who.forEach(w => rows.push(['投票：' + x.q, '', w[0], w[1]]));
   });
-  surveys.forEach(v => { rows.push(['調查：' + SURVEY.q1, '', v.n, SURVEY.a[v.a] || '']); rows.push(['調查：' + SURVEY.q2, '', v.n, v.b.map(i => SURVEY.b[i]).join('、')]); });
+  surveys.forEach(v => { rows.push(['調查：' + SURVEY.q1, '', v.n, SURVEY.a[v.a] || '']); rows.push(['調查：' + SURVEY.q2, '', v.n, v.b.map(i => SURVEY.b[i]).join('、')]); rows.push(['調查：' + SURVEY.q3, '', v.n, v.c.map(i => i === SURVEY.c.length - 1 && v.o ? '其他（' + v.o + '）' : SURVEY.c[i]).join('、')]); });
   fights.forEach(f => rows.push([f.b && String(f.b).startsWith('st') ? '守門獸戰鬥' : '野獸突襲', '', f.n, `${f.st === 'win' ? '已擊退' : '戰鬥中'}・答錯 ${f.w || 0} 次・${f.t || 0} 秒`]));
   ((liveState && liveState.history) || []).forEach(n => rows.push(['抽籤抽中', '', n, '']));
   if (rows.length < 2) return toast('還沒有互動紀錄');
@@ -3692,7 +3728,7 @@ else if (store.get('host.' + ROOM, false)){
   const init = store.get('init.' + ROOM, null);
   if (init){
     store.set('init.' + ROOM, null);
-    pendingInit = () => writeLive({phase:'before', phaseAt:Date.now(), title:init.title, attention:false, rest:null, timer:null, draw:null, history:[], wall:warmWall()});
+    pendingInit = () => writeLive({phase:'class', started:false, open:0, quiz:0, phaseAt:Date.now(), title:init.title, attention:false, rest:null, timer:null, draw:null, history:[], wall:warmWall()});
     setTimeout(() => { openHost(); $('#qrShow').click(); }, 300);
   } else openHost();
 }
