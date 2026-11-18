@@ -1116,7 +1116,7 @@ function firePeers(){ if (!peersRaf) peersRaf = requestAnimationFrame(() => { pe
 room = {
   presence(patch){
     for (const k in patch){ if (patch[k] === null) delete myPres[k]; else myPres[k] = patch[k]; }
-    if (!presT) presT = setTimeout(sendPres, Math.max(0, 250 - (Date.now() - lastPresSent)));
+    if (!presT) presT = setTimeout(sendPres, Math.max(0, 400 - (Date.now() - lastPresSent))); // 25 walkers on a public broker: 2.5 updates a second each is smooth enough
     return Promise.resolve();
   },
   peers(){
@@ -2712,6 +2712,7 @@ $('#agenda').onclick = e => {
     const patch = {};
     if (a.open) patch.open = Math.max(a.open, openUpTo);
     if (a.rest){ patch.attention = false; patch.rest = {until:Date.now() + a.rest*60000}; patch.timer = null; }
+    else if (restUntil > Date.now()) patch.rest = null; // moving on ends the break even if its clock has not run out
     if (Object.keys(patch).length) writeLive(patch);
     toast(a.open ? `${a.t}：已開放` : a.t);
     renderAgenda();
