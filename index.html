@@ -471,6 +471,7 @@ body.is-host #liveChip{cursor:pointer}
         <button type="button" class="pause" id="cAttn">注意！<br><span class="small" style="color:inherit" id="cAttnSub">暫停全班畫面</span></button>
         <button type="button" class="rest" id="cRest">休息<br><span class="small" style="color:inherit" id="cRestSub">島上入夜，角色睡覺</span></button>
         <button type="button" class="end" id="cEnd">離島<br><span class="small" style="color:inherit">大船靠岸，全員登船開走</span></button>
+        <button type="button" class="end" id="cWipe" style="grid-column:1 / -1;background:#8A2E22">清除所有測試紀錄<br><span class="small" style="color:inherit">演練後、正式研習前按一次：調查、聊天、想法牆、投票、名單與學員進度全部歸零</span></button>
         <button type="button" class="end" id="cReset" style="grid-column:1 / -1;background:#9AA9AA">重設島嶼<br><span class="small" style="color:inherit">回到研習開始前，清除計時與抽籤紀錄</span></button>
       </div>
       <label class="field small">離島祝福話（按「離島」時顯示在全班畫面）
@@ -486,7 +487,7 @@ body.is-host #liveChip{cursor:pointer}
       <div class="row"><button class="ghost" id="handClear" type="button">全部放下手・清除問號</button></div>
     </section>
     <section>
-      <h3>研習流程（8:00–12:00，兩次休息）</h3>
+      <h3>研習流程（8:00 開始，約 3 小時 20 分，含休息 10 分）</h3>
       <p class="small" id="agClock">流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。</p>
       <div class="agenda" id="agenda"></div>
     </section>
@@ -2642,6 +2643,13 @@ function renderRoster(){
 }
 function applyLive(d){
   liveState = d || null;
+  { const ep = d && +d.epoch || 0;   // the host wiped the rehearsal: every learner device starts over once
+    if (ep && !isHost && store.get('epoch.' + ROOM, 0) !== ep){
+      const had = !!nick || done.size || frags.size || cards.size;
+      try { Object.keys(localStorage).filter(k => k.startsWith('island.') && !/^island\.(host|epoch|warmQ|farewell|manual|qrUrl|lastTitle|agNow|agT0|music)/.test(k)).forEach(k => localStorage.removeItem(k)); } catch(e){}
+      store.set('epoch.' + ROOM, ep);
+      if (had){ mqPub('p/' + myId, null, true); setTimeout(() => location.reload(), 300); return; }
+    } }
   $('#brandSub').textContent = d && typeof d.title === 'string' && d.title.trim() ? d.title.trim().slice(0, 40) : DEFAULT_TITLE;
   const o = d && Number.isFinite(+d.open) ? Math.max(0, Math.min(7, +d.open)) : 0;
   if (o !== openUpTo){ openUpTo = o; renderHUD(); if (!isHost) toast(o === 0 ? '講師還沒開放關卡' : o < 7 ? `講師已開放到第 ${o} 站` : '講師已開放全部關卡'); }
@@ -2771,19 +2779,18 @@ const AGENDA = [
     poll:{q:'這個孩子最需要先調整哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量']}, dq:0},
   {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 安裝圖解識字 Skill → Padlet',
     poll:{q:'你最想帶回去用的識字工具？', opts:['圖詞析字卡','圖解識字 Skill','每日一字動畫','字族文・形近字學習單','生字書寫練習網']}, dq:1},
-  {t:'第一次休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
-  {t:'第 3 站 寫作小屋', m:20, open:3, note:'講解 → 體驗 → 六何法 Skill',
+  {t:'第 3 站 寫作小屋', m:15, open:3, note:'講解 → 體驗 → 六何法 Skill',
     poll:{q:'學生寫作最常卡在哪裡？', opts:['不知道寫什麼','句子寫不長','會說不會寫','沒有動機']}, dq:3},
-  {t:'第 4 站 閱讀花園', m:30, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
+  {t:'第 4 站 閱讀花園', m:25, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
     poll:{q:'課文漫畫你會用哪個工具做？', opts:['Gemini','NotebookLM','課文漫畫產生器','還在觀望']}, dq:4},
+  {t:'休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
   {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 安裝數學 Skill → 做一份教材 → Padlet',
     poll:{q:'你想先做哪個數學單元的互動教材？', opts:['加減法','乘除法','分數','時間與錢幣','幾何圖形']}, dq:6},
-  {t:'第二次休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
-  {t:'第 6 站 應用題港口', m:20, open:6, note:'講解 → 複製提示詞生情境圖 → Padlet', dq:5},
-  {t:'第 7 站 社交寶箱', m:20, open:7, note:'社交小特工 → 類化活動 → 拿黃金船票',
+  {t:'第 6 站 應用題港口', m:15, open:6, note:'講解 → 複製提示詞生情境圖 → Padlet', dq:5},
+  {t:'第 7 站 社交寶箱', m:15, open:7, note:'社交小特工 → 類化活動 → 拿黃金船票',
     poll:{q:'社會技巧教學最難的是哪一步？', opts:['引起動機','示範','演練與回饋','類化到生活']}, dq:7},
-  {t:'成果分享', m:20, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
-  {t:'Q&A 與離島', m:20, note:'回答提問 → 按「離島」，全員搭船',
+  {t:'成果分享', m:15, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
+  {t:'Q&A 與離島', m:15, note:'回答提問 → 按「離島」，全員搭船',
     poll:{q:'今天最有收穫的一站？', opts:['需求燈塔','識字森林','寫作小屋','閱讀花園','數學山與港口','社交寶箱']}}
 ];
 let agNow = store.get('agNow', -1), agT0 = store.get('agT0', 0);
@@ -2950,7 +2957,8 @@ $('#cEnd').onclick = () => {
   store.set('farewell', farewell);
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
-$('#cReset').onclick = () => { if (confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, wall:warmWall()}); };
+let wiping = false;
+$('#cReset').onclick = () => { if (wiping || confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive(Object.assign({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, poll:null, beast:null, mute:false, wall:warmWall()}, wiping ? {epoch:Date.now()} : {})); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -3806,6 +3814,16 @@ $('#wStart').onclick = () => {
 $('#wStop').onclick = () => { if (wall) writeLive({wall:Object.assign({}, liveState.wall, {open:false})}); };
 $('#wShow').onclick = () => openWall(true);
 $('#wClear').onclick = () => { if (wall && confirm('清空想法牆上的所有便利貼？')){ ideas = {w:wall.id, q:wall.q, list:[]}; saveIdeas(); renderWall(); } };
+$('#cWipe').onclick = () => {
+  if (!confirm('清除所有測試紀錄？\n調查、聊天、想法牆、投票、戰鬥、抽籤、學員名單都會清空，學員裝置上的名字與進度也會歸零（需重新登入）。這個動作無法復原。')) return;
+  [...surveys.keys()].forEach(id => mqPub('sv/' + id, null, true)); surveys.clear(); renderSurvey();
+  peerMap.forEach((v, id) => mqPub('p/' + id, null, true)); peerMap.clear();
+  chatLog = []; chatDel = []; store.set('chat.' + ROOM, []); store.set('chatDel.' + ROOM, []); mqPub('chat', {list:[], del:[]}, true); renderChatLog();
+  pollLog = []; store.set('polls.' + ROOM, []); votes.clear(); fights.clear();
+  joined.clear(); store.set('joined.' + ROOM, {}); store.set('ideas.' + ROOM, {w:'', list:[]});
+  wiping = true; $('#cReset').click(); wiping = false;
+  renderRoster(); renderHands(); toast('測試紀錄已全部清除，島嶼回到研習開始前');
+};
 // --- export everything as one CSV ---
 $('#logCsv').onclick = () => {
   const t2s = t => t ? new Date(t).toLocaleString('zh-TW', {hour12:false}) : '';
