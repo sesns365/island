@@ -1058,10 +1058,8 @@ const STATIONS = [
       why:'改變的是學生「怎麼學」，屬於歷程調整。'},
     {type:'mc', q:'關於教材設計，建議可以怎麼做？', opts:['先挑好最新的 AI 工具，再看哪些學生適合拿來使用','先請 AI 生成教材，之後再回頭對照學生有什麼需求','先分析學生需求、選擇策略，再請 AI 生成，最後教師修正','直接套用別人分享的教材，全班都使用同一份就可以'], a:2,
       why:'不是策略先，而是分析先：分析學生需求 → 判斷學習歷程需求 → 選擇策略 → 通用設計學習 → AI 生成通用設計教材 → 教師修正後形成教材。'},
-    {type:'sort', q:'學習內容的調整策略：把每個做法放進正確的策略。', buckets:['簡化','減量','分解','替代','重整'], items:[
-      ['把課文改寫成較短、較淺的句子',0],['生字由 10 個減為 5 個',1],['把一個目標拆成幾個小目標，分段學',2],['寫字有困難，改用打字或口述完成',3],['改成生活化、功能性的內容，例如看懂藥袋',4]]},
-    {type:'mc', q:'依「閱讀簡單觀點」，閱讀理解由哪兩者相乘而來？', opts:['識字 × 語言理解','速度 × 正確率','注音 × 國字','背誦 × 抄寫'], a:0,
-      why:'只要識字或語言理解其中一項是 0，閱讀理解就難以發生，所以兩者都要支持。'},
+    {type:'sort', q:'學習內容的調整方式：把每個做法放進正確的方式。', buckets:['簡化','減量','分解','替代','重整'], hint:'想一想：是難度降低、份量變少、拆成小步驟、換一種方式，還是重新編排？', items:[
+      ['降低教材或學習目標的難度',0],['把 30 個英文單字縮減為 15 個',1],['把複雜的學習步驟拆成較小的微步驟',2],['視障學生的課本內文改用錄音呈現',3],['重新編排單元順序或統整跨科目內容',4]]},
     {type:'mc', q:'課文漫畫的提示詞要求「語詞用便利貼呈現簡化解釋」，主要是為了什麼？', opts:['讓畫面更熱鬧','幫助程度較弱的學生理解句子內容','減少 AI 輸出的字數','方便老師批改'], a:1,
       why:'不直接用原始解釋，而是簡化後再呈現，降低理解門檻。'}
   ]},
@@ -1083,7 +1081,8 @@ const STATIONS = [
     {type:'order', q:'依年齡由小到大，點出皮亞傑的四個認知發展期：', items:['感覺動作期','前運思期','具體運思期','形式運思期']},
     {type:'mc', q:'國小學生大多處於哪一期？教學上要注意什麼？', opts:['形式運思期，可以直接用公式','具體運思期，需要具體事物支持','感覺動作期，只能用感官','前運思期，不能學數學'], a:1,
       why:'7–11 歲能邏輯思考，但需要具體事物支持，所以 CRA 從操作開始。'},
-    {type:'mc', q:'數學學習表現代碼「r」代表哪一個主題？', opts:['數與量','空間與形狀','關係','資料與不確定性'], a:2}
+    {type:'sort', q:'數學學習表現的類別代碼，哪些國小就有？哪些到國中以後才出現？', buckets:['國小就有','國中以後才有'], hint:'國小有四類：數與量、空間與形狀、關係、資料與不確定性。', items:[
+      ['n 數與量',0],['s 空間與形狀',0],['r 關係',0],['d 資料與不確定性',0],['a 代數',1],['f 函數',1],['g 坐標幾何',1]]}
   ]},
 { id:6, name:'應用題港口', area:'數學・應用題', color:'#3B7FC4', pos:[3.6,9.2],
   intro:`<ul><li><b>圖像表徵－數學情境圖</b>：讓 AI 畫出已知條件、變化過程與未知量</li>
@@ -1130,7 +1129,7 @@ const STATIONS = [
 ];
 
 /* three questions per station is plenty for a 4-hour morning; the rest stay in the bank above (indexes into steps) */
-const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[1,2,3], 5:[0,2,3], 6:[0,1,3], 7:[1,3,5,6]};
+const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[1,2], 5:[0,2,3], 6:[0,1,3], 7:[1,3,5,6]};
 STATIONS.forEach(s => { s.steps = QUIZ_PICK[s.id].map(i => s.steps[i]).filter(Boolean); });
 
 /* bigger island: every map position is scaled by S */
@@ -1572,7 +1571,7 @@ function runStep(st, i){
         const span = document.createElement('span'); span.className = 'card placed'; span.textContent = it[0];
         bk.querySelector('.in').appendChild(span); picked.remove(); picked = null; left--;
         if (!left){ $('#fb').innerHTML = `<div class="feedback ok"><b>全部分類正確！</b></div>` + nextBtn; $('#nextBtn').onclick = next; }
-      } else { shake(bk); $('#fb').innerHTML = `<div class="feedback no">這張不屬於「${esc(s.buckets[+bk.dataset.b])}」，再試試別的框。</div>`; }
+      } else { shake(bk); $('#fb').innerHTML = `<div class="feedback no">這張不屬於「${esc(s.buckets[+bk.dataset.b])}」，再試試別的框。${s.hint ? '<br><b>提示：</b>' + esc(s.hint) : ''}</div>`; }
     };
   }
 
