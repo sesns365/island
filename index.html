@@ -669,7 +669,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       </label>
       <label class="field" id="qCustomWrap" hidden>自訂問題<input id="qCustom" maxlength="80" placeholder="輸入要請學員回答的問題"></label>
       <label class="row small"><input type="checkbox" id="noRepeat" checked> 不重複抽到已抽過的人</label>
-      <button class="primary" id="drawBtn" type="button">丟出漂流瓶，抽一位！</button>
+      <button class="primary" id="drawBtn" type="button">撿起漂流瓶，看看是誰！</button>
       <p class="small" id="drawMsg"></p>
       <div class="hist" id="hist"></div>
     </section>
@@ -888,7 +888,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
   <div class="dialog draw-box">
     <small class="draw-eyebrow">島嶼漂流瓶</small>
     <div class="bottle" id="bottle" aria-hidden="true"><svg viewBox="0 0 120 120" width="112" height="112"><ellipse cx="60" cy="104" rx="46" ry="8" fill="#BFE9EE"/><g class="bt"><rect x="50" y="10" width="20" height="12" rx="3" fill="#B9793F"/><rect x="52" y="20" width="16" height="16" fill="#CFEFF2" stroke="#2A8C8C" stroke-width="3"/><path d="M38 52c0-10 14-10 14-18h16c0 8 14 8 14 18v38a10 10 0 0 1-10 10H48a10 10 0 0 1-10-10z" fill="#DDF5F6" stroke="#2A8C8C" stroke-width="3"/><rect x="47" y="58" width="26" height="30" rx="4" fill="#FFF3D6" stroke="#E0A93B" stroke-width="2.500"/><path d="M52 66h16M52 73h16M52 80h10" stroke="#C98F2B" stroke-width="2.500" stroke-linecap="round"/></g><path class="wv" d="M6 100q12-9 24 0t24 0 24 0 24 0 12 0" fill="none" stroke="#5CC6D0" stroke-width="4" stroke-linecap="round"/></svg></div>
-    <p class="draw-lead" id="drawLead">海浪送來一只漂流瓶…</p>
+    <p class="draw-lead" id="drawLead">在沙灘上撿到一只漂流瓶…</p>
     <div class="reel" id="reel">…</div>
     <div class="me-flag" id="meFlag" hidden>就是你！</div>
     <p id="drawSub"></p>
@@ -3488,7 +3488,7 @@ let drawTimer;
 function showDraw(name, pool, q){
   clearTimeout(drawTimer);
   const reel = $('#reel'), ov = $('#drawOv');
-  ov.hidden = false; reel.className = 'reel'; $('#bottle').className = 'bottle shake'; $('#drawLead').textContent = '海浪送來一只漂流瓶，裡面的名字是…'; $('#meFlag').hidden = true; $('#drawClose').hidden = true; $('#drawSub').textContent = ''; $('#drawQ').hidden = true;
+  ov.hidden = false; reel.className = 'reel'; $('#bottle').className = 'bottle shake'; $('#drawLead').textContent = '在沙灘上撿到一只漂流瓶，裡面的名字是…'; $('#meFlag').hidden = true; $('#drawClose').hidden = true; $('#drawSub').textContent = ''; $('#drawQ').hidden = true;
   const names = pool.length ? pool : [name];
   let k = 0, delay = 60, total = 0;
   const finish = () => {
