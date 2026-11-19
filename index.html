@@ -2815,7 +2815,8 @@ function applyClass(d){
 }
 // break music, on the host's machine only (the projector speakers): a YouTube link if one is set, else the built-in music box
 let restMusicOn = false, restYtOn = false;
-$('#restYt').value = store.get('restYt', '');
+const REST_YT = 'https://www.youtube.com/watch?v=36U9l1L-lDI';   // 瑪莉指定的 10 分鐘休息音樂
+$('#restYt').value = store.get('restYt', null) === null ? REST_YT : store.get('restYt', '');
 $('#restYt').addEventListener('input', () => store.set('restYt', $('#restYt').value.trim()));
 function ytEmbed(u){
   const list = /[?&]list=([\w-]+)/.exec(u), id = /(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/.exec(u);
