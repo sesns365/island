@@ -398,6 +398,24 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
 .peek-quiz{margin:0;padding-left:20px;display:grid;gap:10px}
 .peek-quiz ul{margin:4px 0;padding-left:18px}
 .peek-quiz li.ok{color:var(--teal-deep);font-weight:700}
+.draw-eyebrow{font-weight:700;color:var(--teal-deep);letter-spacing:.14em}
+.dialog.draw-box{background:linear-gradient(180deg,#FFF9EC 0%,#E9F8F8 100%);border:3px solid #BFE9EE}
+.draw-lead{margin:0;font-size:15px;color:var(--ink-soft)}
+.bottle svg{display:block}
+.bottle.shake .bt{transform-origin:60px 96px;animation:btShake .5s ease-in-out infinite}
+.bottle.open .bt{transform-origin:60px 96px;animation:pop .5s}
+.bottle .wv{animation:wvMove 1.6s linear infinite}
+@keyframes btShake{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+@keyframes wvMove{from{transform:translateX(0)}to{transform:translateX(-24px)}}
+.peek-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--mist);border-radius:14px;padding:8px 12px}
+.peek-ctl span{margin-right:auto}
+.peek-ctl button{padding:7px 14px;font-size:14px}
+.yt-box{position:fixed;z-index:32;left:12px;bottom:12px;width:300px;background:var(--paper);border-radius:14px;box-shadow:0 12px 40px rgba(24,50,58,.4);overflow:hidden}
+.yt-box[hidden]{display:none}
+.yt-head{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-weight:700;font-size:13px;background:var(--ink);color:#fff}
+.yt-head button{border:0;background:none;color:#fff;font-size:18px;line-height:1}
+.yt-box iframe{display:block;width:100%;height:169px;border:0}
+.music-btn.end{background:var(--coral);margin-left:4px}
 </style>
 
 <canvas id="scene" aria-label="特教研習島嶼 3D 地圖，點選地標開始闖關"></canvas>
@@ -495,6 +513,8 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       </div>
       <label class="field small">離島祝福話（按「離島」時顯示在全班畫面）
         <textarea id="farewell" rows="3" maxlength="160"></textarea></label>
+      <label class="field small">休息音樂（貼 YouTube 連結；留空則播內建輕音樂，只在講師這台播放）
+        <input id="restYt" maxlength="200" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…"></label>
       <label class="row small">休息時間
         <select id="restMin" aria-label="休息分鐘數"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select> 分鐘
       </label>
@@ -516,8 +536,10 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
         <label class="field" style="flex:1 1 140px">名稱<input id="tLabel" maxlength="20" value="實作時間"></label>
         <label class="field" style="width:90px">分鐘<input id="tMin" type="number" min="1" max="120" value="5"></label>
       </div>
+      <label class="field">計時音樂（全班同步播放）<select id="tMusic"><option value="0">不播音樂</option><option value="1">音樂盒（溫和）</option><option value="2">輕快（闖關、搶答）</option><option value="3">慢板（專注實作）</option><option value="yt">YouTube 連結（只在講師這台播放）</option></select></label>
+      <label class="field" id="tYtWrap" hidden>YouTube 連結<input id="tYt" maxlength="200" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…"></label>
       <div class="row"><button class="primary" id="tStart" type="button">開始計時</button><button class="ghost" id="tStop" type="button">停止</button></div>
-      <p class="small">倒數會同步顯示在每位學員畫面下方。</p>
+      <p class="small">倒數會同步顯示在每位學員畫面。內建音樂全班同步播放；YouTube 只在你這台（投影電腦）播放。「任務一計時」也會套用這裡選的音樂。</p>
     </section>
     <section>
       <h3>任務一：需求燈塔</h3>
@@ -527,7 +549,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
     </section>
     <section>
       <h3>關卡內容預覽</h3>
-      <p class="small">一站一頁，查看學員會看到的內容、工具、實作與挑戰題目（含答案）。只有你看得到，不會影響學員。</p>
+      <p class="small">一站一頁，查看學員會看到的內容、工具、實作與挑戰題目（含答案），頁面上方可以直接開放或關閉這一站與挑戰。</p>
       <div class="open-grid" id="peekGrid"></div>
     </section>
     <section>
@@ -554,6 +576,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       <h3>想法牆</h3>
       <label class="field">引導問題<input id="wQ" maxlength="60" placeholder="例如：數位工具最能幫助哪一類學生？"></label>
       <div class="row"><button class="primary" id="wStart" type="button">開放想法牆</button><button class="ghost" id="wStop" type="button">停止投稿</button><button class="ghost" id="wShow" type="button">投影想法牆</button><button class="ghost" id="wClear" type="button">清空</button></div>
+      <p class="small">「投影想法牆」會同步打開全班的想法牆，新的想法即時出現；你按關閉時，學員畫面也一起關。</p>
       <p class="small" id="wCount">學員也可以走到島上的布告欄貼便利貼。</p>
     </section>
     <section>
@@ -602,12 +625,12 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       <label class="field">手動名單（一行一位，可貼座號或姓名）
         <textarea id="manual" rows="4" placeholder="1號 王小明&#10;2號 陳小華&#10;3號 林小美"></textarea>
       </label>
-      <label class="field">抽到後要回答的問題
+      <label class="field">要不要附問題（預設不附，只抽人）
         <select id="qSel"></select>
       </label>
       <label class="field" id="qCustomWrap" hidden>自訂問題<input id="qCustom" maxlength="80" placeholder="輸入要請學員回答的問題"></label>
       <label class="row small"><input type="checkbox" id="noRepeat" checked> 不重複抽到已抽過的人</label>
-      <button class="primary" id="drawBtn" type="button">抽一位！</button>
+      <button class="primary" id="drawBtn" type="button">丟出漂流瓶，抽一位！</button>
       <p class="small" id="drawMsg"></p>
       <div class="hist" id="hist"></div>
     </section>
@@ -623,9 +646,11 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
 </aside>
 
 <div class="roster-pop" id="rosterPop" hidden></div>
+<div class="yt-box" id="ytBox" hidden><div class="yt-head"><span id="ytTitle">休息音樂</span><button type="button" id="ytClose" aria-label="關閉音樂">×</button></div><div id="ytWrap"></div></div>
 <div class="overlay" id="peekOv" hidden style="z-index:44">
   <div class="dialog peek">
     <div class="wall-nav"><button class="ghost" id="peekPrev" type="button">◀ 上一站</button><b id="peekPos"></b><button class="ghost" id="peekNext" type="button">下一站 ▶</button></div>
+    <div class="peek-ctl" id="peekCtl"></div>
     <div class="peek-body" id="peekBody"></div>
     <button class="ghost" id="peekClose" type="button">關閉</button>
   </div>
@@ -799,7 +824,9 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
 
 <div class="overlay" id="drawOv" hidden>
   <div class="dialog draw-box">
-    <small style="font-weight:700;color:var(--teal-deep);letter-spacing:.08em">隨機抽籤</small>
+    <small class="draw-eyebrow">島嶼漂流瓶</small>
+    <div class="bottle" id="bottle" aria-hidden="true"><svg viewBox="0 0 120 120" width="112" height="112"><ellipse cx="60" cy="104" rx="46" ry="8" fill="#BFE9EE"/><g class="bt"><rect x="50" y="10" width="20" height="12" rx="3" fill="#B9793F"/><rect x="52" y="20" width="16" height="16" fill="#CFEFF2" stroke="#2A8C8C" stroke-width="3"/><path d="M38 52c0-10 14-10 14-18h16c0 8 14 8 14 18v38a10 10 0 0 1-10 10H48a10 10 0 0 1-10-10z" fill="#DDF5F6" stroke="#2A8C8C" stroke-width="3"/><rect x="47" y="58" width="26" height="30" rx="4" fill="#FFF3D6" stroke="#E0A93B" stroke-width="2.500"/><path d="M52 66h16M52 73h16M52 80h10" stroke="#C98F2B" stroke-width="2.500" stroke-linecap="round"/></g><path class="wv" d="M6 100q12-9 24 0t24 0 24 0 24 0 12 0" fill="none" stroke="#5CC6D0" stroke-width="4" stroke-linecap="round"/></svg></div>
+    <p class="draw-lead" id="drawLead">海浪送來一只漂流瓶…</p>
     <div class="reel" id="reel">…</div>
     <div class="me-flag" id="meFlag" hidden>就是你！</div>
     <p id="drawSub"></p>
@@ -846,7 +873,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
     <button class="speak" id="chatSay" type="button">朗讀</button></div>
 </div>
 
-<div class="timer-box" id="timerBox" hidden aria-live="polite"><small id="timerLabel">計時</small><b id="timerClock">00:00</b><button class="music-btn" id="musicBtn" type="button" hidden>音樂：關</button></div>
+<div class="timer-box" id="timerBox" hidden aria-live="polite"><small id="timerLabel">計時</small><b id="timerClock">00:00</b><button class="music-btn" id="musicBtn" type="button" hidden>音樂：關</button><button class="music-btn end" id="timerEnd" type="button" hidden>結束計時</button></div>
 <div class="land-title" id="landTitle" hidden><div id="landText">登島！</div></div>
 
 <div class="overlay" id="qrOv" hidden>
@@ -2767,7 +2794,7 @@ function applyClass(d){
   if (typeof hmStartSync === 'function') hmStartSync();
   document.body.classList.toggle('pre-start', !isHost && !started);
   waitBanner();
-  const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:!!d.timer.music} : null;
+  const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:d.timer.music === true ? 1 : Math.max(0, Math.min(3, +d.timer.music || 0))} : null;
   if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
   else if (tm && timer && tm.music !== timer.music){ timer.music = tm.music; tickTimer(); }
   // attention pause
@@ -2786,24 +2813,69 @@ function applyClass(d){
   const until = (d && d.rest && +d.rest.until) || 0;
   if (until !== restUntil){ restUntil = until; tickRest(); }
 }
+// break music, on the host's machine only (the projector speakers): a YouTube link if one is set, else the built-in music box
+let restMusicOn = false, restYtOn = false;
+$('#restYt').value = store.get('restYt', '');
+$('#restYt').addEventListener('input', () => store.set('restYt', $('#restYt').value.trim()));
+function ytEmbed(u){
+  const list = /[?&]list=([\w-]+)/.exec(u), id = /(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/.exec(u);
+  if (id) return `https://www.youtube.com/embed/${id[1]}?autoplay=1&loop=1&playlist=${id[1]}`;
+  if (list) return `https://www.youtube.com/embed/videoseries?list=${list[1]}&autoplay=1`;
+  return '';
+}
+let ytOwner = '';
+function ytPlay(owner, src, title){
+  if (ytOwner === owner && $('#ytWrap').dataset.src === src) return;
+  ytOwner = owner; $('#ytWrap').dataset.src = src; $('#ytTitle').textContent = title;
+  $('#ytWrap').innerHTML = `<iframe src="${esc(src)}" allow="autoplay; encrypted-media" allowfullscreen title="${esc(title)}"></iframe>`; $('#ytBox').hidden = false;
+}
+function ytStop(owner){ if (owner && ytOwner !== owner) return; ytOwner = ''; $('#ytWrap').dataset.src = ''; $('#ytWrap').innerHTML = ''; $('#ytBox').hidden = true; }
+function restMusic(on){
+  if (on === (restMusicOn || restYtOn)) return;
+  const src = on ? ytEmbed($('#restYt').value.trim()) : '';
+  restYtOn = !!src; restMusicOn = on && !src;
+  if (src) ytPlay('rest', src, '休息音樂'); else ytStop('rest');
+  if (!timer) music(restMusicOn);
+}
+$('#ytClose').onclick = () => ytStop();
+// the activity timer can use an outside (YouTube) track too, again only on the host's machine
+let timerYt = store.get('timerYt', null);   // {until, src}
+function timerYtSync(left){
+  const on = isHost && timer && timerYt && timerYt.until === timer.until && left > 0;
+  if (on) ytPlay('timer', timerYt.src, '計時音樂'); else ytStop('timer');
+}
+function timerMusicPick(fallback){
+  const v = $('#tMusic').value;
+  if (v !== 'yt') return {music:+v || fallback || 0, yt:''};
+  const src = ytEmbed($('#tYt').value.trim());
+  if (!src){ toast('YouTube 連結看不懂，先改播內建音樂'); return {music:fallback || 1, yt:''}; }
+  return {music:0, yt:src};
+}
+function startTimer(min, label, fallback){
+  const pick = timerMusicPick(fallback), until = Date.now() + min*60000;
+  timerYt = pick.yt ? {until, src:pick.yt} : null; store.set('timerYt', timerYt);
+  writeLive({timer:{until, label, music:pick.music}});
+}
 // activity timer: one countdown everyone sees
 let timer = null, timerT = null;
 function tickTimer(){
   clearInterval(timerT);
   const box = $('#timerBox');
   const draw = () => {
-    if (!timer){ box.hidden = true; clearInterval(timerT); music(false); return; }
+    if (!timer){ box.hidden = true; clearInterval(timerT); music(restMusicOn); timerYtSync(0); return; }
     const left = timer.until - Date.now();
-    if (left < -60000){ box.hidden = true; clearInterval(timerT); music(false); return; }
+    if (left < -60000){ box.hidden = true; clearInterval(timerT); music(restMusicOn); return; }
+    timerYtSync(left);
     const sec = Math.max(0, Math.ceil(left/1000));
     box.hidden = false; box.classList.toggle('over', left <= 0);
-    if (left <= 0 && timer.wasLeft > 0) chime();
+    if (left <= 0 && timer.wasLeft > 0){ chime(); landTitle('時間到！', timer.label); }
     timer.wasLeft = left;
     $('#timerLabel').textContent = left > 0 ? timer.label : timer.label + '・時間到';
     $('#timerClock').textContent = `${String(Math.floor(sec/60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
     $('#musicBtn').hidden = !isHost || left <= 0;   // only the host switches the music, for everyone
     $('#musicBtn').textContent = timer.music ? '音樂：開' : '音樂：關';
-    music(!!timer.music && left > 0);
+    music(!!timer.music && left > 0 || restMusicOn);
+    $('#timerEnd').hidden = !isHost;
   };
   draw(); timerT = setInterval(draw, 500);
 }
@@ -2818,28 +2890,42 @@ function chime(){
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.22, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + (i === 2 ? 1.1 : .35)); o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 1.3); });
 }
 addEventListener('pointerdown', () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch(e){} }, {once:true});
+// three built-in moods so each activity can sound different: 1 music box, 2 light and lively, 3 slow and calm
+const MUSIC_STYLES = {
+  1:{notes:[0, 4, 7, 12, 9, 7, 4, 2, 0, 4, 7, 9, 7, 4, 2, -3], ms:520, base:392, wave:'sine', dur:1.2, vol:.07},
+  2:{notes:[0, 7, 4, 7, 9, 7, 4, 2, 0, 4, 7, 12, 11, 9, 7, 4], ms:300, base:440, wave:'triangle', dur:.5, vol:.06},
+  3:{notes:[0, 7, 12, 7, 5, 9, 12, 9, 3, 7, 10, 7, 5, 9, 12, 14], ms:820, base:261.6, wave:'sine', dur:2.2, vol:.08}
+};
+let musicStyle = 0;
 function music(on){
-  if (!on){ clearInterval(musicT); musicT = null; return; }
-  if (musicT) return;
+  const want = on ? (timer && timer.until > Date.now() && +timer.music) || 1 : 0;
+  if (!want){ clearInterval(musicT); musicT = null; musicStyle = 0; return; }
+  if (musicT && musicStyle === want) return;
+  clearInterval(musicT); musicStyle = want;
   try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch(e){ return; }
+  const M = MUSIC_STYLES[want] || MUSIC_STYLES[1];
   const note = (semi, t, dur, vol) => {
     const o = actx.createOscillator(), g = actx.createGain();
-    o.type = 'sine'; o.frequency.value = 392*Math.pow(2, semi/12);
+    o.type = M.wave; o.frequency.value = M.base*Math.pow(2, semi/12);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
     o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur + .05);
   };
   musicT = setInterval(() => {
-    const t = actx.currentTime + .05, k = musicStep++ % MUSIC_NOTES.length;
-    note(MUSIC_NOTES[k], t, 1.2, .07);
-    if (k % 4 === 0) note(MUSIC_NOTES[k] - 12, t, 2.4, .05);
-  }, 520);
+    const t = actx.currentTime + .05, k = musicStep++ % M.notes.length;
+    note(M.notes[k], t, M.dur, M.vol);
+    if (k % 4 === 0) note(M.notes[k] - 12, t, M.dur*2, M.vol*.7);
+  }, M.ms);
 }
-$('#musicBtn').onclick = () => { if (isHost && liveState && liveState.timer) writeLive({timer:Object.assign({}, liveState.timer, {music:!liveState.timer.music})}); };
-$('#tStart').onclick = () => {
-  const m = Math.max(1, Math.min(120, +$('#tMin').value || 5));
-  writeLive({timer:{until:Date.now() + m*60000, label:$('#tLabel').value.trim().slice(0, 20) || '計時'}});
-};
+let lastStyle = 1;
+$('#musicBtn').onclick = () => { if (!(isHost && liveState && liveState.timer)) return; const cur = liveState.timer.music === true ? 1 : +liveState.timer.music || 0; if (cur) lastStyle = cur; writeLive({timer:Object.assign({}, liveState.timer, {music:cur ? 0 : lastStyle})}); };
+$('#tStart').onclick = () => startTimer(Math.max(1, Math.min(120, +$('#tMin').value || 5)), $('#tLabel').value.trim().slice(0, 20) || '計時', 0);
+$('#tYt').value = store.get('tYt', ''); $('#tMusic').value = store.get('tMusic', '0');
+const tMusicUi = () => { $('#tYtWrap').hidden = $('#tMusic').value !== 'yt'; };
+$('#tMusic').onchange = () => { store.set('tMusic', $('#tMusic').value); tMusicUi(); };
+$('#tYt').addEventListener('input', () => store.set('tYt', $('#tYt').value.trim()));
+tMusicUi();
 $('#tStop').onclick = () => writeLive({timer:null});
+$('#timerEnd').onclick = () => { if (isHost) writeLive({timer:null}); };
 
 /* workshop agenda: 210 minutes, one tap per segment */
 const AGENDA = [
@@ -2882,7 +2968,7 @@ function agTick(){
 setInterval(agTick, 20000);
 // host console: a menu of functions; picking one shows only that function's panel
 const HOST_MENU = [
-  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '課堂控制・重設'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡內容預覽（翻頁查看）']]],
+  ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '課堂控制・重設'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡預覽與開關']]],
   ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
   ['開場與設定', [['登島前小調查', '登島小調查'], ['入港前分享', '入港前分享'], ['學員登入 QR', '登入 QR Code'], ['動物新知', '動物知識卡'], ['學員背包', '背包講義連結']]]
 ];
@@ -2897,8 +2983,20 @@ function showSec(sec){
 }
 let peekAt = 1;
 $('#peekGrid').innerHTML = STATIONS.map(x => `<button type="button" data-peek="${x.id}">第 ${x.id} 站</button>`).join('');
+function renderPeekCtl(){
+  const id = peekAt, isO = openUpTo >= id, isQ = quizUpTo >= id;
+  $('#peekCtl').innerHTML = `<span class="small"><b>內容</b>：${isO ? '已開放' : '未開放'}・<b>挑戰</b>：${isQ ? '已開啟' : '未開啟'}</span>` +
+    `<button type="button" class="${isO ? 'ghost' : 'primary'}" data-pk="${isO ? 'close' : 'open'}">${isO ? '關閉這一站' : '開放這一站'}</button>` +
+    `<button type="button" class="${isQ ? 'ghost' : 'primary'}" data-pk="${isQ ? 'qoff' : 'qon'}">${isQ ? '關閉挑戰' : '開啟挑戰'}</button>`;
+}
+$('#peekCtl').onclick = e => { const b = e.target.closest('[data-pk]'); if (!b) return; const id = peekAt, k = b.dataset.pk;
+  if (k === 'open') writeLive({open:Math.max(openUpTo, id)});
+  if (k === 'close') writeLive({open:id - 1, quiz:Math.min(quizUpTo, id - 1)});
+  if (k === 'qon') writeLive({quiz:Math.max(quizUpTo, id), open:Math.max(openUpTo, id)});
+  if (k === 'qoff') writeLive({quiz:id - 1});
+  toast(k === 'open' ? `已開放到第 ${id} 站` : k === 'close' ? `第 ${id} 站之後已鎖回` : k === 'qon' ? `第 ${id} 站挑戰已開啟` : `第 ${id} 站之後的挑戰已關閉`); };
 function renderPeek(){
-  const st = STATIONS.find(x => x.id === peekAt); if (!st) return;
+  const st = STATIONS.find(x => x.id === peekAt); if (!st) return; renderPeekCtl();
   $('#peekPos').textContent = `第 ${st.id} 站・${st.name}（${st.area}）`;
   $('#peekPrev').disabled = peekAt <= 1; $('#peekNext').disabled = peekAt >= STATIONS.length;
   const quiz = st.steps.map((q, i) => `<li><b>${esc(q.q)}</b>` +
@@ -2937,7 +3035,7 @@ const POLL_PRE = AGENDA.filter(a => a.poll).map(a => a.poll);
 $('#pPre').innerHTML = '<option value="">自己出題</option>' + POLL_PRE.map((x, i) => `<option value="${i}">${esc(x.q)}</option>`).join('');
 $('#pPre').onchange = () => { const x = POLL_PRE[+$('#pPre').value]; if ($('#pPre').value !== '' && x){ $('#pQ').value = x.q; $('#pOpts').value = x.opts.join('\n'); } };
 $('#qkPoll').onclick = () => { jump('#secPoll'); $('#pQ').focus({preventScroll:true}); };
-$('#qkDraw').onclick = () => { jump('#secDraw'); $('#drawBtn').click(); };
+$('#qkDraw').onclick = () => jump('#secDraw');   // only opens the panel: the draw starts when the host presses 抽一位
 $('#qkBeast').onclick = () => jump('#secBeast');
 $('#qkTimer').onclick = () => jump('#secTimer');
 $('#agenda').onclick = e => {
@@ -3005,6 +3103,7 @@ function tickRest(){
       nightTarget = 0; setSleep(false);
     } else { box.hidden = true; nightTarget = 0; setSleep(false); clearInterval(restTimer); }
     const on = restUntil && left > 0;
+    restMusic(!!on && isHost);
     $('#cRest').classList.toggle('on', !!on);
     $('#cRestSub').textContent = on ? '提早結束休息' : '島上入夜＋計時';
     waitBanner();
@@ -3052,7 +3151,7 @@ $('#cEnd').onclick = () => {
   if (confirm('確定離島？大船會靠岸，所有學員登船後開走，並顯示祝福話。')) writeLive({phase:'gone', phaseAt:Date.now(), attention:false, rest:null, farewell});
 };
 let wiping = false;
-$('#cReset').onclick = () => { if (wiping || confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive(Object.assign({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, poll:null, beast:null, mute:false, four:false, wall:warmWall()}, wiping ? {epoch:Date.now()} : {})); };
+$('#cReset').onclick = () => { if (wiping || confirm('確定重設島嶼？會回到研習開始前：學員可在島上自由走動，各站鎖住。')){ agNow = -1; agT0 = 0; store.set('agNow', -1); store.set('agT0', 0); renderAgenda(); $('#agClock').textContent = '流程參考表。「開始」開放那一站的內容，「開啟挑戰」讓學員可以作答。抽人、投票用上方「隨時可用」那一列。'; } else return; ideas = {w:'', list:[]}; wallArch = []; saveWalls(); writeLive(Object.assign({svShow:false, phase:'class', started:false, phaseAt:Date.now(), open:0, quiz:0, attention:false, rest:null, timer:null, draw:null, history:[], check1:false, poll:null, beast:null, mute:false, four:false, wallShow:false, wall:warmWall()}, wiping ? {epoch:Date.now()} : {})); };
 
 // one tap of 離島: the ship docks, everyone walks down the pier and boards, then it sails off
 function leaveIsland(docked){
@@ -3143,7 +3242,7 @@ $('#drawBtn').onclick = () => {
   showDraw(name, pool, q);
   writeLive({draw:{id, name, q, pool:shuffle(pool).slice(0, 24), at:Date.now()}, history:[...hist, name].slice(-30)});
 };
-$('#qSel').innerHTML = '<option value="rand">隨機出題（講義題庫）</option><option value="none">不附問題</option>' +
+$('#qSel').innerHTML = '<option value="none">不附問題（只抽人）</option><option value="rand">隨機出題（講義題庫）</option>' +
   QUESTIONS.map((q, i) => `<option value="${i}">${esc(q)}</option>`).join('') + '<option value="custom">自訂問題…</option>';
 $('#qSel').onchange = () => $('#qCustomWrap').hidden = $('#qSel').value !== 'custom';
 
@@ -3199,13 +3298,13 @@ let drawTimer;
 function showDraw(name, pool, q){
   clearTimeout(drawTimer);
   const reel = $('#reel'), ov = $('#drawOv');
-  ov.hidden = false; reel.className = 'reel'; $('#meFlag').hidden = true; $('#drawClose').hidden = true; $('#drawSub').textContent = ''; $('#drawQ').hidden = true;
+  ov.hidden = false; reel.className = 'reel'; $('#bottle').className = 'bottle shake'; $('#drawLead').textContent = '海浪送來一只漂流瓶，裡面的名字是…'; $('#meFlag').hidden = true; $('#drawClose').hidden = true; $('#drawSub').textContent = ''; $('#drawQ').hidden = true;
   const names = pool.length ? pool : [name];
   let k = 0, delay = 60, total = 0;
   const finish = () => {
-    reel.textContent = name; reel.className = 'reel final';
+    reel.textContent = name; reel.className = 'reel final'; $('#bottle').className = 'bottle open'; $('#drawLead').textContent = '漂流瓶選中的探險家是';
     const mine = !isHost && nick && name === nick;
-    $('#meFlag').hidden = !mine; $('#drawSub').textContent = q ? '請回答這個問題：' : '恭喜抽中！';
+    $('#meFlag').hidden = !mine; $('#drawSub').textContent = q ? '請回答這個問題：' : '請這位探險家和大家分享';
     $('#drawQ').textContent = q || ''; $('#drawQ').hidden = !q;
     $('#drawClose').hidden = false; confetti();
   };
@@ -3263,7 +3362,7 @@ $('#missionGo').onclick = () => { $('#missionOv').hidden = true; goStation(1); }
 $('#m1Four').onclick = () => { openFour(); writeLive({four:true}); toast('四大向度圖已同步到學員畫面，關閉時一起收起'); };
 let fourShown = false;
 function applyFour(d){ const on = !!(d && d.four); if (!isHost && on !== fourShown && nick && $('#join').hidden) $('#fourOv').hidden = !on; fourShown = on; }
-$('#m1Timer').onclick = () => writeLive({timer:{until:Date.now() + 10*60000, label:'任務一：個案需求分析', music:true}});
+$('#m1Timer').onclick = () => startTimer(10, '任務一：個案需求分析', 3);   // uses the music picked in the timer panel (YouTube included), slow built-in track otherwise
 $('#m1Check').onclick = () => writeLive({quiz:checkOpen() ? 0 : 1});
 let seenQuiz;
 function applyCheck(){
@@ -3704,7 +3803,8 @@ function applyInteract(d){
   renderWall();
   checkWarm();
   applySvShow(d); applyFour(d);
-  if (isHost) hmStartSync();
+  if (isHost){ hmStartSync(); if (!$('#peekOv').hidden) renderPeekCtl(); }
+  applyWallShow(d);
   openSeen = true;
 }
 // warm-up share before landing: a learner posts one line before stepping onto the island
@@ -3789,7 +3889,7 @@ const warmWall = () => ({id:'warm' + Date.now().toString(36), q:cleanText($('#wa
 $('#warmQ').value = store.get('warmQ', '') || WARM_Q;
 $('#warmQ').addEventListener('input', () => store.set('warmQ', $('#warmQ').value.trim()));
 $('#warmStart').onclick = () => { writeLive({wall:warmWall()}); toast('入港前分享已開放'); };
-$('#warmShow').onclick = () => openWall(true);
+$('#warmShow').onclick = () => { openWall(true); writeLive({wallShow:true}); };
 const myVote = () => poll && votes.has(myId) && votes.get(myId).p === poll.id ? votes.get(myId) : null;
 function tally(){
   const c = poll ? poll.opts.map(() => 0) : [];
@@ -3901,7 +4001,7 @@ $('#wallForm').addEventListener('submit', e => {
   $('#wallInput').value = ''; checkWarm(); renderWall(); toast(wall.warm ? '分享成功！大家都看得到' : '已貼上想法牆'); confetti();
 });
 $('#wallBtn').onclick = () => openWall(isHost && !!wall);
-$('#wallClose').onclick = () => $('#wallOv').hidden = true;
+$('#wallClose').onclick = () => { $('#wallOv').hidden = true; if (isHost && liveState && liveState.wallShow) writeLive({wallShow:false}); };
 $('#wallPrev').onclick = () => { const n = wallArch.filter(a => !wall || a.id !== wall.id).length; wallView = wallView < 0 ? n - 1 : Math.max(0, wallView - 1); renderWall(); };
 $('#wallNext').onclick = () => { const n = wallArch.filter(a => !wall || a.id !== wall.id).length; wallView = wallView + 1 >= n ? -1 : wallView + 1; renderWall(); };
 $('#wStart').onclick = () => {
@@ -3910,7 +4010,13 @@ $('#wStart').onclick = () => {
   writeLive({wall:{id:Date.now().toString(36), q, open:true}}); toast('想法牆已開放');
 };
 $('#wStop').onclick = () => { if (wall) writeLive({wall:Object.assign({}, liveState.wall, {open:false})}); };
-$('#wShow').onclick = () => openWall(true);
+$('#wShow').onclick = () => { openWall(true); writeLive({wallShow:true}); };
+let wallShown = false;
+function applyWallShow(d){
+  const on = !!(d && d.wallShow && d.wall);
+  if (!isHost && on !== wallShown && nick && $('#join').hidden && !(warmGate && needWarm())){ if (on) openWall(); else $('#wallOv').hidden = true; }
+  wallShown = on;
+}
 $('#wClear').onclick = () => { if (wall && confirm('清空想法牆上的所有便利貼？')){ ideas = {w:wall.id, q:wall.q, list:[]}; saveIdeas(); renderWall(); } };
 $('#cWipe').onclick = () => {
   if (!confirm('清除所有測試紀錄？\n調查、聊天、想法牆、投票、戰鬥、抽籤、學員名單都會清空，學員裝置上的名字與進度也會歸零（需重新登入）。這個動作無法復原。')) return;
