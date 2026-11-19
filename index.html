@@ -62,6 +62,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .sheet-head h2{font-family:var(--display);font-weight:900;font-size:24px;line-height:1.2;margin:0;text-wrap:balance}
 .close{margin-left:auto;flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:0;background:var(--mist);font-size:20px;line-height:1}
 .sheet-body{padding:16px 20px 22px;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
+.sheet-body > *{flex-shrink:0}
 .sheet-body h3{font-family:var(--display);font-size:17px;margin:0}
 .sheet-body ul{margin:0;padding-left:1.2em}
 .sheet-body li{margin:2px 0}
@@ -149,6 +150,7 @@ a.primary.padlet-btn{background:#7A4CD9;box-shadow:0 4px 0 #5934A8}
 .card.placed{border-style:solid;border-color:transparent;background:rgba(255,255,255,.75);cursor:default;font-size:13.5px;padding:5px 9px}
 .buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .bucket{border:2px dashed var(--teal);background:var(--mist);border-radius:14px;padding:10px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:84px}
+.buckets.many{grid-template-columns:repeat(3,1fr);gap:6px}.buckets.many .bucket{min-height:58px;padding:7px}
 .bucket > b{font-family:var(--display);color:var(--teal-deep)}
 .bucket .in{display:flex;flex-wrap:wrap;gap:4px}
 .order-line{display:flex;flex-direction:column;gap:6px}
@@ -271,8 +273,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .chat-head{display:flex;gap:10px;align-items:center}
 .chat-head .ava{width:46px;height:46px;border-radius:50%;flex:0 0 auto}
 .chat-head b{font:900 19px var(--display)}
-.chat-text{font-size:16.5px;line-height:1.7;min-height:3.4em}
-.kcard{background:#FFF8E6;border:2px solid #E2B54A;border-radius:14px;padding:10px 12px}
+.chat-text{white-space:pre-line;font-size:16.5px;line-height:1.7;min-height:3.4em}
+.kcard{white-space:pre-line;background:#FFF8E6;border:2px solid #E2B54A;border-radius:14px;padding:10px 12px}
 .kcard small{display:block;font-size:12px;font-weight:700;color:#9A6B00;letter-spacing:.06em}
 .kcard b{display:block;font-family:var(--display);font-size:17px;margin:2px 0}
 .know-ed{display:flex;flex-direction:column;gap:6px}
@@ -938,9 +940,8 @@ const store = {
 
 /* ---------------- content (from the workshop slides) ---------------- */
 const PADLET = 'https://padlet.com/adpscyc/1151120-s023se0gak5s5qrqsd3w';
-const COMIC_PROMPT = `請以Q版可愛漫畫的風格，將課文內容全部句子都變成彩色的漫畫，每個slide三格，橫式排版。第一個Slide請寫出課文名稱與作者，後續課文內容的slide記得每個句子都要呈現。課文的文字必須用「工整的深黑色中性筆」手寫完成。請務必用繁體中文輸出。
-
-把資料來源內容的每一句話，繪製成一格一格的動畫，不能漏掉任何課文句子。每個slide三小格就好。繁體中文輸出。格子請加上流水號。另外，每一小格內容請檢查是否有語詞清單中的語詞，若有的話，請在每一小格下方，用便利貼的方式呈現這些語詞的簡單解釋（請勿用原始的解釋，必須簡化解釋，以幫助程度較差的學生理解句子的內容）。有些語詞若一再重複出現，請只要出現第一次的解釋就好，以免浪費輸出。另，每一小格裡原句子內容的語詞部份要用紅色highlight顯示。
+const COMIC_PROMPT = `請以Q版可愛漫畫的風格，將課文內容全部句子都變成彩色的漫畫，每個slide三格，橫式排版。第一個Slide請寫出課文名稱與作者，後續課文內容的slide記得每個句子都要呈現。課文的文字必須用「工整的深黑色中性筆」手寫完成。請務必用繁體中文輸出。`;
+const ANIM_PROMPT = `把資料來源內容的每一句話，繪製成一格一格的動畫，不能漏掉任何課文句子。每個slide三小格就好。繁體中文輸出。格子請加上流水號。另外，每一小格內容請檢查是否有語詞清單中的語詞，若有的話，請在每一小格下方，用便利貼的方式呈現這些語詞的簡單解釋（請勿用原始的解釋，必須簡化解釋，以幫助程度較差的學生理解句子的內容）。有些語詞若一再重複出現，請只要出現第一次的解釋就好，以免浪費輸出。另，每一小格裡原句子內容的語詞部份要用紅色highlight顯示。
 整體風格：彩色卡通動畫風格。畫風活潑生動，表情誇張。
 核心筆觸：內容主體必須用「工整的深黑色細字中性筆」手寫完成。繁體中文輸出。`;
 const SCENE_PROMPT = `請根據這一題生成「數學題目情境示意圖」：
@@ -960,6 +961,7 @@ const SCENE_PROMPT = `請根據這一題生成「數學題目情境示意圖」�
 9. 圖中所有文字請使用繁體中文。`;
 const HANZI_SKILL = `https://github.com/sesns365/hanzi-visual-teaching
 請讀取這個網址，安裝 skill。`;
+const MATH_GEM = 'https://mathematics-classroom-of-tr-liang.github.io/copy-a-new-gem-setting/';
 const MATH_SKILL_SRC = 'https://raw.githubusercontent.com/sesns365/math-concept-visualizer/main/gpt-gemini/gemini-paste.md';
 
 const STATIONS = [
@@ -990,7 +992,7 @@ const STATIONS = [
   intro:`<div class="note">國語文學習表現：<b>聆聽、口語表達、標音符號與運用、識字與寫字、閱讀、寫作</b>。</div>
   <ul><li><b>識字的認知成分</b>：聲韻覺識、組字規則、詞素覺知、流暢性</li>
   <li><b>識字教學順序</b>：識其音 → 識其義 → 辨其形 → 書寫</li>
-  <li><b>形聲字三步驟</b>：看部首（意思）→ 找聲符（聲音）→ 懂組合</li>
+  <li><b>形聲字的教學順序</b>：規則字（泡、跑、抱）→ 不規則發音（洪、拱、供）→ 聲旁不是常用字（遙、瑤、搖）</li>
   <li><b>策略</b>：圖詞析字卡・分析字頻、字形圖像聯想識字法、部件拆解＋口訣、強制回憶寫字教學法、綜合練習</li>
   <li><b>字形圖像聯想（直映識字）</b>：把國字融入生活情境圖像，像「樹<b>木</b>、豬<b>肉</b>、大<b>火</b>」，讓字形直接和圖像連在一起</li></ul>`,
   tools:[
@@ -998,7 +1000,6 @@ const STATIONS = [
     {n:'圖詞配對', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/8937793/%E5%9C%96%E8%A9%9E%E9%85%8D%E5%B0%8D'},
     {n:'特工365 圖卡', d:'識字圖卡', u:'https://cards.se365edu.com/'},
     {n:'The Literacy Ark', d:'識字資源總覽', u:'https://linktr.ee/theliteracyark'},
-    {n:'每日一字動畫', d:'部件拆解＋形近字', u:'https://www.youtube.com/watch?v=LGjvIttFeMQ'},
     {n:'字族文學習單', d:'產生器', u:'https://spedmix.pages.dev/character-family-generator'},
     {n:'形近字學習單', d:'Gemini Canvas', u:'https://gemini.google.com/share/18d8fe3f0ca0'},
     {n:'生字書寫練習網', d:'強制回憶寫字', u:'https://character-writing-support.sesns365.chatgpt.site/'},
@@ -1010,16 +1011,14 @@ const STATIONS = [
     copy:HANZI_SKILL, link:{n:'圖解識字 Skill 說明', u:'https://github.com/sesns365/hanzi-visual-teaching'}},
   steps:[
     {type:'order', q:'依識字教學的順序點選：', items:['識其音','識其義','辨其形','書寫']},
-    {type:'order', q:'教形聲字的三步驟，依序點選：', items:['看部首：知道意思','找聲符：知道聲音','懂組合：合起來理解']},
     {type:'mc', q:'下列哪一項「不是」識字的認知成分？', opts:['聲韻覺識','組字規則','詞素覺知','流暢性','背誦整篇課文'], a:4,
       why:'識字的認知成分是聲韻覺識、組字規則、詞素覺知與流暢性。'},
-    {type:'sort', q:'這些形聲字，建議在哪個年級教？', buckets:['二年級','五年級','六年級'], items:[
-      ['泡、跑、抱（規則字）',0],['洪、拱、供（不規則字）',1],['遙、瑤、搖（聲旁不是常用字）',2]]},
+    {type:'order', q:'這三組形聲字，建議的教學順序是？依序點選：', items:['泡、跑、抱（規則字）','洪、拱、供（不規則發音）','遙、瑤、搖（聲旁不是常用字）']},
     {type:'mc', q:'學生學會「拆字形 → 找聲音 → 連意思」之後，最後一步應該做什麼？', opts:['抄寫二十遍','放進語境：在句子、文章裡使用','換下一課','背部首表'], a:1,
       why:'識字要回到語境中使用，才能真正連結形、音、義。'}
   ]},
 { id:3, name:'寫作小屋', area:'國語・寫作', color:'#2A8C8C', pos:[4.8,-6.2],
-  intro:`<ul><li><b>小步驟教學</b>：照樣造句與短語練習，先仿寫再擴寫</li>
+  intro:`<ul><li><b>步驟化、提供鷹架</b>：照樣造句與短語練習，先仿寫再擴寫</li>
   <li><b>口頭表達替代書寫</b>：先說再寫，語音輸入降低書寫負擔</li>
   <li><b>融入個人興趣主題</b>：題目換成孩子喜歡的人事物</li>
   <li><b>六何法分層寫作</b>：何人、何地、何事 → 何時、如何 → 為何，一層一層從一句話寫到一篇文章</li></ul>`,
@@ -1031,35 +1030,36 @@ const STATIONS = [
   make:{opt:true, t:'安裝「六何法分層寫作」Skill', how:'打開「六何法分層寫作小幫手」安裝教學，依步驟裝進 Claude、ChatGPT 或 Gemini。接著給它一個作文題目（例如「我最喜歡的寵物」），做出互動網頁或學習單，分享到 Padlet。',
     link:{n:'打開安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'}},
   steps:[
-    {type:'mc', q:'六何法的第一層「三何起步」，要先找出哪三何？', opts:['何人、何地、何事','何時、如何、為何','何物、何價、何量','何人、何時、為何'], a:0,
-      why:'先用何人、何地、何事組成清楚的基本句，再一層一層加上去。'},
+    {type:'mc', q:'六何法是指哪六何？', opts:['何人、何時、何地、何物、何價、為何','何人、何時、何地、何事、如何、為何','何人、何時、何處、何事、何故、何必','何人、何地、何事、何物、如何、何用'], a:1,
+      why:'何人、何時、何地、何事、如何、為何。分層寫作時先從何人、何地、何事起步，再一層一層加上去。'},
     {type:'order', q:'六何法分層寫作，依層次點選：', items:['三何起步','五何擴寫：加入何時、如何','六何完整：加入為何','事件排序','情緒加料','三段成文']},
     {type:'mc', q:'小傑說得出完整的故事，但一寫字就卡住。最適合的寫作策略是？', opts:['多罰寫幾遍','口頭表達替代書寫：先說再寫','直接給他範文抄','取消寫作'], a:1,
       why:'用語音寫作小幫手先說再寫，把「想」和「寫」分開，降低書寫負擔。'},
-    {type:'mc', q:'小美很喜歡恐龍，但寫作文意願低。可以怎麼調整？', opts:['融入個人興趣主題：題目換成恐龍','換成更長的題目','先寫完才能玩','只寫標點符號'], a:0,
-      why:'融入個人興趣主題，提高動機，寫作目標不變。'},
-    {type:'mc', q:'「照樣造句與短語練習」主要對應哪一種寫作策略？', opts:['小步驟教學','評量調整','環境調整','加深加廣'], a:0,
-      why:'先仿照句型、從短語開始，是小步驟教學。'}
+    {type:'mc', q:'小美很喜歡恐龍，但寫作文意願低。可以怎麼調整？', opts:['先規定寫滿三百字，寫完才能做喜歡的事','直接提供範文讓她抄寫，熟練後再自己寫','藉由喜歡的內容來引導，並提供結構化的引導寫作','減少寫作次數，改成只練習標點符號與造詞'], a:2,
+      why:'用她喜歡的恐龍當主題提高動機，再用結構化的引導（例如六何法）一步一步寫，寫作目標不變。'},
+    {type:'mc', q:'「照樣造句與短語練習」主要對應哪一種寫作策略？', opts:['步驟化、提供鷹架','評量調整','環境調整','加深加廣'], a:0,
+      why:'先仿照句型、從短語開始，是步驟化並提供鷹架。'}
   ]},
 { id:4, name:'閱讀花園', area:'國語・閱讀理解', color:'#D46FA0', pos:[8,1.2],
   intro:`<ul><li><b>課文漫畫</b>：用 Gemini／NotebookLM 把每一句課文畫成 Q 版漫畫格，語詞用便利貼簡化解釋</li>
-  <li><b>課文動畫＋PointerFocus</b>：聚焦重點，邊看邊理解</li>
+  <li><b>課文動畫</b>：用 NotebookLM 把每一句課文畫成一格一格的動畫，邊看邊理解</li>
   <li><b>影片理解互動模式</b>：播放 1～2 句就暫停 → 引導看圖 → 參照便利貼詞解 → 理解檢核</li>
   <li><b>閱讀策略學習單小幫手</b>：依需求產生閱讀策略學習單</li>
   <li><b>自製電子書</b>：閱讀基本能力練習，把課文做成可操作的電子書（找出完整句、前導組織策略、選擇題、畫筆工具）</li></ul>
   <div class="note"><b>為什麼這麼設計？</b>不是策略先，而是分析先：分析學生需求 → 判斷學習歷程需求 → 選擇策略 → 通用設計學習 → AI 生成通用設計教材 → 教師修正後形成教材。</div>`,
   tools:[
-    {n:'課文漫畫產生器', d:'四格漫畫', u:'https://spedmix.pages.dev/four-panel-comic'},
+    {n:'課文圖解工坊', d:'四格漫畫', u:'https://spedmix.pages.dev/four-panel-comic'},
     {n:'Gemini', d:'貼提示詞做漫畫', u:'https://gemini.google.com/'},
-    {n:'NotebookLM', d:'上傳課文當資料來源', u:'https://notebooklm.google.com/'},
-    {n:'PointerFocus', d:'聚焦游標工具', u:'https://www.pointerfocus.com/'}],
-  make:{t:'做一份課文漫畫', how:'複製下面的提示詞，在 Gemini 或 NotebookLM 貼上一課課文（和語詞清單），產生課文漫畫，分享到 Padlet。',
-    copy:COMIC_PROMPT},
+    {n:'NotebookLM', d:'上傳課文當資料來源', u:'https://notebooklm.google.com/'}],
+  make:{t:'做一份課文漫畫或課文動畫', how:'在 NotebookLM 上傳一課課文（和語詞清單）當資料來源，下面兩個提示詞擇一複製貼上，產生課文漫畫或課文動畫，分享到 Padlet。',
+    copies:[{n:'提示詞一：課文漫畫', copy:COMIC_PROMPT}, {n:'提示詞二：課文動畫（含便利貼詞解）', copy:ANIM_PROMPT}]},
   steps:[
-    {type:'order', q:'影片理解互動模式，依步驟點選：', items:['播放 1～2 句後暫停','引導看圖','參照便利貼詞解','理解檢核']},
     {type:'mc', q:'「播放一兩句就暫停、看圖、看詞解、再檢核」屬於哪一個向度的調整？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:1,
       why:'改變的是學生「怎麼學」，屬於歷程調整。'},
-    {type:'order', q:'教材設計「分析先行」的六個步驟，依序點選：', items:['分析學生需求','判斷學習歷程需求','選擇策略','通用設計學習','AI 生成通用設計教材','教師修正後形成教材']},
+    {type:'mc', q:'關於教材設計，建議可以怎麼做？', opts:['先挑好最新的 AI 工具，再看哪些學生適合拿來使用','先請 AI 生成教材，之後再回頭對照學生有什麼需求','先分析學生需求、選擇策略，再請 AI 生成，最後教師修正','直接套用別人分享的教材，全班都使用同一份就可以'], a:2,
+      why:'不是策略先，而是分析先：分析學生需求 → 判斷學習歷程需求 → 選擇策略 → 通用設計學習 → AI 生成通用設計教材 → 教師修正後形成教材。'},
+    {type:'sort', q:'學習內容的調整策略：把每個做法放進正確的策略。', buckets:['簡化','減量','分解','替代','重整'], items:[
+      ['把課文改寫成較短、較淺的句子',0],['生字由 10 個減為 5 個',1],['把一個目標拆成幾個小目標，分段學',2],['寫字有困難，改用打字或口述完成',3],['改成生活化、功能性的內容，例如看懂藥袋',4]]},
     {type:'mc', q:'依「閱讀簡單觀點」，閱讀理解由哪兩者相乘而來？', opts:['識字 × 語言理解','速度 × 正確率','注音 × 國字','背誦 × 抄寫'], a:0,
       why:'只要識字或語言理解其中一項是 0，閱讀理解就難以發生，所以兩者都要支持。'},
     {type:'mc', q:'課文漫畫的提示詞要求「語詞用便利貼呈現簡化解釋」，主要是為了什麼？', opts:['讓畫面更熱鬧','幫助程度較弱的學生理解句子內容','減少 AI 輸出的字數','方便老師批改'], a:1,
@@ -1074,18 +1074,16 @@ const STATIONS = [
   <p class="small">「數學概念動態表徵互動網頁 Skill」能依 CRA 歷程，快速做出讓學生動手操作的 HTML 數學教材。</p>`,
   tools:[
     {n:'數學概念動態表徵 Skill', d:'完整說明', u:'https://github.com/sesns365/math-concept-visualizer'},
-    {n:'Skill 安裝文字', d:'全選複製', u:MATH_SKILL_SRC},
+    {n:'有愛無礙數學概念動態表徵介面小幫手', d:'複製成自己的 Gem', u:MATH_GEM},
     {n:'數學教室資源', d:'教學資源總覽', u:'https://linktr.ee/mathclassroom'}],
-  make:{t:'安裝「數學概念動態表徵」Skill', how:'① 打開「Skill 安裝文字」，全選複製全部文字。\n② 開一個 Gemini、ChatGPT 或 Claude 新對話：安裝這個 skill，貼上後送出。\n③ 說出你要的教材，例如下面這句。\nGemini 沒出現可操作畫面，就在「工具」選 Canvas 再重做一次。做好按「共用」複製連結，分享到 Padlet。',
-    copy:'請幫我做一個二年級二位數進位加法的教材。', link:{n:'打開 Skill 安裝文字', u:MATH_SKILL_SRC}},
+  make:{t:'用「數學概念動態表徵介面小幫手」做一份教材', how:'① 打開「有愛無礙數學概念動態表徵介面小幫手」，依頁面說明複製成自己的 Gem。\n② 說出你要的教材，例如下面這句。\n做好按「共用」複製連結，分享到 Padlet。',
+    copy:'請幫我做一個二年級二位數進位加法的教材。', link:{n:'打開介面小幫手', u:MATH_GEM}},
   steps:[
     {type:'order', q:'依 CRA 教學的順序點選：', items:['C 具體：拿出 3 顆蘋果和 2 顆蘋果','R 半具體：畫出蘋果圖','A 抽象：3 + 2 = 5']},
     {type:'order', q:'依年齡由小到大，點出皮亞傑的四個認知發展期：', items:['感覺動作期','前運思期','具體運思期','形式運思期']},
     {type:'mc', q:'國小學生大多處於哪一期？教學上要注意什麼？', opts:['形式運思期，可以直接用公式','具體運思期，需要具體事物支持','感覺動作期，只能用感官','前運思期，不能學數學'], a:1,
       why:'7–11 歲能邏輯思考，但需要具體事物支持，所以 CRA 從操作開始。'},
-    {type:'mc', q:'數學學習表現代碼「r」代表哪一個主題？', opts:['數與量','空間與形狀','關係','資料與不確定性'], a:2},
-    {type:'mc', q:'用 Gemini 安裝數學 Skill 後，沒有出現可以操作的畫面，該怎麼辦？', opts:['換一個帳號','在輸入框的「工具」選 Canvas，再請它重做一次','放棄改用紙本','把題目改成英文'], a:1,
-      why:'Canvas 才能顯示可操作的互動網頁。'}
+    {type:'mc', q:'數學學習表現代碼「r」代表哪一個主題？', opts:['數與量','空間與形狀','關係','資料與不確定性'], a:2}
   ]},
 { id:6, name:'應用題港口', area:'數學・應用題', color:'#3B7FC4', pos:[3.6,9.2],
   intro:`<ul><li><b>圖像表徵－數學情境圖</b>：讓 AI 畫出已知條件、變化過程與未知量</li>
@@ -1094,31 +1092,27 @@ const STATIONS = [
   <li><b>HTML 互動式動態表徵教材</b>：小步驟教學，減輕工作記憶負荷</li></ul>`,
   tools:[
     {n:'10 以內加減法小學堂', d:'圖像表徵', u:'https://gemini.google.com/share/6431cbd0fae1'},
-    {n:'挖礦學習王', d:'遊戲化練習・十十乘法', u:'https://senst365.github.io/miningnew/'},
-    {n:'數學教室資源', d:'HTML 互動式動態表徵教材', u:'https://linktr.ee/mathclassroom'}],
+    {n:'挖礦學習王', d:'遊戲化練習・十十乘法', u:'https://senst365.github.io/miningnew/'}],
   make:{opt:true, t:'做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖，分享到 Padlet。',
     copy:SCENE_PROMPT},
   steps:[
-    {type:'mc', q:'情境圖中的「未知量」要怎麼呈現？', opts:['直接寫出答案','用「？」表示','留白不畫','用英文字母'], a:1,
-      why:'圖是幫助理解題意，不是給答案。'},
+    {type:'order', q:'依年齡由小到大，排出皮亞傑認知發展的四個階段：', items:['感覺動作期','前運思期','具體運思期','形式運思期']},
     {type:'sort', q:'這些做法，情境圖提示詞「要」還是「不要」？', buckets:['要','不要'], items:[
       ['呈現已知條件與變化過程',0],['版面簡潔、低認知負荷',0],['透明背景 PNG、繁體中文',0],
       ['把題目完整印在圖上',1],['加上很多裝飾插圖',1],['在圖上寫出答案',1]]},
     {type:'mc', q:'學生看不懂應用題的長句子，在 NotebookLM 可以請 AI 做什麼？', opts:['把題目翻成英文','文本簡化：改寫成適合學生程度、生活化的句子','直接算出答案','把題目變更長'], a:1,
       why:'文本簡化是內容調整，數學概念不變，降低閱讀負擔。'},
-    {type:'mc', q:'十十乘法、10 以內加減法這類互動教材，「小步驟」設計主要是為了？', opts:['減輕工作記憶負荷','讓學生玩久一點','增加題目數量','比較好計分'], a:0,
-      why:'一次處理一個步驟，學障生的工作記憶比較不會超載。'}
+    {type:'mc', q:'把應用題的已知條件和數量關係畫成情境圖、線段圖或數線，是運用哪一種數學表徵？', opts:['情境表徵','具體物表徵','圖像表徵','符號表徵'], a:2,
+      why:'用畫圖、數線、面積模型把數量與關係視覺化，是圖像表徵；它是從具體操作走到抽象符號的橋。'}
   ]},
 { id:7, name:'社交寶箱', area:'社會技巧・資源分享', color:'#C9902A', pos:[-3.2,7.2],
-  intro:`<ul><li><b>社會技巧課程發展</b>：課前準備（找需求者、分析能力、彙整、決定 4–6 人雙數小組、安排課程）→ 課程進行 → 評量與類化（○ 獨立完成、△ 協助完成、× 未做到）</li>
+  intro:`<ul><li><b>社會技巧課綱三向度</b>：處己、處人、處環境</li>
+  <li><b>社會技巧課程發展</b>：課前準備（找需求者、分析能力、彙整、決定 4–6 人雙數小組、安排課程）→ 課程進行 → 評量與類化（○ 獨立完成、△ 協助完成、× 未做到）</li>
   <li><b>教學九步驟</b>：準備（引起動機）→ 教（說明、示範）→ 練（演練、回饋、再演練、再回饋）→ 收（總結討論、課後作業）</li>
-  <li><b>促進類化</b>：生活實例、句型有彈性、練夠次數、換不同對象、提示卡隨身帶、做對立刻增強</li></ul>
-  <p class="quote">數位工具是橋，而我們的陪伴與專業，才是真正引導孩子勇敢過橋的力量。</p>`,
+  <li><b>促進類化</b>：生活實例、句型有彈性、練夠次數、換不同對象、提示卡隨身帶、做對立刻增強</li></ul>`,
   tools:[
     {n:'社交小特工', d:'動畫＋互動網頁＋學習單', u:'https://sesns365.github.io/social-skills/'},
-    {n:'社會技巧互動遊戲', d:'Claude 互動網頁', u:'https://claude.ai/artifact/LvS6ZmNcFVruvjfZsL727B'},
-    {n:'特工365 教學資源平台', d:'資源分享', u:'https://www.se365edu.com/'}],
-  make:{opt:true, t:'設計一個類化活動', how:'挑一集「社交小特工」，想一個讓孩子在教室外也用得上的類化活動（換不同對象、提示卡隨身帶…），分享到 Padlet。'},
+    {n:'社會技巧互動遊戲', d:'Claude 互動網頁', u:'https://claude.ai/artifact/LvS6ZmNcFVruvjfZsL727B'}],
   steps:[
     {type:'order', q:'社會技巧課程發展的三個階段，依序點選：', items:['課前準備','課程進行','評量與類化']},
     {type:'order', q:'社會技巧教學的四大段，依序點選：', items:['準備：引起動機','教：說明、示範','練：演練、回饋','收：總結討論、課後作業']},
@@ -1128,13 +1122,13 @@ const STATIONS = [
       ['用生活實例練習',0],['換不同對象練習',0],['提示卡隨身帶',0],['做對立刻增強',0],
       ['只在資源班練一次',1],['句型一字不差背熟才算',1]]},
     {type:'mc', q:'評量紀錄上的「△」代表什麼？', opts:['獨立完成','需協助完成','未做到','缺席'], a:1},
-    {type:'mc', q:'「數位工具是橋，而＿＿＿＿才是真正引導孩子勇敢過橋的力量。」', opts:['更多的 App','我們的陪伴與專業','更快的網路','更多的考試'], a:1,
-      why:'謝謝參與今天的研習！'}
+    {type:'mc', q:'特殊需求領域「社會技巧」課綱的學習表現，分成哪三個向度？', opts:['認知、情意、技能','處己、處人、處環境','溝通、合作、解決問題','自我、家庭、社區'], a:1,
+      why:'處己（處理自己的情緒與壓力）、處人（與他人互動）、處環境（在學校、家庭、社區中適應）。'}
   ]}
 ];
 
 /* three questions per station is plenty for a 4-hour morning; the rest stay in the bank above (indexes into steps) */
-const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[0,1,2], 5:[0,2,4], 6:[0,1,3], 7:[1,3,5]};
+const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[1,2,3], 5:[0,2,3], 6:[0,1,3], 7:[1,3,5]};
 STATIONS.forEach(s => { s.steps = QUIZ_PICK[s.id].map(i => s.steps[i]).filter(Boolean); });
 
 /* bigger island: every map position is scaled by S */
@@ -1154,7 +1148,7 @@ function gemSVG(i, cls){
 const FRAGS = [
   {pos:[-2.5,-7.8], tip:'調整不是降低標準，而是打開學習的可能。'},
   {pos:[7.2,-2.6],  tip:'不是策略先，而是分析先。'},
-  {pos:[-7.6,-.4],  tip:'形聲字三步驟：看部首、找聲符、懂組合。'},
+  {pos:[-7.6,-.4],  tip:'識字教學順序：識其音、識其義、辨其形、書寫。'},
   {pos:[4.6,4.2],   tip:'促進類化：換不同對象、提示卡隨身帶、做對立刻增強。'}
 ];
 FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
@@ -1173,7 +1167,11 @@ const ANIMALS = [
   {name:'橘貓咪咪',   kind:'cat',    color:'#EE9A4D', home:[-15,-6],
     card:{t:'尊重創作，標示來源', b:'使用別人分享的提示詞、Skill 或教材時，保留原作者與來源；自己改編後再分享，也寫上「改編自誰」。今天的工具很多都來自第一線老師的無私分享。'}},
   {name:'灰貓小墨',   kind:'cat',    color:'#8E9AA6', home:[-7,-13],
-    card:{t:'認得幾個字才算識字？', b:'依黃富順（1994）的研究，一般成人生活所需是 2,328 字。認得 470 字以下列為不識字；870 字以上、未達 1,680 字為半識字；能認 1,680 字，並能書寫日常生活的簡單應用文字，才算識字者。'}}
+    card:{t:'認得幾個字才算識字？', b:'依黃富順（1994）的研究，一般成人生活所需是 2,328 字。認得 470 字以下列為不識字；870 字以上、未達 1,680 字為半識字；能認 1,680 字，並能書寫日常生活的簡單應用文字，才算識字者。'}},
+  {name:'小狗阿算',   kind:'dog',    color:'#F2EDE4', home:[4.5,3],
+    card:{t:'常見的數學表徵類型', b:'情境表徵（文字／生活經驗）：把數學概念放進日常語境或應用題，例如用「分披薩」引入分數。\n具體物表徵（操作物）：使用實體教具操作，例如積木、算盤、錢幣、分數板或幾何立體模型。\n圖像表徵（視覺化）：用畫圖、數線、面積模型、長條圖或折線圖呈現數量與關係。\n符號表徵（抽象式）：運用數字、運算符號、代數式或方程式，例如 2x + 3 = 7。\n語言表徵（口語／文字說明）：用口頭或書面文字描述解題策略、推理理由或概念意義。'}},
+  {name:'小兔暖暖',   kind:'rabbit', color:'#F6C9D4', home:[-10,10],
+    card:{t:'社會情緒學習（SEL）五個面向', b:'自我覺察：辨識自己的情緒、想法、價值觀與優缺點。\n自我管理：有效調節情緒、壓力與行為，朝目標前進。\n社會覺察：理解他人的感受、觀點與處境，培養同理心。\n人際關係技巧：建立與維持健康的關係，進行清晰溝通與合作。\n負責任的決策：在倫理、安全與實際層面做出明智且負責任的選擇。'}}
 ];
 const QUESTIONS = [
   '分析個案需求時，你最先注意到孩子哪一個需求？會調整哪個向度？',
@@ -1472,6 +1470,7 @@ function kitBlock(st){
     `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
   const make = m ? `<div class="make"><div class="kit-h">實作任務${m.opt ? '<span class="opt-tag">選做</span>' : ''}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
     ${m.copy ? `<div class="prompt" id="mkCopy">${esc(m.copy)}</div>` : ''}
+    ${(m.copies || []).map((c, i) => `<b class="t" style="font-size:14.5px;margin-top:6px">${esc(c.n)}</b><div class="prompt">${esc(c.copy)}</div><div class="row" style="margin-bottom:10px"><button class="ghost" type="button" data-copyi="${i}">複製${esc(c.n.split('：')[0])}</button></div>`).join('')}
     <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
     ${m.link ? `<a class="ghost" href="${esc(m.link.u)}" target="_blank" rel="noopener">${esc(m.link.n)}</a>` : ''}
     ${PADLET_BTN}</div></div>` : '';
@@ -1509,6 +1508,7 @@ function openStation(sid){
   $('#startBtn').onclick = () => runStep(st, 0);
   body.querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
   body.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(st.make.copy));
+  body.querySelectorAll('[data-copyi]').forEach(b => b.onclick = () => copyText(st.make.copies[+b.dataset.copyi].copy));
   $('#sheet').hidden = false;
 }
 function closeSheet(){ if (typeof closeChat === 'function' && chatAid >= 0) closeChat(); $('#sheet').hidden = true; currentSid = null; pushPresence(); nearSid = -1; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
@@ -1556,7 +1556,7 @@ function runStep(st, i){
     body.innerHTML = stepHead(st, i) + qBlock(s.q) +
       `<p class="small">先點一張卡片，再點它屬於的框框。</p>
       <div class="pool" id="pool">${items.map(it => `<button class="card" data-k="${it.k}" aria-pressed="false" type="button">${esc(it.t)}</button>`).join('')}</div>
-      <div class="buckets">${s.buckets.map((b, k) => `<button class="bucket" data-b="${k}" type="button"><b>${esc(b)}</b><span class="in"></span></button>`).join('')}</div><div id="fb"></div>`;
+      <div class="buckets${s.buckets.length > 4 ? ' many' : ''}">${s.buckets.map((b, k) => `<button class="bucket" data-b="${k}" type="button"><b>${esc(b)}</b><span class="in"></span></button>`).join('')}</div><div id="fb"></div>`;
     $('#pool').onclick = e => {
       const c = e.target.closest('.card'); if (!c) return;
       body.querySelectorAll('#pool .card').forEach(x => x.setAttribute('aria-pressed', 'false'));
@@ -1626,7 +1626,6 @@ function showDone(st, first){
     <p style="margin:0">「${esc(st.name)}」完成。礦石 <b>${oresDone()}</b> / 6・藏寶圖碎片 <b>${frags.size}</b> / ${FRAGS.length}${all ? '・已拿到黃金船票' : ''}</p>
     ${!all && oresDone() === 6 && frags.size < FRAGS.length ? '<p class="small" style="margin:0">礦石集滿了！島上還藏著發光的藏寶圖碎片，走過去就能撿起來。</p>' : ''}
     <p class="small" style="margin:0">換裝置接續用的接續碼：<b class="code" style="font-size:18px;padding:2px 10px">${makeCode()}</b></p>
-    ${all && st.id === 7 ? '<p class="quote" style="text-align:left">數位工具是橋，而我們的陪伴與專業，才是真正引導孩子勇敢過橋的力量。</p>' : ''}
     <div class="row" style="justify-content:center">${nextOpen(st) ? `<button class="primary" id="goNext" type="button">走去第 ${nextOpen(st).id} 站：${esc(nextOpen(st).name)}</button>` : ''}
     <button class="ghost" id="backMap" type="button">回到島上</button></div></div>`;
   if (first && done.size >= STATIONS.length){ setTimeout(() => { confetti(); openTreasure(); }, 1400); }
@@ -2747,7 +2746,7 @@ let packLink = PACK_HANDOUT;
 function renderPack(){
   const okUrl = /^https:\/\//.test(packLink);
   const items = [['本日講義', okUrl ? '打開講義' : '在參考檔案資料夾裡', okUrl ? packLink : PACK_REF], ['參考檔案', 'Google Drive 資料夾', PACK_REF],
-    ['相關文獻', 'Google Drive 資料夾', PACK_LIT], ['成果分享 Padlet', '貼上你的實作', PADLET]];
+    ['相關文獻', 'Google Drive 資料夾', PACK_LIT], ['成果分享 Padlet', '貼上你的實作', PADLET], ['特工365 教學資源平台', '更多教學資源', 'https://www.se365edu.com/']];
   $('#packLinks').innerHTML = items.map(t => `<a href="${esc(t[2])}" target="_blank" rel="noopener"><b>${esc(t[0])}</b><span>${esc(t[1])}</span></a>`).join('');
   $('#packMine').innerHTML = nick ? `<b>${esc(nick)}</b> 的收藏：礦石 ${oresDone()}/6・藏寶圖 ${frags.size}/${FRAGS.length}${done.has(7) ? '・黃金船票' : ''}<br><span class="small">接續碼 ${esc(makeCode())}（換裝置時輸入）</span>` : '';
   $('#packMine').hidden = !nick;
@@ -3004,16 +3003,16 @@ const AGENDA = [
   {t:'第 1 站 需求燈塔', m:25, open:1, note:'個案需求分析（下方任務一可計時）→ 開放檢核 → 討論',
     poll:{q:'這個孩子最需要先調整哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量']}, dq:0},
   {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 安裝圖解識字 Skill → Padlet',
-    poll:{q:'你最想帶回去用的識字工具？', opts:['圖詞析字卡','圖解識字 Skill','每日一字動畫','字族文・形近字學習單','生字書寫練習網']}, dq:1},
+    poll:{q:'你最想帶回去用的識字工具？', opts:['圖詞析字卡','圖解識字 Skill','字族文・形近字學習單','生字書寫練習網','找字高手・識字語詞']}, dq:1},
   {t:'第 3 站 寫作小屋', m:15, open:3, note:'講解 → 體驗 → 六何法 Skill',
     poll:{q:'學生寫作最常卡在哪裡？', opts:['不知道寫什麼','句子寫不長','會說不會寫','沒有動機']}, dq:3},
   {t:'第 4 站 閱讀花園', m:25, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
-    poll:{q:'課文漫畫你會用哪個工具做？', opts:['Gemini','NotebookLM','課文漫畫產生器','還在觀望']}, dq:4},
+    poll:{q:'課文漫畫你會用哪個工具做？', opts:['Gemini','NotebookLM','課文圖解工坊','還在觀望']}, dq:4},
   {t:'休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
-  {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 安裝數學 Skill → 做一份教材 → Padlet',
+  {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 打開數學介面小幫手 → 做一份教材 → Padlet',
     poll:{q:'你想先做哪個數學單元的互動教材？', opts:['加減法','乘除法','分數','時間與錢幣','幾何圖形']}, dq:6},
   {t:'第 6 站 應用題港口', m:15, open:6, note:'講解 → 複製提示詞生情境圖 → Padlet', dq:5},
-  {t:'第 7 站 社交寶箱', m:15, open:7, note:'社交小特工 → 類化活動 → 拿黃金船票',
+  {t:'第 7 站 社交寶箱', m:15, open:7, note:'社交小特工體驗 → 拿黃金船票',
     poll:{q:'社會技巧教學最難的是哪一步？', opts:['引起動機','示範','演練與回饋','類化到生活']}, dq:7},
   {t:'成果分享', m:15, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
   {t:'Q&A 與離島', m:15, note:'回答提問 → 按「離島」，全員搭船',
@@ -3080,6 +3079,7 @@ function renderPeek(){
   $('#peekBody').scrollTop = 0;
   $('#peekBody').querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
   $('#peekBody').querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(st.make.copy));
+  $('#peekBody').querySelectorAll('[data-copyi]').forEach(b => b.onclick = () => copyText(st.make.copies[+b.dataset.copyi].copy));
 }
 $('#peekGrid').onclick = e => { const b = e.target.closest('[data-peek]'); if (b){ peekAt = +b.dataset.peek; renderPeek(); $('#peekOv').hidden = false; } };
 $('#peekPrev').onclick = () => { peekAt = Math.max(1, peekAt - 1); renderPeek(); };
@@ -3464,7 +3464,7 @@ const BEAST_QS = [
   {q:'幫容易分心的學生安排靠前、遠離門窗的座位，屬於哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:2},
   {q:'CRA 數學教學的正確順序是？', opts:['具體 → 半具體 → 抽象','抽象 → 半具體 → 具體','半具體 → 具體 → 抽象','具體 → 抽象 → 半具體'], a:0},
   {q:'「工作分析法」的做法是？', opts:['把任務拆成小步驟','讓學生自己摸索','把題目改成選擇題','縮短上課時間'], a:0},
-  {q:'教形聲字的三步驟是？', opts:['看部首 → 找聲符 → 懂組合','抄寫 → 背誦 → 默寫','找聲符 → 抄十遍 → 考試','看注音 → 跳過 → 下一課'], a:0},
+  {q:'識字教學的順序是？', opts:['識其音 → 識其義 → 辨其形 → 書寫','書寫 → 辨其形 → 識其義 → 識其音','辨其形 → 書寫 → 識其音 → 識其義','識其義 → 書寫 → 識其音 → 辨其形'], a:0},
   {q:'學生說得出來卻寫不出來，最適合哪個寫作策略？', opts:['口頭表達替代書寫','多罰寫','直接給範文','取消寫作'], a:0},
   {q:'影片理解互動模式，播放幾句就要暫停？', opts:['1～2 句','整部看完','5 分鐘','完全不暫停'], a:0},
   {q:'做課程調整之前，第一步應該先？', opts:['挑最新的數位工具','分析個案的學習需求','直接降低難度','跟上全班進度'], a:1}
