@@ -212,6 +212,13 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .hist span{background:var(--mist);border-radius:999px;padding:3px 10px;font-size:13px}
 .banner{position:fixed;z-index:6;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 120px);background:var(--ink);color:var(--paper);border-radius:999px;padding:10px 20px;font:700 16px var(--display);box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;pointer-events:none}
 .banner.wait{background:var(--paper);color:var(--ink)}
+#voyage{display:none;position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);width:min(420px,calc(100% - 32px));background:rgba(255,253,246,.96);border:3px solid #F4B740;border-radius:20px;padding:14px 18px 16px;text-align:center;box-shadow:var(--shadow);pointer-events:none}
+body.aboard #voyage{display:block}body.aboard #banner{display:none!important}
+#voyage small{display:block;font-weight:900;letter-spacing:.3em;color:#9A6B00;font-size:12px}
+#voyage b{display:block;font-family:var(--display);font-size:21px;margin:2px 0 4px}
+#voyage span{font-size:14.5px;line-height:1.6}
+#voyage i{display:block;height:6px;margin-top:10px;border-radius:99px;background:linear-gradient(90deg,#3AA6B9 0 50%,#BFE6EC 50% 100%);background-size:36px 6px;animation:voySea 1.2s linear infinite}
+@keyframes voySea{to{background-position:36px 0}}
 .attn{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(24,50,58,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));text-align:center;color:#fff}
 .attn .big{font:900 clamp(40px,11vw,88px)/1.15 var(--display);letter-spacing:.06em}
 .attn p{margin:8px 0 0;font-size:18px;opacity:.9}
@@ -546,10 +553,10 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       <div class="agenda" id="agenda"></div>
     </section>
     <section>
-      <h3 id="secLetter">漂流信（課後回饋）</h3>
-      <p class="small">離島前請大家寄一封漂流信。按「開放寫信」後，每位學員的畫面會跳出信紙；信只會出現在這裡，學員彼此看不到。離島之後學員仍然可以寫。</p>
-      <label class="field">信紙上的題目<textarea id="fbQ" rows="2" maxlength="60"></textarea></label>
-      <div class="row"><button class="primary" id="fbOpen" type="button">開放寫信</button><button class="ghost" id="fbStop" type="button">停止收信</button><span class="small" id="fbState"></span></div>
+      <h3 id="secLetter">島嶼明信片（課後回饋）</h3>
+      <p class="small">離島前請大家寄一張島嶼明信片。按「開放寫明信片」後，每位學員的畫面會跳出明信片；內容只會出現在這裡，學員彼此看不到。離島之後學員仍然可以寫。</p>
+      <label class="field">明信片上的題目<textarea id="fbQ" rows="2" maxlength="60"></textarea></label>
+      <div class="row"><button class="primary" id="fbOpen" type="button">開放寫明信片</button><button class="ghost" id="fbStop" type="button">停止收件</button><span class="small" id="fbState"></span></div>
       <div id="fbList" style="max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
     </section>
     <section>
@@ -680,15 +687,15 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
 <div class="roster-pop" id="rosterPop" hidden></div>
 <div class="overlay" id="fbOv" hidden style="z-index:45">
   <div class="dialog" style="background:#FFFBEF;border:3px solid #E2B54A">
-    <small style="font-weight:700;color:#9A6B00;letter-spacing:.08em">離島前・漂流信</small>
-    <h2 style="margin:2px 0 4px">寄一封漂流信給講師</h2>
+    <small style="font-weight:700;color:#9A6B00;letter-spacing:.08em">離島前・島嶼明信片</small>
+    <h2 style="margin:2px 0 4px">寄一張明信片給講師</h2>
     <p id="fbAsk" style="margin:0 0 8px;font-weight:700"></p>
-    <form id="fbForm"><textarea id="fbText" rows="5" maxlength="300" placeholder="寫下你的想法，裝進瓶子漂給講師…" style="width:100%;font:inherit;border:2px solid var(--line);border-radius:12px;padding:10px"></textarea>
-    <p class="small" style="margin:6px 0">這封信只有講師看得到。</p>
-    <div class="row"><button class="primary" type="submit">裝瓶寄出</button><button class="ghost" type="button" id="fbLater">等一下再寫</button></div></form>
+    <form id="fbForm"><textarea id="fbText" rows="5" maxlength="300" placeholder="寫下你的想法，寄給講師…" style="width:100%;font:inherit;border:2px solid var(--line);border-radius:12px;padding:10px"></textarea>
+    <p class="small" style="margin:6px 0">這張明信片只有講師看得到。</p>
+    <div class="row"><button class="primary" type="submit">寄出明信片</button><button class="ghost" type="button" id="fbLater">等一下再寫</button></div></form>
   </div>
 </div>
-<button class="chip" id="fbBtn" type="button" hidden style="position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:39;background:#F4B740;font-weight:900">寫漂流信</button>
+<button class="chip" id="fbBtn" type="button" hidden style="position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:39;background:#F4B740;font-weight:900">寫明信片</button>
 <div class="notice-ov" id="noticeOv" hidden><div class="notice-text" id="noticeText"></div><button class="ghost" id="noticeClose" type="button" hidden>收起公告</button></div>
 <div class="overlay" id="treasureOv" hidden style="z-index:44">
   <div class="dialog treasure">
@@ -891,6 +898,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
 </div>
 
 <div class="banner" id="banner" hidden></div>
+<div id="voyage" aria-live="polite"><small>航行中</small><b>你已經登船，正在航行中</b><span>即將抵達研習島嶼，開始探險！<br>等講師按下「登島」，大家一起靠岸。</span><i></i></div>
 
 <div class="rest-box" id="restBox" hidden aria-live="polite">
   <small id="restLabel">休息時間</small>
@@ -1092,7 +1100,7 @@ const STATIONS = [
     {n:'找字高手', d:'綜合練習・找字', u:'https://findword.se365edu.com/'},
     {n:'識字語詞', d:'綜合練習・班級或自由練習', u:'https://literacy.se365edu.com/'}],
   prompts:[{n:'字形圖像聯想識字圖', d:'把【目標字】換成要教的字，貼到 Gemini 或 ChatGPT 生圖', copy:GLYPH_PROMPT}],
-  make:{t:'安裝「圖解識字」Skill', how:'開一個 Gemini、ChatGPT 或 Claude 新對話，貼上下面兩行送出；裝好後輸入「圖解識字 休」（換成你想教的字），把成品截圖或連結分享到 Padlet。',
+  make:{t:'安裝「圖解識字」Skill', how:'開一個 Gemini、ChatGPT 或 Claude 新對話，貼上下面兩行送出；裝好後輸入「圖解識字 休」（換成你想教的字），完成後截圖或複製連結。',
     copy:HANZI_SKILL, link:{n:'圖解識字 Skill 說明', u:'https://github.com/sesns365/hanzi-visual-teaching'}},
   steps:[
     {type:'order', q:'依識字教學的順序點選：', items:['識其音','識其義','辨其形','書寫']},
@@ -1112,7 +1120,7 @@ const STATIONS = [
     {n:'語詞造句及句型練習板', d:'Gemini Canvas', u:'https://gemini.google.com/share/dac1116b6e3d'},
     {n:'六何法分層寫作小幫手', d:'安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'},
     {n:'語音寫作小幫手', d:'先說再寫', u:'https://little-voice-writing.sesns365.chatgpt.site/'}],
-  make:{opt:true, t:'安裝「六何法分層寫作」Skill', how:'打開「六何法分層寫作小幫手」安裝教學，依步驟裝進 Claude、ChatGPT 或 Gemini。接著給它一個作文題目（例如「我最喜歡的寵物」），做出互動網頁或學習單，分享到 Padlet。',
+  make:{try:true, t:'體驗「六何法分層寫作」Skill', how:'打開「六何法分層寫作小幫手」安裝教學，依步驟裝進 Claude、ChatGPT 或 Gemini。接著給它一個作文題目（例如「我最喜歡的寵物」），做出互動網頁或學習單看看。',
     link:{n:'打開安裝教學', u:'https://sesns365.github.io/six-w-writing/#install'}},
   steps:[
     {type:'mc', q:'六何法是指哪六何？', opts:['何人、何時、何地、何物、何價、為何','何人、何時、何地、何事、如何、為何','何人、何時、何處、何事、何故、何必','何人、何地、何事、何物、如何、何用'], a:1,
@@ -1136,7 +1144,7 @@ const STATIONS = [
     {n:'課文圖解工坊', d:'四格漫畫', u:'https://spedmix.pages.dev/four-panel-comic'},
     {n:'Gemini', d:'貼提示詞做漫畫', u:'https://gemini.google.com/'},
     {n:'NotebookLM', d:'上傳課文當資料來源', u:'https://notebooklm.google.com/'}],
-  make:{t:'做一份課文漫畫或課文動畫', how:'在 NotebookLM 上傳一課課文（和語詞清單）當資料來源，下面兩個提示詞擇一複製貼上，產生課文漫畫或課文動畫，分享到 Padlet。',
+  make:{try:true, t:'體驗課文漫畫或課文動畫', how:'在 NotebookLM 上傳一課課文（和語詞清單）當資料來源，下面兩個提示詞擇一複製貼上，產生課文漫畫或課文動畫看看。',
     copies:[{n:'提示詞一：課文漫畫', copy:COMIC_PROMPT}, {n:'提示詞二：課文動畫（含便利貼詞解）', copy:ANIM_PROMPT}]},
   steps:[
     {type:'mc', q:'「播放一兩句就暫停、看圖、看詞解、再檢核」屬於哪一個向度的調整？', opts:['學習內容','學習歷程','學習環境','學習評量'], a:1,
@@ -1159,7 +1167,7 @@ const STATIONS = [
     {n:'數學概念動態表徵 Skill', d:'完整說明', u:'https://github.com/sesns365/math-concept-visualizer'},
     {n:'有愛無礙數學概念動態表徵介面小幫手', d:'複製成自己的 Gem', u:MATH_GEM},
     {n:'數學教室資源', d:'教學資源總覽', u:'https://linktr.ee/mathclassroom'}],
-  make:{t:'用「數學概念動態表徵介面小幫手」做一份教材', how:'① 打開「有愛無礙數學概念動態表徵介面小幫手」，依頁面說明複製成自己的 Gem。\n② 說出你要的教材，例如下面這句。\n做好按「共用」複製連結，分享到 Padlet。',
+  make:{t:'用「數學概念動態表徵介面小幫手」做一份教材', how:'① 打開「有愛無礙數學概念動態表徵介面小幫手」，依頁面說明複製成自己的 Gem。\n② 說出你要的教材，例如下面這句。\n做好按「共用」複製連結。',
     copy:'請幫我做一個二年級二位數進位加法的教材。', link:{n:'打開介面小幫手', u:MATH_GEM}},
   steps:[
     {type:'order', q:'依 CRA 教學的順序點選：', items:['C 具體：拿出 3 顆蘋果和 2 顆蘋果','R 半具體：畫出蘋果圖','A 抽象：3 + 2 = 5']},
@@ -1177,7 +1185,7 @@ const STATIONS = [
   tools:[
     {n:'10 以內加減法小學堂', d:'圖像表徵', u:'https://gemini.google.com/share/6431cbd0fae1'},
     {n:'挖礦學習王', d:'遊戲化練習・十十乘法', u:'https://senst365.github.io/miningnew/'}],
-  make:{opt:true, t:'做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖，分享到 Padlet。',
+  make:{try:true, t:'體驗做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖看看。',
     copy:SCENE_PROMPT},
   steps:[
     {type:'order', q:'依年齡由小到大，排出皮亞傑認知發展的四個階段：', items:['感覺動作期','前運思期','具體運思期','形式運思期']},
@@ -1550,18 +1558,21 @@ function taskBlock(){
     <button class="ghost" type="button" data-four>看四大向度圖</button></div>
     <button type="button" class="four-thumb" data-four><img src="${FOUR_IMG}" alt="特教課程調整的核心四大向度：內容、歷程、環境、評量"></button></div>`;
 }
+// which stations ask for a Padlet upload: the host decides, stations 2 and 5 by default
+const SHARE_DEF = [2, 5];
+const shareOn = id => { const a = liveState && Array.isArray(liveState.share) ? liveState.share : SHARE_DEF; return a.includes(id); };
 const PADLET_BTN = `<a class="primary padlet-btn" href="${PADLET}" target="_blank" rel="noopener">分享到 Padlet</a>`;
 function kitBlock(st){
   const m = st.make; if (!m && !st.tools && !st.prompts) return '';
   const prompts = (st.prompts || []).map((c, i) => `<details class="make pr"><summary><b>提示詞：${esc(c.n)}</b><span class="small">點開看提示詞</span></summary><p>${esc(c.d)}</p><div class="prompt">${esc(c.copy)}</div><div class="row"><button class="ghost" type="button" data-copyp="${i}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg> 一鍵複製</button></div></details>`).join('');
   const tools = st.tools ? `<div><div class="kit-h">體驗工具（點開試試看）</div><div class="tools">${st.tools.map(t =>
     `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
-  const make = m ? `<div class="make"><div class="kit-h">實作任務${m.opt ? '<span class="opt-tag">選做</span>' : ''}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
+  const make = m ? `<div class="make"><div class="kit-h">${shareOn(st.id) ? '實作任務<span class="opt-tag">完成後分享到 Padlet</span>' : '體驗任務<span class="opt-tag">體驗就好，不用上傳</span>'}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
     ${m.copy ? `<div class="prompt" id="mkCopy">${esc(m.copy)}</div>` : ''}
     ${(m.copies || []).map((c, i) => `<b class="t" style="font-size:14.5px;margin-top:6px">${esc(c.n)}</b><div class="prompt">${esc(c.copy)}</div><div class="row" style="margin-bottom:10px"><button class="ghost" type="button" data-copyi="${i}">複製${esc(c.n.split('：')[0])}</button></div>`).join('')}
     <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
     ${m.link ? `<a class="ghost" href="${esc(m.link.u)}" target="_blank" rel="noopener">${esc(m.link.n)}</a>` : ''}
-    ${PADLET_BTN}</div></div>` : '';
+    ${shareOn(st.id) ? PADLET_BTN : ''}</div></div>` : '';
   return `<div class="kit">${tools}${prompts}${make}</div>`;
 }
 function copyText(t){
@@ -2815,13 +2826,13 @@ $('#joinForm').addEventListener('submit', e => {
   const v = $('#nickInput').value.trim().slice(0, 16); if (!v) return;
   const r = readCode($('#codeInput').value);
   if (r){ r.done.forEach(i => done.add(i)); store.set('done', [...done]); r.frags.forEach(i => frags.add(i)); store.set('frags', [...frags]); }
-  nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx); nameOk = true;
+  nick = v; charIdx = pickChar; store.set('nick', nick); store.set('char', charIdx); nameOk = true; document.body.classList.toggle('aboard', aboard());
   $('#join').hidden = true; renderHUD(); showFab(); checkWarm();
   const keepPos = player && player.pos.clone();
   spawnPlayer(); if (keepPos) player.pos.copy(keepPos);
   lastPos = 0; pushPos();
   pushFace();
-  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '你已經登船！等講師按「登島」，大家一起開進島');
+  toast(r ? `歡迎回來！已帶回 ${r.done.length} 顆礦石` : explorersOn ? '點地面或地標就會走過去，闖關挖礦石' : '你已經登船，正在航行中！');
 });
 $('#hostSkip').onclick = hostLogin;
 function keepHostUrl(){ try { const u = new URL(location.href); if (!u.searchParams.has('host')){ u.searchParams.set('host', ''); history.replaceState(null, '', u.pathname + u.search.replace(/host=(&|$)/, 'host$1') + u.hash); } } catch(e){} }
@@ -2966,6 +2977,7 @@ function applyClass(d){
   $('#cStart').innerHTML = started && ph === 'class' ? '研習進行中<br><span class="small" style="color:inherit">已開始</span>' : '登島・開始研習<br><span class="small" style="color:inherit">渡輪開進島，各站仍鎖定</span>';
   if (typeof hmStartSync === 'function') hmStartSync();
   document.body.classList.toggle('pre-start', !isHost && !started);
+  document.body.classList.toggle('aboard', !isHost && ph === 'class' && !started && !!nick);
   waitBanner();
   const tm = d && d.timer && +d.timer.until ? {until:+d.timer.until, label:String(d.timer.label || '計時').slice(0, 20), music:d.timer.music === true ? 1 : Math.max(0, Math.min(3, +d.timer.music || 0))} : null;
   if ((tm && tm.until) !== (timer && timer.until)){ timer = tm; tickTimer(); }
@@ -3106,20 +3118,19 @@ const AGENDA = [
   {t:'入港暖身：調查與分享', m:10, note:'學員登入、答調查、寫分享、登船等候 → 投影調查與分享牆 → 按「登島・開始研習」'},
   {t:'第 1 站 需求燈塔', m:25, open:1, note:'個案需求分析（下方任務一可計時）→ 開放檢核 → 討論',
     poll:{q:'這個孩子最需要先調整哪一個向度？', opts:['學習內容','學習歷程','學習環境','學習評量']}, dq:0},
-  {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 安裝圖解識字 Skill → Padlet',
+  {t:'第 2 站 識字森林', m:30, open:2, note:'講解 → 體驗工具 → 做圖解識字圖 → 分享到 Padlet',
     poll:{q:'你最想帶回去用的識字工具？', opts:['圖詞析字卡','圖解識字 Skill','字族文・形近字學習單','生字書寫練習網','找字高手・識字語詞']}, dq:1},
-  {t:'第 3 站 寫作小屋', m:15, open:3, note:'講解 → 體驗 → 六何法 Skill',
+  {t:'第 3 站 寫作小屋', m:15, open:3, note:'講解 → 體驗工具與六何法 Skill（不用上傳）',
     poll:{q:'學生寫作最常卡在哪裡？', opts:['不知道寫什麼','句子寫不長','會說不會寫','沒有動機']}, dq:3},
-  {t:'第 4 站 閱讀花園', m:25, open:4, note:'講解 → 複製提示詞做課文漫畫 → Padlet',
+  {t:'第 4 站 閱讀花園', m:25, open:4, note:'講解 → 體驗課文漫畫、課文動畫（不用上傳）',
     poll:{q:'課文漫畫你會用哪個工具做？', opts:['Gemini','NotebookLM','課文圖解工坊','還在觀望']}, dq:4},
   {t:'休息', m:10, rest:10, note:'島上入夜，角色到營火旁睡覺'},
-  {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 打開數學介面小幫手 → 做一份教材 → Padlet',
+  {t:'第 5 站 CRA 數學山', m:25, open:5, note:'講解 → 打開數學介面小幫手 → 做一份教材 → 分享到 Padlet',
     poll:{q:'你想先做哪個數學單元的互動教材？', opts:['加減法','乘除法','分數','時間與錢幣','幾何圖形']}, dq:6},
-  {t:'第 6 站 應用題港口', m:15, open:6, note:'講解 → 複製提示詞生情境圖 → Padlet', dq:5},
+  {t:'第 6 站 應用題港口', m:15, open:6, note:'講解 → 體驗情境圖提示詞（不用上傳）', dq:5},
   {t:'第 7 站 社交寶箱', m:15, open:7, note:'社交小特工體驗 → 拿黃金船票',
     poll:{q:'社會技巧教學最難的是哪一步？', opts:['引起動機','示範','演練與回饋','類化到生活']}, dq:7},
-  {t:'成果分享', m:15, note:'投影 Padlet，抽人分享作品', padlet:true, dq:8},
-  {t:'Q&A 與離島', m:15, note:'回答提問 → 按「離島」，全員搭船',
+  {t:'Q&A 與離島', m:15, note:'回答提問 → 開放島嶼明信片收回饋 → 按「離島」，全員搭船',
     poll:{q:'今天最有收穫的一站？', opts:['需求燈塔','識字森林','寫作小屋','閱讀花園','數學山與港口','社交寶箱']}}
 ];
 let agNow = store.get('agNow', -1), agT0 = store.get('agT0', 0);
@@ -3143,7 +3154,7 @@ setInterval(agTick, 20000);
 // host console: a menu of functions; picking one shows only that function's panel
 const HOST_MENU = [
   ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '課堂控制・重設'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡預覽與開關']]],
-  ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['漂流信', '漂流信・回饋'], ['全畫面公告', '全畫面公告'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
+  ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['島嶼明信片', '明信片・回饋'], ['全畫面公告', '全畫面公告'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
   ['開場與設定', [['登島前小調查', '登島小調查'], ['入港前分享', '入港前分享'], ['學員登入 QR', '登入 QR Code'], ['動物新知', '動物知識卡'], ['學員背包', '背包講義連結']]]
 ];
 $('#rosterPop').appendChild($('#roster').closest('section'));
@@ -3161,9 +3172,11 @@ function renderPeekCtl(){
   const id = peekAt, isO = openUpTo >= id, isQ = quizUpTo >= id;
   $('#peekCtl').innerHTML = `<span class="small"><b>內容</b>：${isO ? '已開放' : '未開放'}・<b>挑戰</b>：${isQ ? '已開啟' : '未開啟'}</span>` +
     `<button type="button" class="${isO ? 'ghost' : 'primary'}" data-pk="${isO ? 'close' : 'open'}">${isO ? '關閉這一站' : '開放這一站'}</button>` +
-    `<button type="button" class="${isQ ? 'ghost' : 'primary'}" data-pk="${isQ ? 'qoff' : 'qon'}">${isQ ? '關閉挑戰' : '開啟挑戰'}</button>`;
+    `<button type="button" class="${isQ ? 'ghost' : 'primary'}" data-pk="${isQ ? 'qoff' : 'qon'}">${isQ ? '關閉挑戰' : '開啟挑戰'}</button>` +
+    (STATIONS[peekAt - 1].make ? `<button type="button" class="ghost" data-pk="share">Padlet 分享：${shareOn(peekAt) ? '要上傳' : '只體驗'}（點一下切換）</button>` : '');
 }
 $('#peekCtl').onclick = e => { const b = e.target.closest('[data-pk]'); if (!b) return; const id = peekAt, k = b.dataset.pk;
+  if (k === 'share'){ const a = STATIONS.map(x => x.id).filter(x => shareOn(x) !== (x === id)); writeLive({share:a}); toast(a.includes(id) ? '這一站改成：完成後分享到 Padlet' : '這一站改成：體驗就好，不用上傳'); setTimeout(renderPeek, 50); return; }
   if (k === 'open') writeLive({open:Math.max(openUpTo, id)});
   if (k === 'close') writeLive({open:id - 1, quiz:Math.min(quizUpTo, id - 1)});
   if (k === 'qon') writeLive({quiz:Math.max(quizUpTo, id), open:Math.max(openUpTo, id)});
@@ -3303,7 +3316,7 @@ function waitBanner(){
   if (restUntil && restUntil > Date.now() - 15000){ b.hidden = true; return; }
   if (bannerMsg){ b.hidden = false; return; }
   if (phase === 'before'){ b.className = 'banner wait'; b.textContent = isHost ? '學員等待中：按「開始研習」讓渡輪開進島' : '等待講師開始…渡輪準備出發'; b.hidden = false; }
-  else if (phase === 'class' && !started){ b.className = 'banner wait'; b.textContent = isHost ? '學員在船上等候：準備好就按「登島・開始研習」' : '你已經登船！等講師按「登島」，大家一起出發'; b.hidden = false; }
+  else if (phase === 'class' && !started){ b.className = 'banner wait'; b.textContent = isHost ? '學員在船上等候：準備好就按「登島・開始研習」' : '航行中・即將抵達研習島嶼'; b.hidden = false; }
   else b.hidden = true;
 }
 const DEFAULT_FAREWELL = '謝謝大家今天的參與！\n願你帶著今天挖到的寶藏回到教室，成為孩子最好的學習探險夥伴。\n祝教學順利，一路順風！';
@@ -4238,23 +4251,23 @@ $('#fbQ').value = store.get('fbQ', FB_Q);
 function renderLetters(){
   if (!isHost) return;
   const on = liveState && liveState.fb && liveState.fb.open, rows = [...letters.values()].sort((a, b) => a.t - b.t);
-  $('#fbState').textContent = (on ? '收信中' : '未開放') + '・已收到 ' + rows.length + ' 封';
-  $('#fbList').innerHTML = rows.length ? rows.map(r => `<div style="white-space:pre-line"><b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('') : '<span class="small">學員寄出的漂流信會出現在這裡，也會收進「下載互動紀錄」。</span>';
+  $('#fbState').textContent = (on ? '收件中' : '未開放') + '・已收到 ' + rows.length + ' 張';
+  $('#fbList').innerHTML = rows.length ? rows.map(r => `<div style="white-space:pre-line"><b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('') : '<span class="small">學員寄出的明信片會出現在這裡，也會收進「下載互動紀錄」。</span>';
 }
 function gotLetter(id, v){
   if (!isHost || !v || typeof v.x !== 'string') return;
   const x = String(v.x).replace(/[\u0000-\u0009\u000B-\u001F]/g, '').trim().slice(0, 300), n = cleanText(v.n, 16); if (!x || !n) return;
   const had = letters.has(id); letters.set(id, {n, x, t:+v.t || Date.now()}); store.set('letters.' + ROOM, Object.fromEntries(letters)); renderLetters();
-  if (!had) toast(`收到 ${n} 的漂流信`);
+  if (!had) toast(`收到 ${n} 的明信片`);
 }
-$('#fbOpen').onclick = () => { const q = cleanText($('#fbQ').value, 60) || FB_Q; store.set('fbQ', q); writeLive({fb:{id:(liveState && liveState.fb && liveState.fb.id) || Date.now().toString(36), q, open:true}}); toast('已開放：學員畫面會跳出漂流信'); };
+$('#fbOpen').onclick = () => { const q = cleanText($('#fbQ').value, 60) || FB_Q; store.set('fbQ', q); writeLive({fb:{id:(liveState && liveState.fb && liveState.fb.id) || Date.now().toString(36), q, open:true}}); toast('已開放：學員畫面會跳出明信片'); };
 $('#fbStop').onclick = () => { if (liveState && liveState.fb) writeLive({fb:Object.assign({}, liveState.fb, {open:false})}); };
 function applyLetter(d){
   const f = d && d.fb && d.fb.open && typeof d.fb.id === 'string' ? d.fb : null;
   if (isHost){ renderLetters(); return; }
   const sent = f && store.get('fbSent.' + ROOM, '') === f.id, isNew = f && (!fbNow || fbNow.id !== f.id);
   fbNow = f;
-  $('#fbBtn').hidden = !f || !nick; $('#fbBtn').textContent = sent ? '漂流信已寄出（可重寫）' : '寫漂流信';
+  $('#fbBtn').hidden = !f || !nick; $('#fbBtn').textContent = sent ? '明信片已寄出（可重寫）' : '寫明信片';
   if (!f){ $('#fbOv').hidden = true; return; }
   $('#fbAsk').textContent = cleanText(f.q, 60) || FB_Q;
   if (isNew && nick && !sent) $('#fbOv').hidden = false;
@@ -4265,7 +4278,7 @@ $('#fbForm').onsubmit = e => { e.preventDefault(); if (!fbNow) return;
   const x = $('#fbText').value.trim().slice(0, 300); if (!x) return toast('寫幾個字再寄出吧');
   if (!connected) return toast('目前沒有連線，等一下再按一次寄出');
   mqPub('fb/' + myId, {w:fbNow.id, n:nick, x, t:Date.now()}, true); store.set('fbSent.' + ROOM, fbNow.id); store.set('fbDraft.' + ROOM, x);
-  $('#fbOv').hidden = true; $('#fbBtn').textContent = '漂流信已寄出（可重寫）'; toast('漂流信裝瓶寄出了，只有講師收得到'); };
+  $('#fbOv').hidden = true; $('#fbBtn').textContent = '明信片已寄出（可重寫）'; toast('明信片寄出了，只有講師收得到'); };
 // --- the island treasure: every station cleared ---
 function openTreasure(){ $('#treasureMsg').textContent = `探險家「${nick || '你'}」闖過全部 7 站，挖到 6 顆礦石與黃金船票。`; $('#treasureOv').hidden = false; }
 $('#treasureClose').onclick = () => $('#treasureOv').hidden = true;
@@ -4282,7 +4295,7 @@ $('#logCsv').onclick = () => {
     x.opts.forEach((o, i) => rows.push(['投票結果：' + x.q, t2s(x.t), '', `${o}：${x.c[i]} 票`]));
     x.who.forEach(w => rows.push(['投票：' + x.q, '', w[0], w[1]]));
   });
-  letters.forEach(v => rows.push(['漂流信：' + ((liveState && liveState.fb && liveState.fb.q) || FB_Q), t2s(v.t), v.n, v.x]));
+  letters.forEach(v => rows.push(['島嶼明信片：' + ((liveState && liveState.fb && liveState.fb.q) || FB_Q), t2s(v.t), v.n, v.x]));
   surveys.forEach(v => { rows.push(['調查：' + SURVEY.q1, '', v.n, SURVEY.a[v.a] || '']); rows.push(['調查：' + SURVEY.q2, '', v.n, v.b.map(i => SURVEY.b[i]).join('、')]); rows.push(['調查：' + SURVEY.q3, '', v.n, v.c.map(i => i === SURVEY.c.length - 1 && v.o ? '其他（' + v.o + '）' : SURVEY.c[i]).join('、')]); });
   fights.forEach(f => rows.push([f.b && String(f.b).startsWith('st') ? '守門獸戰鬥' : '野獸突襲', '', f.n, `${f.st === 'win' ? '已擊退' : '戰鬥中'}・答錯 ${f.w || 0} 次・${f.t || 0} 秒`]));
   ((liveState && liveState.history) || []).forEach(n => rows.push(['抽籤抽中', '', n, '']));
