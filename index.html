@@ -539,7 +539,7 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       <label class="field">計時音樂（全班同步播放）<select id="tMusic"><option value="0">不播音樂</option><option value="1">音樂盒（溫和）</option><option value="2">輕快（闖關、搶答）</option><option value="3">慢板（專注實作）</option><option value="yt">YouTube 連結（只在講師這台播放）</option></select></label>
       <label class="field" id="tYtWrap" hidden>YouTube 連結<input id="tYt" maxlength="200" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…"></label>
       <div class="row"><button class="primary" id="tStart" type="button">開始計時</button><button class="ghost" id="tStop" type="button">停止</button></div>
-      <p class="small">倒數會同步顯示在每位學員畫面。內建音樂全班同步播放；YouTube 只在你這台（投影電腦）播放。「任務一計時」也會套用這裡選的音樂。</p>
+      <p class="small">倒數會同步顯示在每位學員畫面。內建音樂全班同步播放；YouTube 只在你這台（投影電腦）播放。「任務一計時」固定播放指定的 YouTube 音樂。</p>
     </section>
     <section>
       <h3>任務一：需求燈塔</h3>
@@ -3363,7 +3363,8 @@ $('#missionGo').onclick = () => { $('#missionOv').hidden = true; goStation(1); }
 $('#m1Four').onclick = () => { openFour(); writeLive({four:true}); toast('四大向度圖已同步到學員畫面，關閉時一起收起'); };
 let fourShown = false;
 function applyFour(d){ const on = !!(d && d.four); if (!isHost && on !== fourShown && nick && $('#join').hidden) $('#fourOv').hidden = !on; fourShown = on; }
-$('#m1Timer').onclick = () => startTimer(10, '任務一：個案需求分析', 3);   // uses the music picked in the timer panel (YouTube included), slow built-in track otherwise
+const M1_YT = 'https://www.youtube.com/watch?v=XeZbXNpR0Mo';   // 瑪莉指定的個案需求分析音樂
+$('#m1Timer').onclick = () => { const until = Date.now() + 10*60000; timerYt = {until, src:ytEmbed(M1_YT)}; store.set('timerYt', timerYt); writeLive({timer:{until, label:'任務一：個案需求分析', music:0}}); };   // uses the music picked in the timer panel (YouTube included), slow built-in track otherwise
 $('#m1Check').onclick = () => writeLive({quiz:checkOpen() ? 0 : 1});
 let seenQuiz;
 function applyCheck(){
