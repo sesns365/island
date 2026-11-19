@@ -957,7 +957,9 @@ const STATIONS = [
   <ul><li><b>識字的認知成分</b>：聲韻覺識、組字規則、詞素覺知、流暢性</li>
   <li><b>識字教學順序</b>：識其音 → 識其義 → 辨其形 → 書寫</li>
   <li><b>形聲字三步驟</b>：看部首（意思）→ 找聲符（聲音）→ 懂組合</li>
-  <li><b>策略</b>：圖詞析字卡・分析字頻、字形圖像聯想、部件拆解＋口訣、強制回憶寫字教學法</li></ul>`,
+  <li><b>策略</b>：圖詞析字卡・分析字頻、字形圖像聯想識字法、部件拆解＋口訣、強制回憶寫字教學法、綜合練習</li>
+  <li><b>字形圖像聯想（直映識字）</b>：把國字融入生活情境圖像，像「樹<b>木</b>、豬<b>肉</b>、大<b>火</b>」，讓字形直接和圖像連在一起</li></ul>
+  <div class="note"><b>識字量</b>：依黃富順（1994）的研究，一般成人生活所需是 2,328 字。470 字以下為不識字；870 字以上、未達 1,680 字為半識字；能認 1,680 字並能書寫日常簡單應用文字，才算識字者。</div>`,
   tools:[
     {n:'圖詞析字卡', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/7285877/%E5%9C%96%E8%A9%9E%E6%9E%90%E5%AD%97%E5%8D%A1'},
     {n:'圖詞配對', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/8937793/%E5%9C%96%E8%A9%9E%E9%85%8D%E5%B0%8D'},
@@ -969,7 +971,9 @@ const STATIONS = [
     {n:'生字書寫練習網', d:'強制回憶寫字', u:'https://character-writing-support.sesns365.chatgpt.site/'},
     {n:'生字資源地圖', d:'找生字資源', u:'https://shengzi-resource-map.chiutzu.chatgpt.site/'},
     {n:'自由書寫練習', d:'手寫練習', u:'https://sesns365.github.io/hanzi-free-practice/'},
-    {n:'特工365 識字網', d:'識字資源', u:'https://literacy.se365edu.com/'}],
+    {n:'直映識字影片', d:'字形圖像聯想', u:'https://www.youtube.com/watch?v=mTwnIHcHbrs&list=PLMvxY3bsAdXexj1otFZi26BuueOMClZau&index=7'},
+    {n:'找字高手', d:'綜合練習・找字', u:'https://findword.se365edu.com/'},
+    {n:'識字語詞', d:'綜合練習・班級或自由練習', u:'https://literacy.se365edu.com/'}],
   make:{t:'安裝「圖解識字」Skill', how:'開一個 Gemini、ChatGPT 或 Claude 新對話，貼上下面兩行送出；裝好後輸入「圖解識字 休」（換成你想教的字），把成品截圖或連結分享到 Padlet。',
     copy:HANZI_SKILL, link:{n:'圖解識字 Skill 說明', u:'https://github.com/sesns365/hanzi-visual-teaching'}},
   steps:[
@@ -1009,7 +1013,8 @@ const STATIONS = [
   intro:`<ul><li><b>課文漫畫</b>：用 Gemini／NotebookLM 把每一句課文畫成 Q 版漫畫格，語詞用便利貼簡化解釋</li>
   <li><b>課文動畫＋PointerFocus</b>：聚焦重點，邊看邊理解</li>
   <li><b>影片理解互動模式</b>：播放 1～2 句就暫停 → 引導看圖 → 參照便利貼詞解 → 理解檢核</li>
-  <li><b>閱讀策略學習單小幫手</b>：依需求產生閱讀策略學習單</li></ul>
+  <li><b>閱讀策略學習單小幫手</b>：依需求產生閱讀策略學習單</li>
+  <li><b>自製電子書</b>：閱讀基本能力練習，把課文做成可操作的電子書（找出完整句、前導組織策略、選擇題、畫筆工具）</li></ul>
   <div class="note"><b>為什麼這麼設計？</b>不是策略先，而是分析先：分析學生需求 → 判斷學習歷程需求 → 選擇策略 → 通用設計學習 → AI 生成通用設計教材 → 教師修正後形成教材。</div>`,
   tools:[
     {n:'課文漫畫產生器', d:'四格漫畫', u:'https://spedmix.pages.dev/four-panel-comic'},
@@ -1051,13 +1056,14 @@ const STATIONS = [
       why:'Canvas 才能顯示可操作的互動網頁。'}
   ]},
 { id:6, name:'應用題港口', area:'數學・應用題', color:'#3B7FC4', pos:[3.6,9.2],
-  intro:`<ul><li><b>文本簡化</b>：在 NotebookLM 請 AI 把題目簡化成適合學生的程度，情境要生活化</li>
-  <li><b>數學情境圖</b>：讓 AI 畫出已知條件、變化過程與未知量</li>
-  <li><b>HTML 互動式動態表徵教材</b>：10 以內加減法、十十乘法，小步驟教學，減輕工作記憶負荷</li></ul>`,
+  intro:`<ul><li><b>圖像表徵－數學情境圖</b>：讓 AI 畫出已知條件、變化過程與未知量</li>
+  <li><b>圖像表徵</b>：10 以內加減法小學堂，用圖像幫助理解</li>
+  <li><b>遊戲化練習</b>：挖礦學習王（十十乘法），邊玩邊練</li>
+  <li><b>HTML 互動式動態表徵教材</b>：小步驟教學，減輕工作記憶負荷</li></ul>`,
   tools:[
-    {n:'10 以內加減法', d:'互動教材', u:'https://gemini.google.com/share/6431cbd0fae1'},
-    {n:'十十乘法', d:'挖礦小遊戲', u:'https://senst365.github.io/miningnew/'},
-    {n:'NotebookLM', d:'文本簡化', u:'https://notebooklm.google.com/'}],
+    {n:'10 以內加減法小學堂', d:'圖像表徵', u:'https://gemini.google.com/share/6431cbd0fae1'},
+    {n:'挖礦學習王', d:'遊戲化練習・十十乘法', u:'https://senst365.github.io/miningnew/'},
+    {n:'數學教室資源', d:'HTML 互動式動態表徵教材', u:'https://linktr.ee/mathclassroom'}],
   make:{opt:true, t:'做一張數學情境圖', how:'複製提示詞，把一題應用題貼進【題目】，用 Gemini 或 ChatGPT 生圖，分享到 Padlet。',
     copy:SCENE_PROMPT},
   steps:[
@@ -1096,7 +1102,7 @@ const STATIONS = [
 ];
 
 /* three questions per station is plenty for a 4-hour morning; the rest stay in the bank above (indexes into steps) */
-const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[0,1,2], 5:[0,2,4], 6:[0,1,2], 7:[1,3,5]};
+const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[0,1,2], 5:[0,2,4], 6:[0,1,3], 7:[1,3,5]};
 STATIONS.forEach(s => { s.steps = QUIZ_PICK[s.id].map(i => s.steps[i]).filter(Boolean); });
 
 /* bigger island: every map position is scaled by S */
