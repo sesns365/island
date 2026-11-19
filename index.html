@@ -116,6 +116,7 @@ button.del{border:0;background:#F3D9D4;color:#A33;border-radius:8px;font-weight:
 .make b.t{display:block;font-size:16px;margin-bottom:4px}
 .make p{margin:4px 0 8px;font-size:14px;white-space:pre-line}
 .make p.frame{background:#fff;border-radius:10px;padding:8px 10px;font-size:13.5px;border-left:4px solid var(--sun)}
+.make.pr summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}.make.pr[open] summary{margin-bottom:6px}.make.pr .ic{width:16px;height:16px;vertical-align:-3px}
 .make .prompt{max-height:170px;overflow:auto;margin-bottom:8px}
 .make .row a{text-decoration:none}
 .make .row a.ghost{color:var(--ink);display:inline-block}
@@ -545,6 +546,13 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
       <div class="agenda" id="agenda"></div>
     </section>
     <section>
+      <h3 id="secLetter">漂流信（課後回饋）</h3>
+      <p class="small">離島前請大家寄一封漂流信。按「開放寫信」後，每位學員的畫面會跳出信紙；信只會出現在這裡，學員彼此看不到。離島之後學員仍然可以寫。</p>
+      <label class="field">信紙上的題目<textarea id="fbQ" rows="2" maxlength="60"></textarea></label>
+      <div class="row"><button class="primary" id="fbOpen" type="button">開放寫信</button><button class="ghost" id="fbStop" type="button">停止收信</button><span class="small" id="fbState"></span></div>
+      <div id="fbList" style="max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+    </section>
+    <section>
       <h3 id="secNotice">全畫面公告</h3>
       <p class="small">打一句話，全班畫面會整個換成這則公告（學員不能自己關），你按「收起公告」才消失。</p>
       <label class="field">公告內容<textarea id="ntText" rows="2" maxlength="80" placeholder="例如：請把作品貼到 Padlet"></textarea></label>
@@ -670,6 +678,17 @@ body.pre-start #handBtn,body.pre-start #sayBtn,body.pre-start #feedBtn,body.pre-
 </aside>
 
 <div class="roster-pop" id="rosterPop" hidden></div>
+<div class="overlay" id="fbOv" hidden style="z-index:45">
+  <div class="dialog" style="background:#FFFBEF;border:3px solid #E2B54A">
+    <small style="font-weight:700;color:#9A6B00;letter-spacing:.08em">離島前・漂流信</small>
+    <h2 style="margin:2px 0 4px">寄一封漂流信給講師</h2>
+    <p id="fbAsk" style="margin:0 0 8px;font-weight:700"></p>
+    <form id="fbForm"><textarea id="fbText" rows="5" maxlength="300" placeholder="寫下你的想法，裝進瓶子漂給講師…" style="width:100%;font:inherit;border:2px solid var(--line);border-radius:12px;padding:10px"></textarea>
+    <p class="small" style="margin:6px 0">這封信只有講師看得到。</p>
+    <div class="row"><button class="primary" type="submit">裝瓶寄出</button><button class="ghost" type="button" id="fbLater">等一下再寫</button></div></form>
+  </div>
+</div>
+<button class="chip" id="fbBtn" type="button" hidden style="position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:39;background:#F4B740;font-weight:900">寫漂流信</button>
 <div class="notice-ov" id="noticeOv" hidden><div class="notice-text" id="noticeText"></div><button class="ghost" id="noticeClose" type="button" hidden>收起公告</button></div>
 <div class="overlay" id="treasureOv" hidden style="z-index:44">
   <div class="dialog treasure">
@@ -959,6 +978,71 @@ const SCENE_PROMPT = `請根據這一題生成「數學題目情境示意圖」�
 7. 未知量請用「？」表示，不要直接寫出答案。
 8. 背景要透明，輸出 PNG 圖。
 9. 圖中所有文字請使用繁體中文。`;
+const GLYPH_PROMPT = `請製作「圖像化識字」教材圖。
+
+目標字為：【目標字】。
+
+請使用正確繁體中文字形，並以完整保留原字字形、所有筆畫、筆順邏輯、部件與結構為最高優先。
+
+不可增加、刪除、替換、扭曲、變形、移動或重新組合原字的所有筆畫。
+所有筆畫都必須完整保留，不可省略任何一筆。
+不可改變任何筆畫原本的位置、方向、長短關係與部件結構。
+不可把字直接畫成圖案。
+不可為了美觀破壞字形。
+
+請將與【目標字】字義相關的圖像元素，優先自然融入原有筆畫之中，讓圖像元素盡量依附在原字的筆畫內部、筆畫表面或筆畫結構之內呈現，使學生看到字時，可以立刻聯想到字義。
+
+我希望避免任意新增筆畫，但仍要盡量把與字義相關的圖像元素融入原有筆畫之中。
+
+若有需要，只能在筆畫周圍局部位置加入少量輔助圖像元素，且不得被誤認為新增筆畫，也不得破壞原字辨識度。
+
+但請務必遵守以下原則：
+1. 漢字辨識度最高。
+2. 圖像元素只能輔助理解，不可取代筆畫。
+3. 不可新增會被誤認為筆畫的裝飾線條。
+4. 拿掉裝飾後，仍然必須是一個正確、完整、清楚可辨識的繁體中文字。
+5. 原字的所有筆畫都必須完整保留。
+6. 不得改變所有筆畫原本的相對位置、方向、結構與部件關係。
+7. 適合國小學生識字學習與學習障礙學生使用。
+8. 畫面簡潔、清楚、低認知負荷。
+
+風格請採用：溫暖可愛、教材插圖風、童書感、柔和配色。
+
+版面配置要求：
+- 畫面採用教材式直向排列
+- 上方只呈現 1 個大型圖像化目標字【目標字】
+- 中間可加入 1 張與下方語詞意義相符的小插圖
+- 下方加入 1 個常見語詞
+
+語詞設定規則：
+- 若我有提供指定語詞，請優先使用我提供的語詞。
+- 若我沒有提供指定語詞，請由 AI 自動生成 1 個與【目標字】相關的常見語詞。
+- 自動生成的語詞需符合以下原則：
+1. 必須包含目標字【目標字】
+2. 適合國小學生理解與學習
+3. 常見、自然、容易理解
+4. 盡量使用生活中常見的詞語
+5. 優先選擇 2～4 字詞語
+6. 詞義要明確，方便搭配插圖呈現
+
+語詞文字呈現要求：
+- 語詞請使用正確繁體中文
+- 若語詞中包含目標字，請將目標字用紅色顯示，其餘文字用黑色顯示
+- 語詞字體要大而清楚，適合國小學生閱讀
+- 版面留白要足夠，整體整齊清楚
+
+請先畫出正確漢字骨架，再加入圖像元素。
+漢字辨識度高於圖像創意。
+圖像是幫助理解字義，不是改造字形。
+
+輸出格式：PNG。
+背景：透明背景。
+不要有底色、場景、紋理、邊框、漸層或多餘陰影。
+僅保留漢字主體、語詞插圖與語詞文字元素。
+主體完整置中，不可裁切，四周保留適當留白。
+若透明背景無法呈現，改用純白色 #FFFFFF 背景。
+
+請特別注意：不是只保留主要筆畫，而是必須完整保留原字的所有筆畫；同時也要盡量把與字義相關的圖像元素融入原有筆畫之中。`;
 const HANZI_SKILL = `https://github.com/sesns365/hanzi-visual-teaching
 請讀取這個網址，安裝 skill。`;
 const MATH_GEM = 'https://mathematics-classroom-of-tr-liang.github.io/copy-a-new-gem-setting/';
@@ -999,7 +1083,7 @@ const STATIONS = [
     {n:'圖詞析字卡', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/7285877/%E5%9C%96%E8%A9%9E%E6%9E%90%E5%AD%97%E5%8D%A1'},
     {n:'圖詞配對', d:'Wordwall 互動', u:'https://wordwall.net/tc/teacher/16528342/folder/8937793/%E5%9C%96%E8%A9%9E%E9%85%8D%E5%B0%8D'},
     {n:'特工365 圖卡', d:'識字圖卡', u:'https://cards.se365edu.com/'},
-    {n:'The Literacy Ark', d:'識字資源總覽', u:'https://linktr.ee/theliteracyark'},
+    {n:'識字方舟', d:'識字資源總覽', u:'https://linktr.ee/theliteracyark'},
     {n:'字族文學習單', d:'產生器', u:'https://spedmix.pages.dev/character-family-generator'},
     {n:'形近字學習單', d:'Gemini Canvas', u:'https://gemini.google.com/share/18d8fe3f0ca0'},
     {n:'生字書寫練習網', d:'強制回憶寫字', u:'https://character-writing-support.sesns365.chatgpt.site/'},
@@ -1007,6 +1091,7 @@ const STATIONS = [
     {n:'自由書寫練習', d:'手寫練習', u:'https://sesns365.github.io/hanzi-free-practice/'},
     {n:'找字高手', d:'綜合練習・找字', u:'https://findword.se365edu.com/'},
     {n:'識字語詞', d:'綜合練習・班級或自由練習', u:'https://literacy.se365edu.com/'}],
+  prompts:[{n:'字形圖像聯想識字圖', d:'把【目標字】換成要教的字，貼到 Gemini 或 ChatGPT 生圖', copy:GLYPH_PROMPT}],
   make:{t:'安裝「圖解識字」Skill', how:'開一個 Gemini、ChatGPT 或 Claude 新對話，貼上下面兩行送出；裝好後輸入「圖解識字 休」（換成你想教的字），把成品截圖或連結分享到 Padlet。',
     copy:HANZI_SKILL, link:{n:'圖解識字 Skill 說明', u:'https://github.com/sesns365/hanzi-visual-teaching'}},
   steps:[
@@ -1336,6 +1421,7 @@ function onMsg(topic, buf){
   if (kind === 'fight'){ gotFight(id, v); return; }
   if (kind === 'ack'){ gotAck(v); return; }
   if (kind === 'sv'){ gotSurvey(id, v); return; }
+  if (kind === 'fb'){ gotLetter(id, v); return; }
   if (kind === 'p'){
     if (v && typeof v === 'object' && typeof v.nick === 'string' && Date.now() - (+v.t || 0) < 3*3600e3){
       peerMap.set(id, {presence:v, t:Date.now()}); noteJoin(v);
@@ -1466,7 +1552,8 @@ function taskBlock(){
 }
 const PADLET_BTN = `<a class="primary padlet-btn" href="${PADLET}" target="_blank" rel="noopener">分享到 Padlet</a>`;
 function kitBlock(st){
-  const m = st.make; if (!m && !st.tools) return '';
+  const m = st.make; if (!m && !st.tools && !st.prompts) return '';
+  const prompts = (st.prompts || []).map((c, i) => `<details class="make pr"><summary><b>提示詞：${esc(c.n)}</b><span class="small">點開看提示詞</span></summary><p>${esc(c.d)}</p><div class="prompt">${esc(c.copy)}</div><div class="row"><button class="ghost" type="button" data-copyp="${i}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg> 一鍵複製</button></div></details>`).join('');
   const tools = st.tools ? `<div><div class="kit-h">體驗工具（點開試試看）</div><div class="tools">${st.tools.map(t =>
     `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
   const make = m ? `<div class="make"><div class="kit-h">實作任務${m.opt ? '<span class="opt-tag">選做</span>' : ''}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
@@ -1475,7 +1562,7 @@ function kitBlock(st){
     <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
     ${m.link ? `<a class="ghost" href="${esc(m.link.u)}" target="_blank" rel="noopener">${esc(m.link.n)}</a>` : ''}
     ${PADLET_BTN}</div></div>` : '';
-  return `<div class="kit">${tools}${make}</div>`;
+  return `<div class="kit">${tools}${prompts}${make}</div>`;
 }
 function copyText(t){
   const done = () => toast('已複製，到 AI 對話框貼上吧');
@@ -1510,6 +1597,7 @@ function openStation(sid){
   body.querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
   body.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(st.make.copy));
   body.querySelectorAll('[data-copyi]').forEach(b => b.onclick = () => copyText(st.make.copies[+b.dataset.copyi].copy));
+  body.querySelectorAll('[data-copyp]').forEach(b => b.onclick = () => copyText(st.prompts[+b.dataset.copyp].copy));
   $('#sheet').hidden = false;
 }
 function closeSheet(){ if (typeof closeChat === 'function' && chatAid >= 0) closeChat(); $('#sheet').hidden = true; currentSid = null; pushPresence(); nearSid = -1; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
@@ -3041,7 +3129,7 @@ setInterval(agTick, 20000);
 // host console: a menu of functions; picking one shows only that function's panel
 const HOST_MENU = [
   ['帶流程', [['研習流程', '研習流程表'], ['課堂控制', '課堂控制・重設'], ['關卡開放進度', '開放關卡・開啟挑戰'], ['任務一', '任務一：需求燈塔'], ['關卡內容預覽', '關卡預覽與開關']]],
-  ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['全畫面公告', '全畫面公告'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
+  ['互動工具', [['舉手與提問', '舉手・提問'], ['隨機抽籤', '抽人'], ['即時投票', '投票'], ['想法牆', '想法牆'], ['野獸突襲', '野獸突襲'], ['漂流信', '漂流信・回饋'], ['全畫面公告', '全畫面公告'], ['活動計時器', '計時器'], ['聊天紀錄', '聊天紀錄・下載紀錄']]],
   ['開場與設定', [['登島前小調查', '登島小調查'], ['入港前分享', '入港前分享'], ['學員登入 QR', '登入 QR Code'], ['動物新知', '動物知識卡'], ['學員背包', '背包講義連結']]]
 ];
 $('#rosterPop').appendChild($('#roster').closest('section'));
@@ -3082,6 +3170,7 @@ function renderPeek(){
   $('#peekBody').querySelectorAll('[data-four]').forEach(b => b.onclick = openFour);
   $('#peekBody').querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copyText(st.make.copy));
   $('#peekBody').querySelectorAll('[data-copyi]').forEach(b => b.onclick = () => copyText(st.make.copies[+b.dataset.copyi].copy));
+  $('#peekBody').querySelectorAll('[data-copyp]').forEach(b => b.onclick = () => copyText(st.prompts[+b.dataset.copyp].copy));
 }
 $('#peekGrid').onclick = e => { const b = e.target.closest('[data-peek]'); if (b){ peekAt = +b.dataset.peek; renderPeek(); $('#peekOv').hidden = false; } };
 $('#peekPrev').onclick = () => { peekAt = Math.max(1, peekAt - 1); renderPeek(); };
@@ -3878,7 +3967,7 @@ function applyInteract(d){
   if (isHost && w && ideas.w === w.id && !ideas.q) ideas.q = w.q;
   renderWall();
   checkWarm();
-  applySvShow(d); applyFour(d); applyNotice(d);
+  applySvShow(d); applyFour(d); applyNotice(d); applyLetter(d);
   if (isHost){ hmStartSync(); if (!$('#peekOv').hidden) renderPeekCtl(); }
   applyWallShow(d);
   openSeen = true;
@@ -4097,6 +4186,7 @@ $('#wClear').onclick = () => { if (wall && confirm('清空想法牆上的所有�
 $('#cWipe').onclick = () => {
   if (!confirm('清除所有測試紀錄？\n調查、聊天、想法牆、投票、戰鬥、抽籤、學員名單都會清空，學員裝置上的名字與進度也會歸零（需重新登入）。這個動作無法復原。')) return;
   [...surveys.keys()].forEach(id => mqPub('sv/' + id, null, true)); surveys.clear(); renderSurvey();
+  [...letters.keys()].forEach(id => mqPub('fb/' + id, null, true)); letters.clear(); store.set('letters.' + ROOM, {}); writeLive({fb:null});
   peerMap.forEach((v, id) => mqPub('p/' + id, null, true)); peerMap.clear();
   chatLog = []; chatDel = []; store.set('chat.' + ROOM, []); store.set('chatDel.' + ROOM, []); mqPub('chat', {list:[], del:[]}, true); renderChatLog();
   pollLog = []; store.set('polls.' + ROOM, []); votes.clear(); fights.clear();
@@ -4127,6 +4217,41 @@ function applyNotice(d){
   if (ov.dataset.id !== String(n.id) || ov.hidden){ ov.dataset.id = String(n.id); $('#noticeText').textContent = cleanText(n.x, 80); if (!isHost && document.activeElement) document.activeElement.blur(); }
   $('#noticeClose').hidden = !isHost; ov.hidden = false;
 }
+// --- drifting letters: end-of-day feedback that only the host reads ---
+const FB_Q = '本次分享對您最有幫助或印象深刻的內容是？';
+let letters = new Map(Object.entries(store.get('letters.' + ROOM, {}))), fbNow = null;
+$('#fbQ').value = store.get('fbQ', FB_Q);
+function renderLetters(){
+  if (!isHost) return;
+  const on = liveState && liveState.fb && liveState.fb.open, rows = [...letters.values()].sort((a, b) => a.t - b.t);
+  $('#fbState').textContent = (on ? '收信中' : '未開放') + '・已收到 ' + rows.length + ' 封';
+  $('#fbList').innerHTML = rows.length ? rows.map(r => `<div style="white-space:pre-line"><b>${esc(r.n)}</b>：${esc(r.x)}</div>`).join('') : '<span class="small">學員寄出的漂流信會出現在這裡，也會收進「下載互動紀錄」。</span>';
+}
+function gotLetter(id, v){
+  if (!isHost || !v || typeof v.x !== 'string') return;
+  const x = String(v.x).replace(/[\u0000-\u0009\u000B-\u001F]/g, '').trim().slice(0, 300), n = cleanText(v.n, 16); if (!x || !n) return;
+  const had = letters.has(id); letters.set(id, {n, x, t:+v.t || Date.now()}); store.set('letters.' + ROOM, Object.fromEntries(letters)); renderLetters();
+  if (!had) toast(`收到 ${n} 的漂流信`);
+}
+$('#fbOpen').onclick = () => { const q = cleanText($('#fbQ').value, 60) || FB_Q; store.set('fbQ', q); writeLive({fb:{id:(liveState && liveState.fb && liveState.fb.id) || Date.now().toString(36), q, open:true}}); toast('已開放：學員畫面會跳出漂流信'); };
+$('#fbStop').onclick = () => { if (liveState && liveState.fb) writeLive({fb:Object.assign({}, liveState.fb, {open:false})}); };
+function applyLetter(d){
+  const f = d && d.fb && d.fb.open && typeof d.fb.id === 'string' ? d.fb : null;
+  if (isHost){ renderLetters(); return; }
+  const sent = f && store.get('fbSent.' + ROOM, '') === f.id, isNew = f && (!fbNow || fbNow.id !== f.id);
+  fbNow = f;
+  $('#fbBtn').hidden = !f || !nick; $('#fbBtn').textContent = sent ? '漂流信已寄出（可重寫）' : '寫漂流信';
+  if (!f){ $('#fbOv').hidden = true; return; }
+  $('#fbAsk').textContent = cleanText(f.q, 60) || FB_Q;
+  if (isNew && nick && !sent) $('#fbOv').hidden = false;
+}
+$('#fbBtn').onclick = () => { if (fbNow){ $('#fbText').value = store.get('fbDraft.' + ROOM, ''); $('#fbOv').hidden = false; } };
+$('#fbLater').onclick = () => { store.set('fbDraft.' + ROOM, $('#fbText').value); $('#fbOv').hidden = true; };
+$('#fbForm').onsubmit = e => { e.preventDefault(); if (!fbNow) return;
+  const x = $('#fbText').value.trim().slice(0, 300); if (!x) return toast('寫幾個字再寄出吧');
+  if (!connected) return toast('目前沒有連線，等一下再按一次寄出');
+  mqPub('fb/' + myId, {w:fbNow.id, n:nick, x, t:Date.now()}, true); store.set('fbSent.' + ROOM, fbNow.id); store.set('fbDraft.' + ROOM, x);
+  $('#fbOv').hidden = true; $('#fbBtn').textContent = '漂流信已寄出（可重寫）'; toast('漂流信裝瓶寄出了，只有講師收得到'); };
 // --- the island treasure: every station cleared ---
 function openTreasure(){ $('#treasureMsg').textContent = `探險家「${nick || '你'}」闖過全部 7 站，挖到 6 顆礦石與黃金船票。`; $('#treasureOv').hidden = false; }
 $('#treasureClose').onclick = () => $('#treasureOv').hidden = true;
@@ -4143,6 +4268,7 @@ $('#logCsv').onclick = () => {
     x.opts.forEach((o, i) => rows.push(['投票結果：' + x.q, t2s(x.t), '', `${o}：${x.c[i]} 票`]));
     x.who.forEach(w => rows.push(['投票：' + x.q, '', w[0], w[1]]));
   });
+  letters.forEach(v => rows.push(['漂流信：' + ((liveState && liveState.fb && liveState.fb.q) || FB_Q), t2s(v.t), v.n, v.x]));
   surveys.forEach(v => { rows.push(['調查：' + SURVEY.q1, '', v.n, SURVEY.a[v.a] || '']); rows.push(['調查：' + SURVEY.q2, '', v.n, v.b.map(i => SURVEY.b[i]).join('、')]); rows.push(['調查：' + SURVEY.q3, '', v.n, v.c.map(i => i === SURVEY.c.length - 1 && v.o ? '其他（' + v.o + '）' : SURVEY.c[i]).join('、')]); });
   fights.forEach(f => rows.push([f.b && String(f.b).startsWith('st') ? '守門獸戰鬥' : '野獸突襲', '', f.n, `${f.st === 'win' ? '已擊退' : '戰鬥中'}・答錯 ${f.w || 0} 次・${f.t || 0} 秒`]));
   ((liveState && liveState.history) || []).forEach(n => rows.push(['抽籤抽中', '', n, '']));
