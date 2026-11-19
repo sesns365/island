@@ -1143,7 +1143,8 @@ const STATIONS = [
   tools:[
     {n:'課文圖解工坊', d:'四格漫畫', u:'https://spedmix.pages.dev/four-panel-comic'},
     {n:'Gemini', d:'貼提示詞做漫畫', u:'https://gemini.google.com/'},
-    {n:'NotebookLM', d:'上傳課文當資料來源', u:'https://notebooklm.google.com/'}],
+    {n:'NotebookLM', d:'上傳課文當資料來源', u:'https://notebooklm.google.com/'},
+    {n:'閱讀策略學習單小幫手', d:'依需求產生學習單', u:'https://github.com/sesns365/reading-strategy-worksheet'}],
   make:{try:true, t:'體驗課文漫畫或課文動畫', how:'在 NotebookLM 上傳一課課文（和語詞清單）當資料來源，下面兩個提示詞擇一複製貼上，產生課文漫畫或課文動畫看看。',
     copies:[{n:'提示詞一：課文漫畫', copy:COMIC_PROMPT}, {n:'提示詞二：課文動畫（含便利貼詞解）', copy:ANIM_PROMPT}]},
   steps:[
@@ -1567,7 +1568,7 @@ function kitBlock(st){
   const prompts = (st.prompts || []).map((c, i) => `<details class="make pr"><summary><b>提示詞：${esc(c.n)}</b><span class="small">點開看提示詞</span></summary><p>${esc(c.d)}</p><div class="prompt">${esc(c.copy)}</div><div class="row"><button class="ghost" type="button" data-copyp="${i}"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg> 一鍵複製</button></div></details>`).join('');
   const tools = st.tools ? `<div><div class="kit-h">體驗工具（點開試試看）</div><div class="tools">${st.tools.map(t =>
     `<a href="${esc(t.u)}" target="_blank" rel="noopener"><b>${esc(t.n)}</b><span>${esc(t.d)}</span></a>`).join('')}</div></div>` : '';
-  const make = m ? `<div class="make"><div class="kit-h">${shareOn(st.id) ? '實作任務<span class="opt-tag">完成後分享到 Padlet</span>' : '體驗任務<span class="opt-tag">體驗就好，不用上傳</span>'}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
+  const make = m ? `<div class="make"><div class="kit-h">${shareOn(st.id) ? '實作任務' : '體驗任務'}</div><b class="t">${esc(m.t)}</b><p>${esc(m.how)}</p>
     ${m.copy ? `<div class="prompt" id="mkCopy">${esc(m.copy)}</div>` : ''}
     ${(m.copies || []).map((c, i) => `<b class="t" style="font-size:14.5px;margin-top:6px">${esc(c.n)}</b><div class="prompt">${esc(c.copy)}</div><div class="row" style="margin-bottom:10px"><button class="ghost" type="button" data-copyi="${i}">複製${esc(c.n.split('：')[0])}</button></div>`).join('')}
     <div class="row">${m.copy ? '<button class="ghost" type="button" data-copy>複製文字</button>' : ''}
