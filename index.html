@@ -274,7 +274,7 @@ td.num{font-variant-numeric:tabular-nums;text-align:center}
 .chat-head .ava{width:46px;height:46px;border-radius:50%;flex:0 0 auto}
 .chat-head b{font:900 19px var(--display)}
 .chat-text{white-space:pre-line;font-size:16.5px;line-height:1.7;min-height:3.4em}
-.kcard{white-space:pre-line;background:#FFF8E6;border:2px solid #E2B54A;border-radius:14px;padding:10px 12px}
+.kcard{white-space:pre-line;line-height:1.65;background:#FFF8E6;border:2px solid #E2B54A;border-radius:14px;padding:10px 12px}
 .kcard small{display:block;font-size:12px;font-weight:700;color:#9A6B00;letter-spacing:.06em}
 .kcard b{display:block;font-family:var(--display);font-size:17px;margin:2px 0}
 .know-ed{display:flex;flex-direction:column;gap:6px}
@@ -1123,12 +1123,14 @@ const STATIONS = [
       ['只在資源班練一次',1],['句型一字不差背熟才算',1]]},
     {type:'mc', q:'評量紀錄上的「△」代表什麼？', opts:['獨立完成','需協助完成','未做到','缺席'], a:1},
     {type:'mc', q:'特殊需求領域「社會技巧」課綱的學習表現，分成哪三個向度？', opts:['認知、情意、技能','處己、處人、處環境','溝通、合作、解決問題','自我、家庭、社區'], a:1,
-      why:'處己（處理自己的情緒與壓力）、處人（與他人互動）、處環境（在學校、家庭、社區中適應）。'}
+      why:'處己（處理自己的情緒與壓力）、處人（與他人互動）、處環境（在學校、家庭、社區中適應）。'},
+    {type:'mc', q:'下列哪一個作法屬於「提示褪除」？', opts:['從肢體提示到口語提示','選擇反例的差異由大變小','將課文重點以螢光筆標記','圖片提示由大變小'], a:0,
+      why:'提示褪除是逐步減少教師給的協助，例如從肢體提示退到口語提示，最後讓學生獨立完成。'}
   ]}
 ];
 
 /* three questions per station is plenty for a 4-hour morning; the rest stay in the bank above (indexes into steps) */
-const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[1,2,3], 5:[0,2,3], 6:[0,1,3], 7:[1,3,5]};
+const QUIZ_PICK = {1:[0,1,3], 2:[1,2,3], 3:[0,2,3], 4:[1,2,3], 5:[0,2,3], 6:[0,1,3], 7:[1,3,5,6]};
 STATIONS.forEach(s => { s.steps = QUIZ_PICK[s.id].map(i => s.steps[i]).filter(Boolean); });
 
 /* bigger island: every map position is scaled by S */
@@ -1148,8 +1150,8 @@ function gemSVG(i, cls){
 const FRAGS = [
   {pos:[-2.5,-7.8], tip:'調整不是降低標準，而是打開學習的可能。'},
   {pos:[7.2,-2.6],  tip:'不是策略先，而是分析先。'},
-  {pos:[-7.6,-.4],  tip:'識字教學順序：識其音、識其義、辨其形、書寫。'},
-  {pos:[4.6,4.2],   tip:'促進類化：換不同對象、提示卡隨身帶、做對立刻增強。'}
+  {pos:[-7.6,-.4],  tip:'有提示，就有褪除。'},
+  {pos:[4.6,4.2],   tip:'每個孩子都能學，只是需要不一樣的路。'}
 ];
 FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
 
@@ -1157,21 +1159,21 @@ FRAGS.forEach(f => f.pos = [f.pos[0]*S, f.pos[1]*S]);
    The host can rewrite each card live from the control panel. */
 const ANIMALS = [
   {name:'貓頭鷹博士', kind:'owl',    color:'#8A6142', home:[2,-12.5],
-    card:{t:'用 AI 前先保護個資', b:'不要把學生的姓名、照片、診斷證明、IEP 原文直接貼給 AI。先去識別化：用「小安、三年級、識字困難」這樣的描述就夠了。'}},
+    card:{t:'使用 AI 的五個倫理提醒', b:'保護隱私：不貼學生姓名、照片、診斷證明與 IEP 原文，先去識別化。\n\n查證把關：AI 會出錯，給學生之前教師要先檢查。\n\n專業判斷：AI 是助手，決定仍由了解學生的教師來做。\n\n公平取用：留意學生是否都有設備與能力使用。\n\n尊重著作：保留原作者與來源，改編也要註明。'}},
   {name:'小兔跳跳',   kind:'rabbit', color:'#F4F1EA', home:[-8,2],
-    card:{t:'AI 會出錯，老師要把關', b:'AI 生成的教材常有錯字、注音錯誤、筆順或計算錯誤，生圖也可能把字畫錯。給學生之前一定要自己檢查一遍，你才是教材的最後一道關卡。'}},
+    card:{t:'身心障礙有哪 13 類？', b:'依《特殊教育法》，身心障礙分為：\n\n智能障礙、視覺障礙、聽覺障礙、語言障礙、肢體障礙、腦性麻痺、身體病弱、\n情緒行為障礙、學習障礙、自閉症、多重障礙、發展遲緩、其他障礙。'}},
   {name:'烏龜爺爺',   kind:'turtle', color:'#5FA651', home:[9,-4],
-    card:{t:'通用設計學習 UDL 三原則', b:'多元參與（為什麼學）、多元表徵（學什麼）、多元行動與表達（怎麼學、怎麼表現）。請 AI 做教材時，可以直接要求它符合這三項原則。'}},
+    card:{t:'什麼是通用設計學習（UDL）？', b:'在設計課程的一開始，就把學生的個別差異考慮進去，提供有彈性的教材、教法與評量，讓每個學生都能參與學習。\n\n三大原則：\n多元參與：用不同方式引發動機（為什麼學）\n多元表徵：用不同方式呈現內容（學什麼）\n多元行動與表達：用不同方式展現所學（怎麼學）'}},
   {name:'小狗旺旺',   kind:'dog',    color:'#D9A066', home:[-3,7],
-    card:{t:'好提示詞的四個要素', b:'角色（你是資源班老師）、對象（三年級識字困難的學生）、任務（做一份形近字學習單）、格式（A4、字大、留書寫格）。說得越具體，成品越合用。'}},
+    card:{t:'社會情緒學習（SEL）是什麼？', b:'學習認識與管理自己的情緒、理解他人、建立良好關係，並做出負責任決定的歷程。\n\n五個面向：\n自我覺察：辨識自己的情緒、想法與優缺點\n自我管理：調節情緒、壓力與行為\n社會覺察：理解他人的感受與觀點\n人際關係技巧：溝通、合作、維持關係\n負責任的決策：做出安全且負責的選擇'}},
   {name:'橘貓咪咪',   kind:'cat',    color:'#EE9A4D', home:[-15,-6],
-    card:{t:'尊重創作，標示來源', b:'使用別人分享的提示詞、Skill 或教材時，保留原作者與來源；自己改編後再分享，也寫上「改編自誰」。今天的工具很多都來自第一線老師的無私分享。'}},
+    card:{t:'有提示，就有褪除', b:'提示是幫助學生做出正確反應的協助，目標是最後不需要提示也做得到。\n\n常見的提示（協助由多到少）：\n肢體提示 → 示範 → 手勢 → 視覺提示 → 口語提示 → 獨立完成\n\n褪除：隨著學生進步，逐步減少協助的量或改用較少的提示，避免學生依賴提示。'}},
   {name:'灰貓小墨',   kind:'cat',    color:'#8E9AA6', home:[-7,-13],
-    card:{t:'認得幾個字才算識字？', b:'依黃富順（1994）的研究，一般成人生活所需是 2,328 字。認得 470 字以下列為不識字；870 字以上、未達 1,680 字為半識字；能認 1,680 字，並能書寫日常生活的簡單應用文字，才算識字者。'}},
+    card:{t:'認得幾個字才算識字？', b:'依黃富順（1994）的研究：\n\n一般成人生活所需：2,328 字\n不識字：認得 470 字以下\n半識字：870 字以上、未達 1,680 字\n識字者：能認 1,680 字，並能書寫日常生活的簡單應用文字'}},
   {name:'小狗阿算',   kind:'dog',    color:'#F2EDE4', home:[4.5,3],
-    card:{t:'常見的數學表徵類型', b:'情境表徵（文字／生活經驗）：把數學概念放進日常語境或應用題，例如用「分披薩」引入分數。\n具體物表徵（操作物）：使用實體教具操作，例如積木、算盤、錢幣、分數板或幾何立體模型。\n圖像表徵（視覺化）：用畫圖、數線、面積模型、長條圖或折線圖呈現數量與關係。\n符號表徵（抽象式）：運用數字、運算符號、代數式或方程式，例如 2x + 3 = 7。\n語言表徵（口語／文字說明）：用口頭或書面文字描述解題策略、推理理由或概念意義。'}},
+    card:{t:'常見的數學表徵類型', b:'情境表徵：把概念放進生活語境或應用題，例如用「分披薩」引入分數。\n\n具體物表徵：操作實體教具，例如積木、錢幣、分數板。\n\n圖像表徵：用畫圖、數線、面積模型、長條圖呈現數量與關係。\n\n符號表徵：用數字、運算符號、算式，例如 2x + 3 = 7。\n\n語言表徵：用口語或文字說明解題策略與理由。'}},
   {name:'小兔暖暖',   kind:'rabbit', color:'#F6C9D4', home:[-10,10],
-    card:{t:'社會情緒學習（SEL）五個面向', b:'自我覺察：辨識自己的情緒、想法、價值觀與優缺點。\n自我管理：有效調節情緒、壓力與行為，朝目標前進。\n社會覺察：理解他人的感受、觀點與處境，培養同理心。\n人際關係技巧：建立與維持健康的關係，進行清晰溝通與合作。\n負責任的決策：在倫理、安全與實際層面做出明智且負責任的選擇。'}}
+    card:{t:'資賦優異有哪 6 類？', b:'依《特殊教育法》，資賦優異分為：\n\n一般智能資賦優異\n學術性向資賦優異\n藝術才能資賦優異\n創造能力資賦優異\n領導能力資賦優異\n其他特殊才能資賦優異'}}
 ];
 const QUESTIONS = [
   '分析個案需求時，你最先注意到孩子哪一個需求？會調整哪個向度？',
@@ -1978,6 +1980,7 @@ $('#chatNext').onclick = () => {
   if (chatStep < lines.length - 1){ chatStep++; return showChatStep(); }
   const k = knowAt(chatAid), first = !cards.has(chatAid);
   cards.add(chatAid); store.set('cards', [...cards]); renderHUD();
+  clearInterval(typeT); $('#chatText').textContent = '這張知識卡送給你，已經收進「我的背包」，隨時可以打開看。';
   $('#chatCard').innerHTML = `<div class="kcard"><small>知識卡 ${cards.size}/${ANIMALS.length}</small><b>${esc(k.t)}</b>${esc(k.b)}</div>`;
   $('#chatNext').textContent = '謝謝，再見！';
   $('#chatNext').onclick = closeChat;
@@ -3467,6 +3470,7 @@ const BEAST_QS = [
   {q:'識字教學的順序是？', opts:['識其音 → 識其義 → 辨其形 → 書寫','書寫 → 辨其形 → 識其義 → 識其音','辨其形 → 書寫 → 識其音 → 識其義','識其義 → 書寫 → 識其音 → 辨其形'], a:0},
   {q:'學生說得出來卻寫不出來，最適合哪個寫作策略？', opts:['口頭表達替代書寫','多罰寫','直接給範文','取消寫作'], a:0},
   {q:'影片理解互動模式，播放幾句就要暫停？', opts:['1～2 句','整部看完','5 分鐘','完全不暫停'], a:0},
+  {q:'下列哪一個作法屬於「提示褪除」？', opts:['從肢體提示到口語提示','選擇反例的差異由大變小','將課文重點以螢光筆標記','圖片提示由大變小'], a:0},
   {q:'做課程調整之前，第一步應該先？', opts:['挑最新的數位工具','分析個案的學習需求','直接降低難度','跟上全班進度'], a:1}
 ];
 const BEASTS = [{name:'迷思野豬', body:'#8A5A3B', belly:'#C99A6B'}, {name:'標籤灰狼', body:'#6E7B85', belly:'#B9C3CA'}, {name:'放棄巨熊', body:'#4A3426', belly:'#8A6A4E'}, {name:'森林守門獸', body:'#3F7A3A', belly:'#9CC77E'}];
