@@ -2675,9 +2675,10 @@ function loop(){
   if (!loop.t0) loop.t0 = now;
   if (now - loop.t0 > 3000){
     const fps = loop.n*1000/(now - loop.t0); loop.n = 0; loop.t0 = now; loop.warm = (loop.warm || 0) + 1;
-    if (loop.warm > 1 && fps < 27 && document.visibilityState === 'visible' && (loop.q || 0) < 3){
+    if (loop.warm > 2 && fps < 22 && document.visibilityState === 'visible' && (loop.q || 0) < 3){
       loop.q = (loop.q || 0) + 1;
-      renderer.setPixelRatio(loop.q === 1 ? Math.min(devicePixelRatio, 1.25) : loop.q === 2 ? 1 : .8);
+      // never go below the screen's own resolution: a soft picture looks worse than a slightly slower one
+      renderer.setPixelRatio(Math.max(1, loop.q < 3 ? Math.min(devicePixelRatio, 1.25) : 1));
       if (loop.q >= 2){ sun.castShadow = false; renderer.shadowMap.needsUpdate = true; }
     }
   }
